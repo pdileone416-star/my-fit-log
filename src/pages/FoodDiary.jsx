@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronUp, Heart, Pencil, Save, Sparkles, Trash2, X } from 'lucide-react'
+import { ChevronDown, ChevronUp, Heart, ImagePlus, Pencil, Save, Trash2, X } from 'lucide-react'
 import Button from '../components/Button'
 import Card from '../components/Card'
 import Input from '../components/Input'
@@ -11,9 +11,13 @@ const emptyLog = {
   date: todayISO(),
   weight: '',
   breakfast: '',
+  breakfastPhoto: '',
   lunch: '',
+  lunchPhoto: '',
   snack: '',
+  snackPhoto: '',
   dinner: '',
+  dinnerPhoto: '',
   supplements: '',
   water: '',
   energy: '',
@@ -21,20 +25,38 @@ const emptyLog = {
   stress: '',
   cycle: '',
   notes: '',
+  bodyPhoto: '',
 }
 
-const demoTemplates = [
-  { weight: '64.8', energy: '7', bloating: '3', stress: '4', water: '2 L', notes: 'Giornata ordinata, mi sono sentita leggera.' },
-  { weight: '64.6', energy: '8', bloating: '2', stress: '3', water: '2.2 L', notes: 'Buona energia e pasti abbastanza regolari.' },
-  { weight: '64.7', energy: '5', bloating: '6', stress: '6', water: '1.5 L', notes: 'Un po di gonfiore, giornata da tenere d occhio.' },
-  { weight: '64.3', energy: '8', bloating: '3', stress: '4', water: '2 L', notes: 'Mi sono sentita bene, fame gestibile.' },
-  { weight: '64.1', energy: '6', bloating: '4', stress: '5', water: '1.8 L', notes: 'Giornata normale, senza grandi picchi.' },
-  { weight: '64.0', energy: '7', bloating: '3', stress: '3', water: '2.3 L', notes: 'Molto bene con acqua e pasti.' },
-  { weight: '63.9', energy: '4', bloating: '5', stress: '7', water: '1.4 L', notes: 'Giornata piu stressante, energia bassa.' },
-  { weight: '63.8', energy: '7', bloating: '4', stress: '4', water: '2 L', notes: 'Recuperata meglio, giornata positiva.' },
-  { weight: '63.7', energy: '8', bloating: '2', stress: '3', water: '2.1 L', notes: 'Ottima sensazione generale.' },
-  { weight: '63.6', energy: '7', bloating: '3', stress: '4', water: '2 L', notes: 'Demo finale: andamento stabile e buono.' },
-]
+function PhotoField({ label, value, onChange }) {
+  function handleFile(event) {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = () => onChange(String(reader.result || ''))
+    reader.readAsDataURL(file)
+  }
+
+  return (
+    <div className="grid gap-2 text-sm font-semibold text-title">
+      <span>{label}</span>
+      {value ? (
+        <img src={value} alt="" className="max-h-48 w-full rounded-2xl border border-blush-border bg-white object-cover" />
+      ) : null}
+      <div className="flex flex-wrap gap-2">
+        <label className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl bg-blush px-4 py-2 text-sm font-semibold text-title transition hover:bg-sage">
+          <ImagePlus size={16} aria-hidden="true" />
+          Aggiungi foto
+          <input type="file" accept="image/*" className="sr-only" onChange={handleFile} />
+        </label>
+        {value ? (
+          <Button type="button" variant="ghost" onClick={() => onChange('')}>Rimuovi</Button>
+        ) : null}
+      </div>
+    </div>
+  )
+}
 
 export default function FoodDiary({ dailyLogs, setDailyLogs }) {
   const [form, setForm] = useState(emptyLog)
@@ -82,34 +104,6 @@ export default function FoodDiary({ dailyLogs, setDailyLogs }) {
 
   function toggleDay(id) {
     setOpenDays((days) => days.includes(id) ? days.filter((dayId) => dayId !== id) : [...days, id])
-  }
-
-  function createDemoLogs() {
-    const today = new Date(todayISO())
-    const demos = demoTemplates.map((template, index) => {
-      const date = new Date(today)
-      date.setDate(today.getDate() - (demoTemplates.length - 1 - index))
-
-      return {
-        id: createId(),
-        date: date.toISOString().slice(0, 10),
-        weight: template.weight,
-        breakfast: 'Yogurt greco, frutta e cereali',
-        lunch: 'Riso, pollo e verdure',
-        snack: 'Frutta o barretta proteica',
-        dinner: 'Uova o pesce con contorno',
-        supplements: 'Magnesio / crema / routine serale',
-        water: template.water,
-        energy: template.energy,
-        bloating: template.bloating,
-        stress: template.stress,
-        cycle: index === 2 || index === 7 ? 'Ritenzione leggera' : '',
-        notes: `[DEMO] ${template.notes}`,
-      }
-    })
-
-    const demoDates = new Set(demos.map((log) => log.date))
-    setDailyLogs((logs) => [...demos, ...logs.filter((log) => !demoDates.has(log.date))])
   }
 
   function mealCount(log) {
@@ -163,9 +157,13 @@ export default function FoodDiary({ dailyLogs, setDailyLogs }) {
             <Input label="Data" type="date" value={form.date} onChange={(e) => loadByDate(e.target.value)} required />
             <Input label="Peso kg" type="number" step="0.1" value={form.weight} onChange={(e) => update('weight', e.target.value)} />
             <Textarea label="Colazione" value={form.breakfast} onChange={(e) => update('breakfast', e.target.value)} />
+            <PhotoField label="Foto colazione" value={form.breakfastPhoto || ''} onChange={(value) => update('breakfastPhoto', value)} />
             <Textarea label="Pranzo" value={form.lunch} onChange={(e) => update('lunch', e.target.value)} />
+            <PhotoField label="Foto pranzo" value={form.lunchPhoto || ''} onChange={(value) => update('lunchPhoto', value)} />
             <Textarea label="Merenda" value={form.snack} onChange={(e) => update('snack', e.target.value)} />
+            <PhotoField label="Foto merenda" value={form.snackPhoto || ''} onChange={(value) => update('snackPhoto', value)} />
             <Textarea label="Cena" value={form.dinner} onChange={(e) => update('dinner', e.target.value)} />
+            <PhotoField label="Foto cena" value={form.dinnerPhoto || ''} onChange={(value) => update('dinnerPhoto', value)} />
             <Input label="Integratori / applicazioni" value={form.supplements} onChange={(e) => update('supplements', e.target.value)} />
             <Input label="Acqua" placeholder="Es. 2 litri" value={form.water} onChange={(e) => update('water', e.target.value)} />
             <Input label="Energia" placeholder="1-10 o testo libero" value={form.energy} onChange={(e) => update('energy', e.target.value)} />
@@ -173,15 +171,12 @@ export default function FoodDiary({ dailyLogs, setDailyLogs }) {
             <Input label="Stress" placeholder="1-10 o testo libero" value={form.stress} onChange={(e) => update('stress', e.target.value)} />
             <Input label="Ciclo / ritenzione" value={form.cycle} onChange={(e) => update('cycle', e.target.value)} />
           </div>
+          <PhotoField label="Foto corpo / progressi" value={form.bodyPhoto || ''} onChange={(value) => update('bodyPhoto', value)} />
           <Textarea label="Note generali" rows={4} value={form.notes} onChange={(e) => update('notes', e.target.value)} />
           <div className="flex flex-wrap gap-2">
             <Button type="submit" className="w-full md:w-auto">
               <Save size={18} aria-hidden="true" />
               Salva giornata
-            </Button>
-            <Button type="button" variant="secondary" className="w-full md:w-auto" onClick={createDemoLogs}>
-              <Sparkles size={18} aria-hidden="true" />
-              Crea 10 giornate demo
             </Button>
             <Button type="button" variant="ghost" className="w-full border border-blush-border md:w-auto" onClick={resetForm}>
               <X size={18} aria-hidden="true" />
@@ -259,6 +254,22 @@ export default function FoodDiary({ dailyLogs, setDailyLogs }) {
                     <p><strong>Merenda:</strong> {log.snack || '-'}</p>
                     <p><strong>Cena:</strong> {log.dinner || '-'}</p>
                     <p><strong>Note:</strong> {log.notes || '-'}</p>
+                    {[log.breakfastPhoto, log.lunchPhoto, log.snackPhoto, log.dinnerPhoto, log.bodyPhoto].some(Boolean) ? (
+                      <div className="mt-2 grid grid-cols-2 gap-2">
+                        {[
+                          ['Colazione', log.breakfastPhoto],
+                          ['Pranzo', log.lunchPhoto],
+                          ['Merenda', log.snackPhoto],
+                          ['Cena', log.dinnerPhoto],
+                          ['Corpo', log.bodyPhoto],
+                        ].filter(([, photo]) => photo).map(([label, photo]) => (
+                          <figure key={label} className="rounded-xl border border-blush-border bg-white p-2">
+                            <img src={photo} alt="" className="h-28 w-full rounded-lg object-cover" />
+                            <figcaption className="mt-1 text-xs font-bold text-title">{label}</figcaption>
+                          </figure>
+                        ))}
+                      </div>
+                    ) : null}
                   </div>
                 ) : log.notes ? (
                   <p className="mt-2 text-sm">{log.notes}</p>

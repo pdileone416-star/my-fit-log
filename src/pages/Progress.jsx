@@ -1,4 +1,4 @@
-import { Activity, Droplets, LineChart, Scale } from 'lucide-react'
+import { Activity, Camera, Droplets, LineChart, Scale } from 'lucide-react'
 import Card from '../components/Card'
 import SectionTitle from '../components/SectionTitle'
 import { sortByDateDesc } from '../utils/storage'
@@ -46,11 +46,32 @@ export default function Progress({ dailyLogs, workoutSessions }) {
 
       <Card>
         <SectionTitle title="Trend peso" eyebrow="ultimi record" />
-        <div className="table-wrap">
+        <div className="mb-4 grid gap-3 md:grid-cols-2 lg:hidden">
+          {sortedLogs.slice(0, 12).map((log) => (
+            <article key={log.id} className="rounded-2xl border border-blush-border bg-white p-3">
+              <div className="flex items-start gap-3">
+                <div className="grid size-20 shrink-0 place-items-center overflow-hidden rounded-2xl border border-blush-border bg-pink-bg text-accent">
+                  {log.bodyPhoto ? (
+                    <img src={log.bodyPhoto} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    <Camera size={22} aria-hidden="true" />
+                  )}
+                </div>
+                <div>
+                  <p className="font-black text-title">{log.date}</p>
+                  <p className="text-sm">Peso {log.weight ? `${log.weight} kg` : '-'}</p>
+                  <p className="text-sm">Energia {log.energy || '-'} - Gonfiore {log.bloating || '-'} - Stress {log.stress || '-'}</p>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+        <div className="table-wrap hidden lg:block">
           <table className="clean-table">
             <thead>
               <tr>
                 <th>Data</th>
+                <th>Foto corpo</th>
                 <th>Peso</th>
                 <th>Energia</th>
                 <th>Gonfiore</th>
@@ -61,6 +82,11 @@ export default function Progress({ dailyLogs, workoutSessions }) {
               {sortedLogs.slice(0, 12).map((log) => (
                 <tr key={log.id}>
                   <td>{log.date}</td>
+                  <td>
+                    {log.bodyPhoto ? (
+                      <img src={log.bodyPhoto} alt="" className="h-16 w-16 rounded-xl border border-blush-border object-cover" />
+                    ) : '-'}
+                  </td>
                   <td>{log.weight ? `${log.weight} kg` : '-'}</td>
                   <td>{log.energy || '-'}</td>
                   <td>{log.bloating || '-'}</td>
@@ -69,7 +95,7 @@ export default function Progress({ dailyLogs, workoutSessions }) {
               ))}
               {sortedLogs.length === 0 ? (
                 <tr>
-                  <td colSpan="5">Nessuna giornata salvata.</td>
+                  <td colSpan="6">Nessuna giornata salvata.</td>
                 </tr>
               ) : null}
             </tbody>
