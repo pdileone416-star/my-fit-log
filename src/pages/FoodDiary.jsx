@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronUp, Pencil, Save, Trash2 } from 'lucide-react'
+import { ChevronDown, ChevronUp, Pencil, Save, Trash2, X } from 'lucide-react'
 import Button from '../components/Button'
 import Card from '../components/Card'
 import Input from '../components/Input'
@@ -46,6 +46,10 @@ export default function FoodDiary({ dailyLogs, setDailyLogs }) {
     const payload = { ...form, id: dailyLogs.find((log) => log.date === form.date)?.id || createId() }
     setDailyLogs((logs) => [payload, ...logs.filter((log) => log.date !== form.date)])
     setForm({ ...emptyLog, date: form.date })
+  }
+
+  function resetForm() {
+    setForm(emptyLog)
   }
 
   function loadByDate(date) {
@@ -103,10 +107,16 @@ export default function FoodDiary({ dailyLogs, setDailyLogs }) {
             <Input label="Ciclo / ritenzione" value={form.cycle} onChange={(e) => update('cycle', e.target.value)} />
           </div>
           <Textarea label="Note generali" rows={4} value={form.notes} onChange={(e) => update('notes', e.target.value)} />
-          <Button type="submit" className="w-full md:w-auto">
-            <Save size={18} aria-hidden="true" />
-            Salva giornata
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button type="submit" className="w-full md:w-auto">
+              <Save size={18} aria-hidden="true" />
+              Salva giornata
+            </Button>
+            <Button type="button" variant="ghost" className="w-full border border-blush-border md:w-auto" onClick={resetForm}>
+              <X size={18} aria-hidden="true" />
+              Annulla
+            </Button>
+          </div>
         </form>
       </Card>
 

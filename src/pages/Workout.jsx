@@ -240,14 +240,22 @@ export default function Workout({ workoutSessions, setWorkoutSessions, workoutPl
     setEditingPlanExerciseId(null)
   }
 
+  function resetPlanExercise() {
+    setPlanExercise(emptyPlanExercise)
+    setEditingPlanExerciseId(null)
+  }
+
+  function resetPlanForm() {
+    setPlanForm(emptyPlan)
+    setEditingPlanId(null)
+    resetPlanExercise()
+  }
+
   function savePlan(event) {
     event.preventDefault()
     const payload = { ...planForm, id: editingPlanId || createId() }
     setWorkoutPlans((plans) => editingPlanId ? plans.map((plan) => plan.id === editingPlanId ? payload : plan) : [payload, ...plans])
-    setPlanForm(emptyPlan)
-    setEditingPlanId(null)
-    setPlanExercise(emptyPlanExercise)
-    setEditingPlanExerciseId(null)
+    resetPlanForm()
   }
 
   function editPlan(plan) {
@@ -521,7 +529,10 @@ export default function Workout({ workoutSessions, setWorkoutSessions, workoutPl
                   <Textarea label="Note tecniche" value={planExercise.technicalNotes} onChange={(event) => setPlanExercise((exercise) => ({ ...exercise, technicalNotes: event.target.value }))} />
                   <Textarea label="Note personali" value={planExercise.personalNotes} onChange={(event) => setPlanExercise((exercise) => ({ ...exercise, personalNotes: event.target.value }))} />
                   <ImageField label="Immagine esercizio" value={planExercise.imageData} onChange={(imageData) => setPlanExercise((exercise) => ({ ...exercise, imageData }))} />
-                  <Button type="button" variant="secondary" onClick={addPlanExercise}><Plus size={16} />Salva esercizio scheda</Button>
+                  <div className="flex flex-wrap gap-2">
+                    <Button type="button" variant="secondary" onClick={addPlanExercise}><Plus size={16} />Salva esercizio scheda</Button>
+                    <Button type="button" variant="ghost" onClick={resetPlanExercise}><X size={16} />Annulla</Button>
+                  </div>
                 </div>
               </div>
 
@@ -554,7 +565,10 @@ export default function Workout({ workoutSessions, setWorkoutSessions, workoutPl
                 ))}
               </div>
 
-              <Button type="submit"><Save size={18} />{editingPlanId ? 'Aggiorna scheda' : 'Crea nuova scheda'}</Button>
+              <div className="flex flex-wrap gap-2">
+                <Button type="submit"><Save size={18} />{editingPlanId ? 'Aggiorna scheda' : 'Crea nuova scheda'}</Button>
+                <Button type="button" variant="ghost" className="border border-blush-border" onClick={resetPlanForm}><X size={18} />Annulla</Button>
+              </div>
             </form>
           </Card>
 
