@@ -26,22 +26,26 @@ const baseRows = [
 ]
 
 export function buildDefaultWorkoutPlans() {
-  return ['Giorno 1', 'Giorno 2', 'Giorno 3'].map((day) => ({
+  return [{
     id: createId(),
-    name: `Scheda ${day}`,
-    workoutDay: day,
-    goal: day === 'Giorno 2' ? 'Glutei, gambe e core' : 'Parte alta, spalle, schiena e core',
-    exercises: baseRows
-      .filter(([workoutDay]) => workoutDay === day)
-      .map(([, exercise, plannedSetsReps, technicalNotes]) => ({
-        id: createId(),
-        exercise,
-        plannedSetsReps,
-        technicalNotes,
-        personalNotes: '',
-        imageData: '',
-      })),
-  }))
+    name: 'Scheda base',
+    goal: 'Programmazione completa divisa in Giorno 1, Giorno 2 e Giorno 3',
+    days: ['Giorno 1', 'Giorno 2', 'Giorno 3'].map((day) => ({
+      id: createId(),
+      workoutDay: day,
+      goal: day === 'Giorno 2' ? 'Glutei, gambe e core' : 'Parte alta, spalle, schiena e core',
+      exercises: baseRows
+        .filter(([workoutDay]) => workoutDay === day)
+        .map(([, exercise, plannedSetsReps, technicalNotes]) => ({
+          id: createId(),
+          exercise,
+          plannedSetsReps,
+          technicalNotes,
+          personalNotes: '',
+          imageData: '',
+        })),
+    })),
+  }]
 }
 
 export const workoutPlans = buildDefaultWorkoutPlans()

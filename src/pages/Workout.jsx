@@ -28,12 +28,12 @@ const emptyExercise = {
 
 const emptyPlan = {
   name: '',
-  workoutDay: 'Giorno 1',
   goal: '',
-  exercises: [],
+  days: [],
 }
 
 const emptyPlanExercise = {
+  workoutDay: 'Giorno 1',
   exercise: '',
   plannedSetsReps: '',
   technicalNotes: '',
@@ -75,6 +75,39 @@ function sessionCompletion(session) {
   return Math.round((session.exercises.filter((exercise) => exercise.completed).length / session.exercises.length) * 100)
 }
 
+function getPlanDays(plan) {
+  if (plan.days?.length) return plan.days
+  return [{
+    id: plan.id,
+    workoutDay: normalizeWorkoutDay(plan.workoutDay),
+    goal: plan.goal || '',
+    exercises: plan.exercises || [],
+  }]
+}
+
+function upsertPlanExercise(days, workoutDay, exercise, editingExerciseId) {
+  const existingDay = days.find((day) => day.workoutDay === workoutDay)
+
+  if (!existingDay) {
+    return [...days, {
+      id: createId(),
+      workoutDay,
+      goal: '',
+      exercises: [exercise],
+    }]
+  }
+
+  return days.map((day) => {
+    if (day.workoutDay !== workoutDay) return day
+    return {
+      ...day,
+      exercises: editingExerciseId
+        ? day.exercises.map((item) => item.id === editingExerciseId ? exercise : item)
+        : [...day.exercises, exercise],
+    }
+  })
+}
+
 export default function Workout({ workoutSessions, setWorkoutSessions, workoutPlans, setWorkoutPlans }) {
   const [mode, setMode] = useState('sessions')
   const [showSessionForm, setShowSessionForm] = useState(false)
@@ -88,6 +121,7 @@ export default function Workout({ workoutSessions, setWorkoutSessions, workoutPl
   const [planExercise, setPlanExercise] = useState(emptyPlanExercise)
   const [editingPlanId, setEditingPlanId] = useState(null)
   const [editingPlanExerciseId, setEditingPlanExerciseId] = useState(null)
+  const [selectedPlanDays, setSelectedPlanDays] = useState({})
 
   const sortedSessions = [...workoutSessions].sort((a, b) => (b.date || '').localeCompare(a.date || ''))
 
@@ -186,12 +220,18 @@ export default function Workout({ workoutSessions, setWorkoutSessions, workoutPl
   function addPlanExercise(event) {
     event.preventDefault()
     if (!planExercise.exercise.trim()) return
-    const payload = { ...planExercise, id: editingPlanExerciseId || createId() }
+    const workoutDay = normalizeWorkoutDay(planExercise.workoutDay)
+    const payload = {
+      id: editingPlanExerciseId || createId(),
+      exercise: planExercise.exercise,
+      plannedSetsReps: planExercise.plannedSetsReps,
+      technicalNotes: planExercise.technicalNotes,
+      personalNotes: planExercise.personalNotes,
+      imageData: planExercise.imageData,
+    }
     setPlanForm((current) => ({
       ...current,
-      exercises: editingPlanExerciseId
-        ? current.exercises.map((item) => item.id === editingPlanExerciseId ? payload : item)
-        : [...current.exercises, payload],
+      days: upsertPlanExercise(current.days || [], workoutDay, payload, editingPlanExerciseId),
     }))
     setPlanExercise(emptyPlanExercise)
     setEditingPlanExerciseId(null)
@@ -199,7 +239,7 @@ export default function Workout({ workoutSessions, setWorkoutSessions, workoutPl
 
   function savePlan(event) {
     event.preventDefault()
-    const payload = { ...planForm, workoutDay: normalizeWorkoutDay(planForm.workoutDay), id: editingPlanId || createId() }
+    const payload = { ...planForm, id: editingPlanId || createId() }
     setWorkoutPlans((plans) => editingPlanId ? plans.map((plan) => plan.id === editingPlanId ? payload : plan) : [payload, ...plans])
     setPlanForm(emptyPlan)
     setEditingPlanId(null)
@@ -208,7 +248,7 @@ export default function Workout({ workoutSessions, setWorkoutSessions, workoutPl
   }
 
   function editPlan(plan) {
-    setPlanForm({ ...plan, workoutDay: normalizeWorkoutDay(plan.workoutDay) })
+    setPlanForm({ id: plan.id, name: plan.name, goal: plan.goal || '', days: getPlanDays(plan) })
     setEditingPlanId(plan.id)
     setMode('plans')
   }
@@ -221,14 +261,15 @@ export default function Workout({ workoutSessions, setWorkoutSessions, workoutPl
     }
   }
 
-  function applyPlan(plan) {
+  function applyPlan(plan, workoutDay) {
+    const day = getPlanDays(plan).find((item) => item.workoutDay === workoutDay) || getPlanDays(plan)[0]
     const session = {
       id: createId(),
       date: todayISO(),
-      workoutDay: normalizeWorkoutDay(plan.workoutDay),
-      title: plan.name,
-      notes: plan.goal || '',
-      exercises: plan.exercises.map((item) => ({
+      workoutDay: normalizeWorkoutDay(day.workoutDay),
+      title: `${plan.name} - ${normalizeWorkoutDay(day.workoutDay)}`,
+      notes: day.goal || plan.goal || '',
+      exercises: (day.exercises || []).map((item) => ({
         id: createId(),
         exercise: item.exercise,
         plannedSetsReps: item.plannedSetsReps,
@@ -389,16 +430,16 @@ export default function Workout({ workoutSessions, setWorkoutSessions, workoutPl
         <div className="grid gap-5 lg:grid-cols-[1fr_1fr]">
           <Card>
             <SectionTitle title="Schede allenamento" eyebrow="workoutPlans">
-              Crea schede libere e usale per creare una sessione workout gia compilata.
+              Crea schede libere con uno o piu giorni, poi scegli il giorno quando le usi.
             </SectionTitle>
             <form onSubmit={savePlan} className="grid gap-4">
               <Input label="Nome scheda" value={planForm.name} onChange={(event) => setPlanForm((plan) => ({ ...plan, name: event.target.value }))} required />
-              <Input label="Giorno scheda / Nome sessione" value={planForm.workoutDay} onChange={(event) => setPlanForm((plan) => ({ ...plan, workoutDay: event.target.value }))} placeholder="Es. Giorno 5, Full body, Richiamo glutei" required />
-              <Textarea label="Obiettivo scheda" value={planForm.goal} onChange={(event) => setPlanForm((plan) => ({ ...plan, goal: event.target.value }))} />
+              <Textarea label="Obiettivo generale scheda" value={planForm.goal} onChange={(event) => setPlanForm((plan) => ({ ...plan, goal: event.target.value }))} />
 
               <div className="rounded-2xl border border-blush-border bg-pink-bg p-3">
                 <p className="mb-3 font-bold text-title">{editingPlanExerciseId ? 'Modifica esercizio scheda' : 'Aggiungi esercizio alla scheda'}</p>
                 <div className="grid gap-3">
+                  <Input label="Giorno della scheda" value={planExercise.workoutDay} onChange={(event) => setPlanExercise((exercise) => ({ ...exercise, workoutDay: event.target.value }))} placeholder="Es. Giorno 1, Upper body, Camminata" required />
                   <Input label="Esercizio" value={planExercise.exercise} onChange={(event) => setPlanExercise((exercise) => ({ ...exercise, exercise: event.target.value }))} />
                   <Input label="Serie x rip previste" value={planExercise.plannedSetsReps} onChange={(event) => setPlanExercise((exercise) => ({ ...exercise, plannedSetsReps: event.target.value }))} />
                   <Textarea label="Note tecniche" value={planExercise.technicalNotes} onChange={(event) => setPlanExercise((exercise) => ({ ...exercise, technicalNotes: event.target.value }))} />
@@ -409,17 +450,29 @@ export default function Workout({ workoutSessions, setWorkoutSessions, workoutPl
               </div>
 
               <div className="grid gap-2">
-                {planForm.exercises.map((item) => (
-                  <div key={item.id} className="rounded-xl border border-blush-border bg-white p-3">
-                    <p className="font-bold text-title">{item.exercise}</p>
-                    <p className="text-sm">{item.plannedSetsReps}</p>
-                    {item.imageData ? <img src={item.imageData} alt="" className="mt-2 max-h-36 w-full rounded-xl border border-blush-border object-contain bg-pink-bg p-2" /> : null}
-                    <div className="mt-2 flex gap-2">
-                      <Button type="button" variant="ghost" onClick={() => {
-                        setPlanExercise(item)
-                        setEditingPlanExerciseId(item.id)
-                      }}><Pencil size={16} />Modifica</Button>
-                      <Button type="button" variant="danger" onClick={() => setPlanForm((plan) => ({ ...plan, exercises: plan.exercises.filter((exercise) => exercise.id !== item.id) }))}><Trash2 size={16} />Elimina</Button>
+                {getPlanDays(planForm).map((day) => (
+                  <div key={day.id || day.workoutDay} className="rounded-xl border border-blush-border bg-white p-3">
+                    <p className="font-black text-title">{day.workoutDay}</p>
+                    <div className="mt-2 grid gap-2">
+                      {(day.exercises || []).map((item) => (
+                        <div key={item.id} className="rounded-xl bg-pink-bg p-3">
+                          <p className="font-bold text-title">{item.exercise}</p>
+                          <p className="text-sm">{item.plannedSetsReps}</p>
+                          {item.imageData ? <img src={item.imageData} alt="" className="mt-2 max-h-36 w-full rounded-xl border border-blush-border object-contain bg-white p-2" /> : null}
+                          <div className="mt-2 flex gap-2">
+                            <Button type="button" variant="ghost" onClick={() => {
+                              setPlanExercise({ ...item, workoutDay: day.workoutDay })
+                              setEditingPlanExerciseId(item.id)
+                            }}><Pencil size={16} />Modifica</Button>
+                            <Button type="button" variant="danger" onClick={() => setPlanForm((plan) => ({
+                              ...plan,
+                              days: getPlanDays(plan).map((planDay) => planDay.workoutDay === day.workoutDay
+                                ? { ...planDay, exercises: planDay.exercises.filter((exercise) => exercise.id !== item.id) }
+                                : planDay),
+                            }))}><Trash2 size={16} />Elimina</Button>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 ))}
@@ -436,10 +489,26 @@ export default function Workout({ workoutSessions, setWorkoutSessions, workoutPl
               {workoutPlans.map((plan) => (
                 <article key={plan.id} className="rounded-2xl border border-blush-border bg-white p-3">
                   <p className="font-bold text-title">{plan.name}</p>
-                  <p className="text-sm">{normalizeWorkoutDay(plan.workoutDay)} - {plan.exercises.length} esercizi</p>
+                  <p className="text-sm">
+                    {getPlanDays(plan).length} giorni - {getPlanDays(plan).reduce((sum, day) => sum + (day.exercises?.length || 0), 0)} esercizi
+                  </p>
                   {plan.goal ? <p className="mt-1 text-sm">{plan.goal}</p> : null}
+                  <label className="mt-3 grid gap-1.5 text-sm font-semibold text-title">
+                    <span>Scegli giorno</span>
+                    <select
+                      className="min-h-11 rounded-xl border border-blush-border bg-pink-bg px-3 py-2 text-base font-normal text-text outline-none transition focus:border-accent focus:ring-4 focus:ring-blush"
+                      value={selectedPlanDays[plan.id] || getPlanDays(plan)[0]?.workoutDay || ''}
+                      onChange={(event) => setSelectedPlanDays((days) => ({ ...days, [plan.id]: event.target.value }))}
+                    >
+                      {getPlanDays(plan).map((day) => (
+                        <option key={day.id || day.workoutDay} value={day.workoutDay}>
+                          {day.workoutDay} - {(day.exercises || []).length} esercizi
+                        </option>
+                      ))}
+                    </select>
+                  </label>
                   <div className="mt-3 flex flex-wrap gap-2">
-                    <Button type="button" onClick={() => applyPlan(plan)}><CopyPlus size={16} />Usa oggi</Button>
+                    <Button type="button" onClick={() => applyPlan(plan, selectedPlanDays[plan.id] || getPlanDays(plan)[0]?.workoutDay)}><CopyPlus size={16} />Usa giorno scelto</Button>
                     <Button type="button" variant="ghost" onClick={() => editPlan(plan)}><Pencil size={16} />Modifica</Button>
                     <Button type="button" variant="danger" onClick={() => deletePlan(plan.id)}><Trash2 size={16} />Elimina</Button>
                   </div>

@@ -33,11 +33,23 @@ function AppContent({ user, onLogout }) {
 
   useEffect(() => {
     const seedKey = storageKeyForUser(user.id, 'workoutPlansSeeded')
+    const hasOldSplitBase = workoutPlans.some((plan) => plan.name === 'Scheda Giorno 1')
+      && workoutPlans.some((plan) => plan.name === 'Scheda Giorno 2')
+      && workoutPlans.some((plan) => plan.name === 'Scheda Giorno 3')
+      && !workoutPlans.some((plan) => plan.name === 'Scheda base')
+
+    if (hasOldSplitBase) {
+      const customPlans = workoutPlans.filter((plan) => !['Scheda Giorno 1', 'Scheda Giorno 2', 'Scheda Giorno 3'].includes(plan.name))
+      setWorkoutPlans([...buildDefaultWorkoutPlans(), ...customPlans])
+      writeStorage(seedKey, true)
+      return
+    }
+
     if (workoutPlans.length === 0 && !readStorage(seedKey, false)) {
       setWorkoutPlans(buildDefaultWorkoutPlans())
       writeStorage(seedKey, true)
     }
-  }, [setWorkoutPlans, user.id, workoutPlans.length])
+  }, [setWorkoutPlans, user.id, workoutPlans])
 
   const tabs = [
     { id: 'home', label: 'Home', icon: HomeIcon },
