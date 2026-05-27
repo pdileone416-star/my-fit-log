@@ -117,6 +117,7 @@ export default function History({ dailyLogs, setDailyLogs, workoutSessions, setW
                             <p className="text-sm">Previste {exercise.plannedSetsReps || '-'} - Effettuate {exercise.completedSetsReps || '-'}</p>
                             <p className="text-sm">Carico {exercise.weightKg || '-'} kg - Fatica {exercise.fatigue || '-'}</p>
                             {exercise.notes ? <p className="mt-1 text-sm">{exercise.notes}</p> : null}
+                            {exercise.imageData ? <img src={exercise.imageData} alt="" className="mt-2 max-h-36 w-full rounded-xl border border-blush-border object-contain bg-white p-2" /> : null}
                           </div>
                           <span className={`w-fit rounded-full px-3 py-1 text-xs font-bold ${exercise.completed ? 'bg-sage text-title' : 'bg-blush text-title'}`}>
                             {exercise.completed ? 'Fatto' : 'Da fare'}

@@ -23,6 +23,7 @@ const emptyExercise = {
   fatigue: '',
   completed: false,
   notes: '',
+  imageData: '',
 }
 
 const emptyPlan = {
@@ -37,6 +38,36 @@ const emptyPlanExercise = {
   plannedSetsReps: '',
   technicalNotes: '',
   personalNotes: '',
+  imageData: '',
+}
+
+function ImageField({ label, value, onChange }) {
+  function handleFile(event) {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = () => onChange(String(reader.result || ''))
+    reader.readAsDataURL(file)
+  }
+
+  return (
+    <div className="grid gap-2 text-sm font-semibold text-title">
+      <span>{label}</span>
+      {value ? (
+        <img src={value} alt="" className="max-h-48 w-full rounded-2xl border border-blush-border object-contain bg-white p-2" />
+      ) : null}
+      <div className="flex flex-wrap gap-2">
+        <label className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-xl bg-blush px-4 py-2 text-sm font-semibold text-title transition hover:bg-sage">
+          Carica immagine
+          <input type="file" accept="image/*" className="sr-only" onChange={handleFile} />
+        </label>
+        {value ? (
+          <Button type="button" variant="ghost" onClick={() => onChange('')}>Rimuovi immagine</Button>
+        ) : null}
+      </div>
+    </div>
+  )
 }
 
 function sessionCompletion(session) {
@@ -206,6 +237,7 @@ export default function Workout({ workoutSessions, setWorkoutSessions, workoutPl
         fatigue: '',
         completed: false,
         notes: `${item.technicalNotes || ''}${item.personalNotes ? ` | ${item.personalNotes}` : ''}`.trim(),
+        imageData: item.imageData || '',
       })),
     }
 
@@ -306,6 +338,7 @@ export default function Workout({ workoutSessions, setWorkoutSessions, workoutPl
                       <input type="checkbox" checked={exerciseForm.completed} onChange={(event) => setExerciseForm((form) => ({ ...form, completed: event.target.checked }))} />
                       Completato
                     </label>
+                    <ImageField label="Immagine esercizio" value={exerciseForm.imageData} onChange={(imageData) => setExerciseForm((form) => ({ ...form, imageData }))} />
                     <Textarea label="Note" value={exerciseForm.notes} onChange={(event) => setExerciseForm((form) => ({ ...form, notes: event.target.value }))} />
                     <div className="flex flex-wrap gap-2">
                       <Button type="submit"><Save size={16} />{editingExerciseId ? 'Aggiorna esercizio' : 'Salva esercizio'}</Button>
@@ -325,6 +358,7 @@ export default function Workout({ workoutSessions, setWorkoutSessions, workoutPl
                             <p className="text-sm">Previste {exercise.plannedSetsReps || '-'} - Effettuate {exercise.completedSetsReps || '-'}</p>
                             <p className="text-sm">Carico {exercise.weightKg || '-'} kg - Fatica {exercise.fatigue || '-'}</p>
                             {exercise.notes ? <p className="mt-1 text-sm">{exercise.notes}</p> : null}
+                            {exercise.imageData ? <img src={exercise.imageData} alt="" className="mt-3 max-h-44 w-full rounded-xl border border-blush-border object-contain bg-pink-bg p-2" /> : null}
                           </div>
                           <span className={`w-fit rounded-full px-3 py-1 text-xs font-bold ${exercise.completed ? 'bg-sage text-title' : 'bg-blush text-title'}`}>
                             {exercise.completed ? 'Fatto' : 'Da fare'}
@@ -369,6 +403,7 @@ export default function Workout({ workoutSessions, setWorkoutSessions, workoutPl
                   <Input label="Serie x rip previste" value={planExercise.plannedSetsReps} onChange={(event) => setPlanExercise((exercise) => ({ ...exercise, plannedSetsReps: event.target.value }))} />
                   <Textarea label="Note tecniche" value={planExercise.technicalNotes} onChange={(event) => setPlanExercise((exercise) => ({ ...exercise, technicalNotes: event.target.value }))} />
                   <Textarea label="Note personali" value={planExercise.personalNotes} onChange={(event) => setPlanExercise((exercise) => ({ ...exercise, personalNotes: event.target.value }))} />
+                  <ImageField label="Immagine esercizio" value={planExercise.imageData} onChange={(imageData) => setPlanExercise((exercise) => ({ ...exercise, imageData }))} />
                   <Button type="button" variant="secondary" onClick={addPlanExercise}><Plus size={16} />Salva esercizio scheda</Button>
                 </div>
               </div>
@@ -378,6 +413,7 @@ export default function Workout({ workoutSessions, setWorkoutSessions, workoutPl
                   <div key={item.id} className="rounded-xl border border-blush-border bg-white p-3">
                     <p className="font-bold text-title">{item.exercise}</p>
                     <p className="text-sm">{item.plannedSetsReps}</p>
+                    {item.imageData ? <img src={item.imageData} alt="" className="mt-2 max-h-36 w-full rounded-xl border border-blush-border object-contain bg-pink-bg p-2" /> : null}
                     <div className="mt-2 flex gap-2">
                       <Button type="button" variant="ghost" onClick={() => {
                         setPlanExercise(item)

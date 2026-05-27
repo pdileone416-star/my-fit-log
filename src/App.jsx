@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Activity, CalendarDays, Dumbbell, Home as HomeIcon, LineChart, LogOut, Utensils } from 'lucide-react'
 import Button from './components/Button'
 import Tabs from './components/Tabs'
@@ -8,7 +8,8 @@ import Workout from './pages/Workout'
 import Progress from './pages/Progress'
 import History from './pages/History'
 import Login from './pages/Login'
-import { getCurrentUser, logoutUser, migrateWorkoutLogsToSessions, STORAGE_KEYS, storageKeyForUser, useLocalStorage } from './utils/storage'
+import { buildDefaultWorkoutPlans } from './data/workoutPlan'
+import { getCurrentUser, logoutUser, migrateWorkoutLogsToSessions, readStorage, STORAGE_KEYS, storageKeyForUser, useLocalStorage, writeStorage } from './utils/storage'
 
 function App() {
   const [user, setUser] = useState(() => getCurrentUser())
@@ -28,7 +29,15 @@ function AppContent({ user, onLogout }) {
   const [activeTab, setActiveTab] = useState('home')
   const [dailyLogs, setDailyLogs] = useLocalStorage(storageKeyForUser(user.id, STORAGE_KEYS.dailyLogs), [])
   const [workoutSessions, setWorkoutSessions] = useLocalStorage(storageKeyForUser(user.id, STORAGE_KEYS.workoutSessions), [])
-  const [workoutPlans, setWorkoutPlans] = useLocalStorage(storageKeyForUser(user.id, STORAGE_KEYS.workoutPlans), [])
+  const [workoutPlans, setWorkoutPlans] = useLocalStorage(storageKeyForUser(user.id, STORAGE_KEYS.workoutPlans), buildDefaultWorkoutPlans())
+
+  useEffect(() => {
+    const seedKey = storageKeyForUser(user.id, 'workoutPlansSeeded')
+    if (workoutPlans.length === 0 && !readStorage(seedKey, false)) {
+      setWorkoutPlans(buildDefaultWorkoutPlans())
+      writeStorage(seedKey, true)
+    }
+  }, [setWorkoutPlans, user.id, workoutPlans.length])
 
   const tabs = [
     { id: 'home', label: 'Home', icon: HomeIcon },
