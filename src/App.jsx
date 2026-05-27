@@ -37,9 +37,10 @@ function AppContent({ user, onLogout }) {
       && workoutPlans.some((plan) => plan.name === 'Scheda Giorno 2')
       && workoutPlans.some((plan) => plan.name === 'Scheda Giorno 3')
       && !workoutPlans.some((plan) => plan.name === 'Scheda base')
+    const hasOutdatedBase = workoutPlans.some((plan) => plan.name === 'Scheda base' && plan.version !== 'sheet-images-2026-05-27')
 
-    if (hasOldSplitBase) {
-      const customPlans = workoutPlans.filter((plan) => !['Scheda Giorno 1', 'Scheda Giorno 2', 'Scheda Giorno 3'].includes(plan.name))
+    if (hasOldSplitBase || hasOutdatedBase) {
+      const customPlans = workoutPlans.filter((plan) => !['Scheda Giorno 1', 'Scheda Giorno 2', 'Scheda Giorno 3', 'Scheda base'].includes(plan.name))
       setWorkoutPlans([...buildDefaultWorkoutPlans(), ...customPlans])
       writeStorage(seedKey, true)
       return
