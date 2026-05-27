@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronUp, Pencil, Save, Trash2, X } from 'lucide-react'
+import { ChevronDown, ChevronUp, Heart, Pencil, Save, Trash2, X } from 'lucide-react'
 import Button from '../components/Button'
 import Card from '../components/Card'
 import Input from '../components/Input'
@@ -27,6 +27,7 @@ export default function FoodDiary({ dailyLogs, setDailyLogs }) {
   const [form, setForm] = useState(emptyLog)
   const [openDays, setOpenDays] = useState([])
   const sortedLogs = sortByDateDesc(dailyLogs)
+  const progressLogs = [...dailyLogs].sort((a, b) => (a.date || '').localeCompare(b.date || '')).slice(-21)
 
   useEffect(() => {
     function handleEdit(event) {
@@ -84,6 +85,31 @@ export default function FoodDiary({ dailyLogs, setDailyLogs }) {
     return 'Da completare'
   }
 
+  function dayWentWell(log) {
+    const energy = Number(log.energy)
+    const bloating = Number(log.bloating)
+    const stress = Number(log.stress)
+    const hasNumericMood = Boolean(energy || bloating || stress)
+
+    if (foodRating(log) === 'Completa') return true
+    if (!hasNumericMood) return foodRating(log) === 'Buona'
+    return (energy >= 6 || !energy) && (bloating <= 5 || !bloating) && (stress <= 5 || !stress)
+  }
+
+  function moodLabel(log) {
+    const energy = Number(log.energy)
+    const bloating = Number(log.bloating)
+    const stress = Number(log.stress)
+
+    if (energy >= 7 && (!stress || stress <= 5) && (!bloating || bloating <= 5)) return 'Mi sono sentita bene'
+    if (energy && energy <= 4) return 'Energia bassa'
+    if (stress >= 7) return 'Stress alto'
+    if (bloating >= 7) return 'Gonfiore alto'
+    if (foodRating(log) === 'Completa') return 'Giornata completa'
+    if (foodRating(log) === 'Buona') return 'Giornata buona'
+    return 'Da completare'
+  }
+
   return (
     <div className="grid gap-5">
       <Card>
@@ -118,6 +144,45 @@ export default function FoodDiary({ dailyLogs, setDailyLogs }) {
             </Button>
           </div>
         </form>
+      </Card>
+
+      <Card>
+        <SectionTitle title="Andamento giornate" eyebrow={`${progressLogs.length} ultimi record`}>
+          Una vista veloce per vedere peso e sensazioni giorno dopo giorno.
+        </SectionTitle>
+
+        {progressLogs.length === 0 ? (
+          <p className="text-sm">Appena salvi una giornata, comparira qui il tuo percorso.</p>
+        ) : (
+          <div className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-2 lg:grid lg:grid-cols-3 lg:overflow-visible xl:grid-cols-4">
+            {progressLogs.map((log, index) => {
+              const wentWell = dayWentWell(log)
+              return (
+                <button
+                  type="button"
+                  key={log.id}
+                  onClick={() => editLog(log)}
+                  className="min-w-[210px] rounded-2xl border border-blush-border bg-white p-3 text-left shadow-soft transition hover:-translate-y-0.5 hover:border-accent lg:min-w-0"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className={`grid size-11 shrink-0 place-items-center rounded-2xl ${wentWell ? 'bg-sage text-title' : 'bg-blush text-title'}`}>
+                      <Heart size={20} className={wentWell ? 'fill-current' : ''} aria-hidden="true" />
+                    </span>
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-wide text-accent">Giornata {index + 1}</p>
+                      <p className="font-black text-title">{formatDate(log.date)}</p>
+                    </div>
+                  </div>
+                  <div className="mt-3 grid gap-1 text-sm">
+                    <p><strong>Peso:</strong> {log.weight ? `${log.weight} kg` : '-'}</p>
+                    <p><strong>Sensazione:</strong> {moodLabel(log)}</p>
+                    <p><strong>Energia:</strong> {log.energy || '-'} <span className="text-text">|</span> <strong>Stress:</strong> {log.stress || '-'}</p>
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+        )}
       </Card>
 
       <Card>
