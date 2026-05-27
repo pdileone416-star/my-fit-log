@@ -122,6 +122,9 @@ export default function Workout({ workoutSessions, setWorkoutSessions, workoutPl
   const [editingPlanId, setEditingPlanId] = useState(null)
   const [editingPlanExerciseId, setEditingPlanExerciseId] = useState(null)
   const [selectedPlanDays, setSelectedPlanDays] = useState({})
+  const [openPlanDetails, setOpenPlanDetails] = useState({})
+  const [inlinePlanExercise, setInlinePlanExercise] = useState(emptyPlanExercise)
+  const [inlinePlanEdit, setInlinePlanEdit] = useState(null)
 
   const sortedSessions = [...workoutSessions].sort((a, b) => (b.date || '').localeCompare(a.date || ''))
 
@@ -258,6 +261,79 @@ export default function Workout({ workoutSessions, setWorkoutSessions, workoutPl
     if (editingPlanId === id) {
       setPlanForm(emptyPlan)
       setEditingPlanId(null)
+    }
+    if (inlinePlanEdit?.planId === id) {
+      resetInlinePlanExercise()
+    }
+  }
+
+  function getSelectedPlanDay(plan) {
+    const days = getPlanDays(plan)
+    return days.find((day) => day.workoutDay === selectedPlanDays[plan.id]) || days[0]
+  }
+
+  function getPlanDetailKey(plan, day) {
+    return `${plan.id}-${day?.workoutDay || 'giorno'}`
+  }
+
+  function resetInlinePlanExercise() {
+    setInlinePlanExercise(emptyPlanExercise)
+    setInlinePlanEdit(null)
+  }
+
+  function togglePlanDetails(plan) {
+    const day = getSelectedPlanDay(plan)
+    const key = getPlanDetailKey(plan, day)
+    setOpenPlanDetails((details) => ({ ...details, [key]: !details[key] }))
+  }
+
+  function openInlinePlanExercise(plan, day, exercise = null) {
+    const workoutDay = normalizeWorkoutDay(day.workoutDay)
+    setOpenPlanDetails((details) => ({ ...details, [getPlanDetailKey(plan, day)]: true }))
+    setInlinePlanExercise(exercise ? { ...exercise, workoutDay } : { ...emptyPlanExercise, workoutDay })
+    setInlinePlanEdit({
+      planId: plan.id,
+      workoutDay,
+      exerciseId: exercise?.id || null,
+    })
+  }
+
+  function saveInlinePlanExercise(event) {
+    event.preventDefault()
+    if (!inlinePlanEdit || !inlinePlanExercise.exercise.trim()) return
+
+    const workoutDay = normalizeWorkoutDay(inlinePlanExercise.workoutDay)
+    const payload = {
+      id: inlinePlanEdit.exerciseId || createId(),
+      exercise: inlinePlanExercise.exercise,
+      plannedSetsReps: inlinePlanExercise.plannedSetsReps,
+      technicalNotes: inlinePlanExercise.technicalNotes,
+      personalNotes: inlinePlanExercise.personalNotes,
+      imageData: inlinePlanExercise.imageData,
+    }
+
+    setWorkoutPlans((plans) => plans.map((plan) => (
+      plan.id === inlinePlanEdit.planId
+        ? { ...plan, days: upsertPlanExercise(getPlanDays(plan), workoutDay, payload, inlinePlanEdit.exerciseId) }
+        : plan
+    )))
+    resetInlinePlanExercise()
+  }
+
+  function deleteInlinePlanExercise(planId, workoutDay, exerciseId) {
+    setWorkoutPlans((plans) => plans.map((plan) => {
+      if (plan.id !== planId) return plan
+      return {
+        ...plan,
+        days: getPlanDays(plan).map((day) => (
+          day.workoutDay === workoutDay
+            ? { ...day, exercises: (day.exercises || []).filter((exercise) => exercise.id !== exerciseId) }
+            : day
+        )),
+      }
+    }))
+    if (inlinePlanEdit?.planId === planId && inlinePlanEdit?.exerciseId === exerciseId) {
+      resetInlinePlanExercise()
     }
   }
 
@@ -486,34 +562,89 @@ export default function Workout({ workoutSessions, setWorkoutSessions, workoutPl
             <SectionTitle title="Schede salvate" eyebrow={`${workoutPlans.length} schede`} />
             <div className="grid gap-3">
               {workoutPlans.length === 0 ? <p className="text-sm">Non hai ancora schede salvate.</p> : null}
-              {workoutPlans.map((plan) => (
-                <article key={plan.id} className="rounded-2xl border border-blush-border bg-white p-3">
-                  <p className="font-bold text-title">{plan.name}</p>
-                  <p className="text-sm">
-                    {getPlanDays(plan).length} giorni - {getPlanDays(plan).reduce((sum, day) => sum + (day.exercises?.length || 0), 0)} esercizi
-                  </p>
-                  {plan.goal ? <p className="mt-1 text-sm">{plan.goal}</p> : null}
-                  <label className="mt-3 grid gap-1.5 text-sm font-semibold text-title">
-                    <span>Scegli giorno</span>
-                    <select
-                      className="min-h-11 rounded-xl border border-blush-border bg-pink-bg px-3 py-2 text-base font-normal text-text outline-none transition focus:border-accent focus:ring-4 focus:ring-blush"
-                      value={selectedPlanDays[plan.id] || getPlanDays(plan)[0]?.workoutDay || ''}
-                      onChange={(event) => setSelectedPlanDays((days) => ({ ...days, [plan.id]: event.target.value }))}
-                    >
-                      {getPlanDays(plan).map((day) => (
-                        <option key={day.id || day.workoutDay} value={day.workoutDay}>
-                          {day.workoutDay} - {(day.exercises || []).length} esercizi
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    <Button type="button" onClick={() => applyPlan(plan, selectedPlanDays[plan.id] || getPlanDays(plan)[0]?.workoutDay)}><CopyPlus size={16} />Usa giorno scelto</Button>
-                    <Button type="button" variant="ghost" onClick={() => editPlan(plan)}><Pencil size={16} />Modifica</Button>
-                    <Button type="button" variant="danger" onClick={() => deletePlan(plan.id)}><Trash2 size={16} />Elimina</Button>
-                  </div>
-                </article>
-              ))}
+              {workoutPlans.map((plan) => {
+                const selectedDay = getSelectedPlanDay(plan)
+                const detailKey = getPlanDetailKey(plan, selectedDay)
+                const detailsOpen = Boolean(openPlanDetails[detailKey])
+                const inlineFormOpen = inlinePlanEdit?.planId === plan.id && inlinePlanEdit?.workoutDay === selectedDay?.workoutDay
+
+                return (
+                  <article key={plan.id} className="rounded-2xl border border-blush-border bg-white p-3">
+                    <p className="font-bold text-title">{plan.name}</p>
+                    <p className="text-sm">
+                      {getPlanDays(plan).length} giorni - {getPlanDays(plan).reduce((sum, day) => sum + (day.exercises?.length || 0), 0)} esercizi
+                    </p>
+                    {plan.goal ? <p className="mt-1 text-sm">{plan.goal}</p> : null}
+                    <label className="mt-3 grid gap-1.5 text-sm font-semibold text-title">
+                      <span>Scegli giorno</span>
+                      <select
+                        className="min-h-11 rounded-xl border border-blush-border bg-pink-bg px-3 py-2 text-base font-normal text-text outline-none transition focus:border-accent focus:ring-4 focus:ring-blush"
+                        value={selectedPlanDays[plan.id] || getPlanDays(plan)[0]?.workoutDay || ''}
+                        onChange={(event) => setSelectedPlanDays((days) => ({ ...days, [plan.id]: event.target.value }))}
+                      >
+                        {getPlanDays(plan).map((day) => (
+                          <option key={day.id || day.workoutDay} value={day.workoutDay}>
+                            {day.workoutDay} - {(day.exercises || []).length} esercizi
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <Button type="button" onClick={() => applyPlan(plan, selectedPlanDays[plan.id] || getPlanDays(plan)[0]?.workoutDay)}><CopyPlus size={16} />Usa giorno scelto</Button>
+                      <Button type="button" variant="secondary" onClick={() => togglePlanDetails(plan)}>
+                        {detailsOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                        {detailsOpen ? 'Chiudi esercizi' : 'Apri esercizi'}
+                      </Button>
+                      <Button type="button" variant="ghost" onClick={() => editPlan(plan)}><Pencil size={16} />Modifica scheda</Button>
+                      <Button type="button" variant="danger" onClick={() => deletePlan(plan.id)}><Trash2 size={16} />Elimina</Button>
+                    </div>
+
+                    {detailsOpen && selectedDay ? (
+                      <div className="mt-4 grid gap-3 rounded-2xl border border-blush-border bg-pink-bg p-3">
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                          <div>
+                            <p className="text-sm font-bold text-accent">{selectedDay.workoutDay}</p>
+                            <p className="text-sm">{(selectedDay.exercises || []).length} esercizi salvati</p>
+                          </div>
+                          <Button type="button" onClick={() => openInlinePlanExercise(plan, selectedDay)}><Plus size={16} />Aggiungi esercizio</Button>
+                        </div>
+
+                        {inlineFormOpen ? (
+                          <form onSubmit={saveInlinePlanExercise} className="grid gap-3 rounded-2xl border border-blush-border bg-white p-3">
+                            <Input label="Giorno della scheda" value={inlinePlanExercise.workoutDay} onChange={(event) => setInlinePlanExercise((exercise) => ({ ...exercise, workoutDay: event.target.value }))} required />
+                            <Input label="Esercizio" value={inlinePlanExercise.exercise} onChange={(event) => setInlinePlanExercise((exercise) => ({ ...exercise, exercise: event.target.value }))} required />
+                            <Input label="Serie x rip previste" value={inlinePlanExercise.plannedSetsReps} onChange={(event) => setInlinePlanExercise((exercise) => ({ ...exercise, plannedSetsReps: event.target.value }))} />
+                            <Textarea label="Note tecniche" value={inlinePlanExercise.technicalNotes} onChange={(event) => setInlinePlanExercise((exercise) => ({ ...exercise, technicalNotes: event.target.value }))} />
+                            <Textarea label="Note personali" value={inlinePlanExercise.personalNotes} onChange={(event) => setInlinePlanExercise((exercise) => ({ ...exercise, personalNotes: event.target.value }))} />
+                            <ImageField label="Immagine esercizio" value={inlinePlanExercise.imageData} onChange={(imageData) => setInlinePlanExercise((exercise) => ({ ...exercise, imageData }))} />
+                            <div className="flex flex-wrap gap-2">
+                              <Button type="submit"><Save size={16} />{inlinePlanEdit.exerciseId ? 'Aggiorna esercizio' : 'Salva esercizio'}</Button>
+                              <Button type="button" variant="ghost" onClick={resetInlinePlanExercise}><X size={16} />Annulla</Button>
+                            </div>
+                          </form>
+                        ) : null}
+
+                        <div className="grid gap-2">
+                          {(selectedDay.exercises || []).length === 0 ? <p className="text-sm">Nessun esercizio in questo giorno.</p> : null}
+                          {(selectedDay.exercises || []).map((exercise) => (
+                            <article key={exercise.id} className="rounded-xl border border-blush-border bg-white p-3">
+                              <p className="font-bold text-title">{exercise.exercise}</p>
+                              <p className="text-sm">{exercise.plannedSetsReps || 'Serie non indicate'}</p>
+                              {exercise.technicalNotes ? <p className="mt-1 text-sm">Tecnica: {exercise.technicalNotes}</p> : null}
+                              {exercise.personalNotes ? <p className="mt-1 text-sm">Note: {exercise.personalNotes}</p> : null}
+                              {exercise.imageData ? <img src={exercise.imageData} alt="" className="mt-2 max-h-40 w-full rounded-xl border border-blush-border object-contain bg-pink-bg p-2" /> : null}
+                              <div className="mt-3 flex flex-wrap gap-2">
+                                <Button type="button" variant="ghost" onClick={() => openInlinePlanExercise(plan, selectedDay, exercise)}><Pencil size={16} />Modifica</Button>
+                                <Button type="button" variant="danger" onClick={() => deleteInlinePlanExercise(plan.id, selectedDay.workoutDay, exercise.id)}><Trash2 size={16} />Elimina</Button>
+                              </div>
+                            </article>
+                          ))}
+                        </div>
+                      </div>
+                    ) : null}
+                  </article>
+                )
+              })}
             </div>
           </Card>
         </div>
