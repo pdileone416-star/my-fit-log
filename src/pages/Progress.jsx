@@ -52,7 +52,7 @@ export default function Progress({ dailyLogs, workoutSessions }) {
               <div className="flex items-start gap-3">
                 <div className="grid size-20 shrink-0 place-items-center overflow-hidden rounded-2xl border border-blush-border bg-pink-bg text-accent">
                   {log.bodyPhoto ? (
-                    <img src={log.bodyPhoto} alt="" className="h-full w-full object-cover" />
+                    <img src={log.bodyPhoto} alt="" className="h-full w-full object-cover" onError={(event) => { event.currentTarget.style.display = 'none' }} />
                   ) : (
                     <Camera size={22} aria-hidden="true" />
                   )}
@@ -84,7 +84,7 @@ export default function Progress({ dailyLogs, workoutSessions }) {
                   <td>{log.date}</td>
                   <td>
                     {log.bodyPhoto ? (
-                      <img src={log.bodyPhoto} alt="" className="h-16 w-16 rounded-xl border border-blush-border object-cover" />
+                      <img src={log.bodyPhoto} alt="" className="h-16 w-16 rounded-xl border border-blush-border object-cover" onError={(event) => { event.currentTarget.style.display = 'none' }} />
                     ) : '-'}
                   </td>
                   <td>{log.weight ? `${log.weight} kg` : '-'}</td>

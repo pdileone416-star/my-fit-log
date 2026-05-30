@@ -28,32 +28,79 @@ const emptyLog = {
   bodyPhoto: '',
 }
 
+function compressPhoto(file) {
+  return new Promise((resolve, reject) => {
+    const imageUrl = URL.createObjectURL(file)
+    const image = new Image()
+
+    image.onload = () => {
+      const maxSide = 1200
+      const scale = Math.min(1, maxSide / Math.max(image.naturalWidth, image.naturalHeight))
+      const canvas = document.createElement('canvas')
+      canvas.width = Math.max(1, Math.round(image.naturalWidth * scale))
+      canvas.height = Math.max(1, Math.round(image.naturalHeight * scale))
+
+      const context = canvas.getContext('2d')
+      context.fillStyle = '#FFFDFB'
+      context.fillRect(0, 0, canvas.width, canvas.height)
+      context.drawImage(image, 0, 0, canvas.width, canvas.height)
+      URL.revokeObjectURL(imageUrl)
+      resolve(canvas.toDataURL('image/jpeg', 0.78))
+    }
+
+    image.onerror = () => {
+      URL.revokeObjectURL(imageUrl)
+      reject(new Error('Formato immagine non leggibile.'))
+    }
+
+    image.src = imageUrl
+  })
+}
+
 function PhotoField({ label, value, onChange }) {
-  function handleFile(event) {
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  async function handleFile(event) {
     const file = event.target.files?.[0]
     if (!file) return
 
-    const reader = new FileReader()
-    reader.onload = () => onChange(String(reader.result || ''))
-    reader.readAsDataURL(file)
+    setLoading(true)
+    setError('')
+
+    try {
+      const compressed = await compressPhoto(file)
+      onChange(compressed)
+    } catch {
+      setError('Questa foto non si riesce a leggere. Prova uno screenshot o una foto JPG/PNG.')
+    } finally {
+      setLoading(false)
+      event.target.value = ''
+    }
   }
 
   return (
     <div className="grid gap-2 text-sm font-semibold text-title">
       <span>{label}</span>
       {value ? (
-        <img src={value} alt="" className="max-h-48 w-full rounded-2xl border border-blush-border bg-white object-cover" />
+        <img
+          src={value}
+          alt=""
+          className="max-h-48 w-full rounded-2xl border border-blush-border bg-white object-cover"
+          onError={() => setError('Foto salvata male: rimuovila e caricala di nuovo.')}
+        />
       ) : null}
       <div className="flex flex-wrap gap-2">
         <label className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl bg-blush px-4 py-2 text-sm font-semibold text-title transition hover:bg-sage">
           <ImagePlus size={16} aria-hidden="true" />
-          Aggiungi foto
+          {loading ? 'Carico...' : 'Aggiungi foto'}
           <input type="file" accept="image/*" className="sr-only" onChange={handleFile} />
         </label>
         {value ? (
           <Button type="button" variant="ghost" onClick={() => onChange('')}>Rimuovi</Button>
         ) : null}
       </div>
+      {error ? <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700">{error}</p> : null}
     </div>
   )
 }
@@ -264,7 +311,7 @@ export default function FoodDiary({ dailyLogs, setDailyLogs }) {
                           ['Corpo', log.bodyPhoto],
                         ].filter(([, photo]) => photo).map(([label, photo]) => (
                           <figure key={label} className="rounded-xl border border-blush-border bg-white p-2">
-                            <img src={photo} alt="" className="h-28 w-full rounded-lg object-cover" />
+                            <img src={photo} alt="" className="h-28 w-full rounded-lg object-cover" onError={(event) => { event.currentTarget.style.display = 'none' }} />
                             <figcaption className="mt-1 text-xs font-bold text-title">{label}</figcaption>
                           </figure>
                         ))}
