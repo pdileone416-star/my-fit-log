@@ -117,6 +117,7 @@ export default function Workout({ workoutSessions, setWorkoutSessions, workoutPl
   const [activeExerciseSessionId, setActiveExerciseSessionId] = useState(null)
   const [exerciseForm, setExerciseForm] = useState(emptyExercise)
   const [editingExerciseId, setEditingExerciseId] = useState(null)
+  const [showPlanForm, setShowPlanForm] = useState(false)
   const [planForm, setPlanForm] = useState(emptyPlan)
   const [planExercise, setPlanExercise] = useState(emptyPlanExercise)
   const [editingPlanId, setEditingPlanId] = useState(null)
@@ -249,6 +250,7 @@ export default function Workout({ workoutSessions, setWorkoutSessions, workoutPl
     setPlanForm(emptyPlan)
     setEditingPlanId(null)
     resetPlanExercise()
+    setShowPlanForm(false)
   }
 
   function savePlan(event) {
@@ -261,6 +263,7 @@ export default function Workout({ workoutSessions, setWorkoutSessions, workoutPl
   function editPlan(plan) {
     setPlanForm({ id: plan.id, name: plan.name, goal: plan.goal || '', days: getPlanDays(plan) })
     setEditingPlanId(plan.id)
+    setShowPlanForm(true)
     setMode('plans')
   }
 
@@ -269,6 +272,7 @@ export default function Workout({ workoutSessions, setWorkoutSessions, workoutPl
     if (editingPlanId === id) {
       setPlanForm(emptyPlan)
       setEditingPlanId(null)
+      setShowPlanForm(false)
     }
     if (inlinePlanEdit?.planId === id) {
       resetInlinePlanExercise()
@@ -511,12 +515,28 @@ export default function Workout({ workoutSessions, setWorkoutSessions, workoutPl
           })}
         </div>
       ) : (
-        <div className="grid gap-5 lg:grid-cols-[1fr_1fr]">
+        <div className="grid gap-5">
           <Card>
-            <SectionTitle title="Schede allenamento" eyebrow="workoutPlans">
-              Crea schede libere con uno o piu giorni, poi scegli il giorno quando le usi.
-            </SectionTitle>
-            <form onSubmit={savePlan} className="grid gap-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <SectionTitle title="Schede allenamento" eyebrow="workoutPlans">
+                Vedi prima le schede salvate. Apri il form solo quando vuoi creare o modificare una scheda.
+              </SectionTitle>
+              <Button type="button" onClick={() => {
+                setPlanForm(emptyPlan)
+                setEditingPlanId(null)
+                resetPlanExercise()
+                setShowPlanForm(true)
+              }}>
+                <Plus size={18} />
+                Nuova scheda
+              </Button>
+            </div>
+          </Card>
+
+          {showPlanForm ? (
+            <Card>
+              <SectionTitle title={editingPlanId ? 'Modifica scheda' : 'Nuova scheda'} eyebrow="scheda" />
+              <form onSubmit={savePlan} className="grid gap-4">
               <Input label="Nome scheda" value={planForm.name} onChange={(event) => setPlanForm((plan) => ({ ...plan, name: event.target.value }))} required />
               <Textarea label="Obiettivo generale scheda" value={planForm.goal} onChange={(event) => setPlanForm((plan) => ({ ...plan, goal: event.target.value }))} />
 
@@ -569,8 +589,9 @@ export default function Workout({ workoutSessions, setWorkoutSessions, workoutPl
                 <Button type="submit"><Save size={18} />{editingPlanId ? 'Aggiorna scheda' : 'Crea nuova scheda'}</Button>
                 <Button type="button" variant="ghost" className="border border-blush-border" onClick={resetPlanForm}><X size={18} />Annulla</Button>
               </div>
-            </form>
-          </Card>
+              </form>
+            </Card>
+          ) : null}
 
           <Card>
             <SectionTitle title="Schede salvate" eyebrow={`${workoutPlans.length} schede`} />

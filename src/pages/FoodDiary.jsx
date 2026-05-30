@@ -242,6 +242,13 @@ export default function FoodDiary({ dailyLogs, setDailyLogs }) {
     setOpenDays((days) => days.includes(log.id) ? days : [...days, log.id])
   }
 
+  function openLogDetail(log) {
+    if (editingLogId === log.id) {
+      cancelInlineEdit()
+    }
+    setOpenDays((days) => days.includes(log.id) ? days : [...days, log.id])
+  }
+
   function updateInline(field, value) {
     setInlineForm((current) => ({ ...current, [field]: value }))
   }
@@ -359,7 +366,7 @@ export default function FoodDiary({ dailyLogs, setDailyLogs }) {
                 <button
                   type="button"
                   key={log.id}
-                  onClick={() => editLog(log)}
+                  onClick={() => openLogDetail(log)}
                   className="min-w-[210px] rounded-2xl border border-blush-border bg-white p-3 text-left shadow-soft transition hover:-translate-y-0.5 hover:border-accent lg:min-w-0"
                 >
                   <div className="flex items-center gap-3">
