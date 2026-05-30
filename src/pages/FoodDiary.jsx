@@ -5,7 +5,7 @@ import Input from '../components/Input'
 import SectionTitle from '../components/SectionTitle'
 import Textarea from '../components/Textarea'
 import { createId, formatDate, sortByDateDesc, todayISO } from '../utils/storage'
-import { useEffect, useState } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 
 const emptyLog = {
   date: todayISO(),
@@ -105,15 +105,69 @@ function PhotoField({ label, value, onChange }) {
   )
 }
 
+function hasDailyContent(log) {
+  return [
+    'weight',
+    'breakfast',
+    'breakfastPhoto',
+    'lunch',
+    'lunchPhoto',
+    'snack',
+    'snackPhoto',
+    'dinner',
+    'dinnerPhoto',
+    'supplements',
+    'water',
+    'energy',
+    'bloating',
+    'stress',
+    'cycle',
+    'notes',
+    'bodyPhoto',
+  ].some((key) => String(log[key] || '').trim())
+}
+
+function DiaryFields({ value, onUpdate, onDateChange }) {
+  return (
+    <>
+      <div className="grid gap-4 md:grid-cols-2">
+        <Input label="Data" type="date" value={value.date} onChange={(event) => onDateChange(event.target.value)} required />
+        <Input label="Peso kg" type="number" step="0.1" value={value.weight || ''} onChange={(event) => onUpdate('weight', event.target.value)} />
+        <Textarea label="Colazione" value={value.breakfast || ''} onChange={(event) => onUpdate('breakfast', event.target.value)} />
+        <PhotoField label="Foto colazione" value={value.breakfastPhoto || ''} onChange={(photo) => onUpdate('breakfastPhoto', photo)} />
+        <Textarea label="Pranzo" value={value.lunch || ''} onChange={(event) => onUpdate('lunch', event.target.value)} />
+        <PhotoField label="Foto pranzo" value={value.lunchPhoto || ''} onChange={(photo) => onUpdate('lunchPhoto', photo)} />
+        <Textarea label="Merenda" value={value.snack || ''} onChange={(event) => onUpdate('snack', event.target.value)} />
+        <PhotoField label="Foto merenda" value={value.snackPhoto || ''} onChange={(photo) => onUpdate('snackPhoto', photo)} />
+        <Textarea label="Cena" value={value.dinner || ''} onChange={(event) => onUpdate('dinner', event.target.value)} />
+        <PhotoField label="Foto cena" value={value.dinnerPhoto || ''} onChange={(photo) => onUpdate('dinnerPhoto', photo)} />
+        <Input label="Integratori / applicazioni" value={value.supplements || ''} onChange={(event) => onUpdate('supplements', event.target.value)} />
+        <Input label="Acqua" placeholder="Es. 2 litri" value={value.water || ''} onChange={(event) => onUpdate('water', event.target.value)} />
+        <Input label="Energia" placeholder="1-10 o testo libero" value={value.energy || ''} onChange={(event) => onUpdate('energy', event.target.value)} />
+        <Input label="Gonfiore" placeholder="1-10 o testo libero" value={value.bloating || ''} onChange={(event) => onUpdate('bloating', event.target.value)} />
+        <Input label="Stress" placeholder="1-10 o testo libero" value={value.stress || ''} onChange={(event) => onUpdate('stress', event.target.value)} />
+        <Input label="Ciclo / ritenzione" value={value.cycle || ''} onChange={(event) => onUpdate('cycle', event.target.value)} />
+      </div>
+      <PhotoField label="Foto corpo / progressi" value={value.bodyPhoto || ''} onChange={(photo) => onUpdate('bodyPhoto', photo)} />
+      <Textarea label="Note generali" rows={4} value={value.notes || ''} onChange={(event) => onUpdate('notes', event.target.value)} />
+    </>
+  )
+}
+
 export default function FoodDiary({ dailyLogs, setDailyLogs }) {
   const [form, setForm] = useState(emptyLog)
+  const [inlineForm, setInlineForm] = useState(emptyLog)
+  const [editingLogId, setEditingLogId] = useState(null)
   const [openDays, setOpenDays] = useState([])
   const sortedLogs = sortByDateDesc(dailyLogs)
   const progressLogs = [...dailyLogs].sort((a, b) => (a.date || '').localeCompare(b.date || '')).slice(-21)
 
   useEffect(() => {
     function handleEdit(event) {
-      setForm(event.detail)
+      const log = event.detail
+      setInlineForm({ ...emptyLog, ...log })
+      setEditingLogId(log.id)
+      setOpenDays((days) => days.includes(log.id) ? days : [...days, log.id])
     }
 
     window.addEventListener('my-fit-log-edit-daily', handleEdit)
@@ -126,9 +180,10 @@ export default function FoodDiary({ dailyLogs, setDailyLogs }) {
 
   function saveLog(event) {
     event.preventDefault()
+    if (!hasDailyContent(form)) return
     const payload = { ...form, id: dailyLogs.find((log) => log.date === form.date)?.id || createId() }
     setDailyLogs((logs) => [payload, ...logs.filter((log) => log.date !== form.date)])
-    setForm({ ...emptyLog, date: form.date })
+    setForm(emptyLog)
   }
 
   function resetForm() {
@@ -141,12 +196,35 @@ export default function FoodDiary({ dailyLogs, setDailyLogs }) {
   }
 
   function editLog(log) {
-    setForm(log)
+    setInlineForm({ ...emptyLog, ...log })
+    setEditingLogId(log.id)
     setOpenDays((days) => days.includes(log.id) ? days : [...days, log.id])
+  }
+
+  function updateInline(field, value) {
+    setInlineForm((current) => ({ ...current, [field]: value }))
+  }
+
+  function cancelInlineEdit() {
+    setInlineForm(emptyLog)
+    setEditingLogId(null)
+  }
+
+  function saveInlineLog(event) {
+    event.preventDefault()
+    if (!editingLogId || !hasDailyContent(inlineForm)) return
+
+    const payload = { ...inlineForm, id: editingLogId }
+    setDailyLogs((logs) => [payload, ...logs.filter((log) => log.id !== editingLogId && log.date !== payload.date)])
+    setOpenDays((days) => days.filter((dayId) => dayId !== editingLogId))
+    cancelInlineEdit()
   }
 
   function deleteLog(id) {
     setDailyLogs((logs) => logs.filter((log) => log.id !== id))
+    if (editingLogId === id) {
+      cancelInlineEdit()
+    }
   }
 
   function toggleDay(id) {
@@ -200,28 +278,9 @@ export default function FoodDiary({ dailyLogs, setDailyLogs }) {
         </SectionTitle>
 
         <form onSubmit={saveLog} className="grid gap-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            <Input label="Data" type="date" value={form.date} onChange={(e) => loadByDate(e.target.value)} required />
-            <Input label="Peso kg" type="number" step="0.1" value={form.weight} onChange={(e) => update('weight', e.target.value)} />
-            <Textarea label="Colazione" value={form.breakfast} onChange={(e) => update('breakfast', e.target.value)} />
-            <PhotoField label="Foto colazione" value={form.breakfastPhoto || ''} onChange={(value) => update('breakfastPhoto', value)} />
-            <Textarea label="Pranzo" value={form.lunch} onChange={(e) => update('lunch', e.target.value)} />
-            <PhotoField label="Foto pranzo" value={form.lunchPhoto || ''} onChange={(value) => update('lunchPhoto', value)} />
-            <Textarea label="Merenda" value={form.snack} onChange={(e) => update('snack', e.target.value)} />
-            <PhotoField label="Foto merenda" value={form.snackPhoto || ''} onChange={(value) => update('snackPhoto', value)} />
-            <Textarea label="Cena" value={form.dinner} onChange={(e) => update('dinner', e.target.value)} />
-            <PhotoField label="Foto cena" value={form.dinnerPhoto || ''} onChange={(value) => update('dinnerPhoto', value)} />
-            <Input label="Integratori / applicazioni" value={form.supplements} onChange={(e) => update('supplements', e.target.value)} />
-            <Input label="Acqua" placeholder="Es. 2 litri" value={form.water} onChange={(e) => update('water', e.target.value)} />
-            <Input label="Energia" placeholder="1-10 o testo libero" value={form.energy} onChange={(e) => update('energy', e.target.value)} />
-            <Input label="Gonfiore" placeholder="1-10 o testo libero" value={form.bloating} onChange={(e) => update('bloating', e.target.value)} />
-            <Input label="Stress" placeholder="1-10 o testo libero" value={form.stress} onChange={(e) => update('stress', e.target.value)} />
-            <Input label="Ciclo / ritenzione" value={form.cycle} onChange={(e) => update('cycle', e.target.value)} />
-          </div>
-          <PhotoField label="Foto corpo / progressi" value={form.bodyPhoto || ''} onChange={(value) => update('bodyPhoto', value)} />
-          <Textarea label="Note generali" rows={4} value={form.notes} onChange={(e) => update('notes', e.target.value)} />
+          <DiaryFields value={form} onUpdate={update} onDateChange={loadByDate} />
           <div className="flex flex-wrap gap-2">
-            <Button type="submit" className="w-full md:w-auto">
+            <Button type="submit" className="w-full md:w-auto" disabled={!hasDailyContent(form)}>
               <Save size={18} aria-hidden="true" />
               Salva giornata
             </Button>
@@ -281,6 +340,7 @@ export default function FoodDiary({ dailyLogs, setDailyLogs }) {
           {sortedLogs.length === 0 ? <p className="text-sm">Nessuna giornata salvata.</p> : null}
           {sortedLogs.map((log) => {
             const isOpen = openDays.includes(log.id)
+            const isEditing = editingLogId === log.id
             return (
               <article key={log.id} className="rounded-2xl border border-blush-border bg-white p-3">
                 <div className="flex items-start justify-between gap-3">
@@ -294,7 +354,19 @@ export default function FoodDiary({ dailyLogs, setDailyLogs }) {
                   </span>
                 </div>
 
-                {isOpen ? (
+                {isEditing ? (
+                  <form onSubmit={saveInlineLog} className="mt-3 grid gap-4 rounded-xl bg-pink-bg p-3">
+                    <DiaryFields
+                      value={inlineForm}
+                      onUpdate={updateInline}
+                      onDateChange={(date) => updateInline('date', date)}
+                    />
+                    <div className="flex flex-wrap gap-2">
+                      <Button type="submit" disabled={!hasDailyContent(inlineForm)}><Save size={16} />Aggiorna giornata</Button>
+                      <Button type="button" variant="ghost" className="border border-blush-border" onClick={cancelInlineEdit}><X size={16} />Annulla</Button>
+                    </div>
+                  </form>
+                ) : isOpen ? (
                   <div className="mt-3 grid gap-2 rounded-xl bg-pink-bg p-3 text-sm">
                     <p><strong>Colazione:</strong> {log.breakfast || '-'}</p>
                     <p><strong>Pranzo:</strong> {log.lunch || '-'}</p>
@@ -323,11 +395,11 @@ export default function FoodDiary({ dailyLogs, setDailyLogs }) {
                 ) : null}
 
                 <div className="mt-3 flex flex-wrap gap-2">
-                  <Button type="button" variant="secondary" onClick={() => toggleDay(log.id)}>
+                  <Button type="button" variant="secondary" onClick={() => toggleDay(log.id)} disabled={isEditing}>
                     {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                     {isOpen ? 'Chiudi' : 'Apri'}
                   </Button>
-                  <Button type="button" variant="ghost" onClick={() => editLog(log)}><Pencil size={16} />Modifica</Button>
+                  <Button type="button" variant="ghost" onClick={() => editLog(log)} disabled={isEditing}><Pencil size={16} />Modifica</Button>
                   <Button type="button" variant="danger" onClick={() => deleteLog(log.id)}><Trash2 size={16} />Elimina</Button>
                 </div>
               </article>
@@ -352,21 +424,40 @@ export default function FoodDiary({ dailyLogs, setDailyLogs }) {
               </thead>
               <tbody>
                 {sortedLogs.map((log) => (
-                  <tr key={log.id}>
-                    <td>{log.date}</td>
-                    <td>{log.weight || '-'}</td>
-                    <td>{mealCount(log)}/4</td>
-                    <td>{log.water || '-'}</td>
-                    <td>E {log.energy || '-'} / G {log.bloating || '-'} / S {log.stress || '-'}</td>
-                    <td>{foodRating(log)}</td>
-                    <td>{log.notes || '-'}</td>
-                    <td>
-                      <div className="flex gap-2">
-                        <Button type="button" variant="ghost" onClick={() => editLog(log)}><Pencil size={16} />Modifica</Button>
-                        <Button type="button" variant="danger" onClick={() => deleteLog(log.id)}><Trash2 size={16} />Elimina</Button>
-                      </div>
-                    </td>
-                  </tr>
+                  <Fragment key={log.id}>
+                    <tr>
+                      <td>{log.date}</td>
+                      <td>{log.weight || '-'}</td>
+                      <td>{mealCount(log)}/4</td>
+                      <td>{log.water || '-'}</td>
+                      <td>E {log.energy || '-'} / G {log.bloating || '-'} / S {log.stress || '-'}</td>
+                      <td>{foodRating(log)}</td>
+                      <td>{log.notes || '-'}</td>
+                      <td>
+                        <div className="flex gap-2">
+                          <Button type="button" variant="ghost" onClick={() => editLog(log)} disabled={editingLogId === log.id}><Pencil size={16} />Modifica</Button>
+                          <Button type="button" variant="danger" onClick={() => deleteLog(log.id)}><Trash2 size={16} />Elimina</Button>
+                        </div>
+                      </td>
+                    </tr>
+                    {editingLogId === log.id ? (
+                      <tr>
+                        <td colSpan="8">
+                          <form onSubmit={saveInlineLog} className="grid gap-4 rounded-xl bg-pink-bg p-3">
+                            <DiaryFields
+                              value={inlineForm}
+                              onUpdate={updateInline}
+                              onDateChange={(date) => updateInline('date', date)}
+                            />
+                            <div className="flex flex-wrap gap-2">
+                              <Button type="submit" disabled={!hasDailyContent(inlineForm)}><Save size={16} />Aggiorna giornata</Button>
+                              <Button type="button" variant="ghost" className="border border-blush-border" onClick={cancelInlineEdit}><X size={16} />Annulla</Button>
+                            </div>
+                          </form>
+                        </td>
+                      </tr>
+                    ) : null}
+                  </Fragment>
                 ))}
                 {sortedLogs.length === 0 ? <tr><td colSpan="8">Nessuna giornata salvata.</td></tr> : null}
               </tbody>
