@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronUp, Heart, ImagePlus, Pencil, Save, Trash2, X } from 'lucide-react'
+import { ChevronDown, ChevronUp, Heart, ImagePlus, Pencil, Plus, Save, Trash2, X } from 'lucide-react'
 import Button from '../components/Button'
 import Card from '../components/Card'
 import Input from '../components/Input'
@@ -193,6 +193,7 @@ function DiaryFields({ value, onUpdate, onDateChange }) {
 
 export default function FoodDiary({ dailyLogs, setDailyLogs }) {
   const [form, setForm] = useState(emptyLog)
+  const [showCreateForm, setShowCreateForm] = useState(false)
   const [inlineForm, setInlineForm] = useState(emptyLog)
   const [editingLogId, setEditingLogId] = useState(null)
   const [openDays, setOpenDays] = useState([])
@@ -222,10 +223,12 @@ export default function FoodDiary({ dailyLogs, setDailyLogs }) {
     const payload = { ...form, id: dailyLogs.find((log) => log.date === form.date)?.id || createId() }
     setDailyLogs((logs) => [payload, ...logs.filter((log) => log.date !== form.date)])
     setForm(emptyLog)
+    setShowCreateForm(false)
   }
 
   function resetForm() {
     setForm(emptyLog)
+    setShowCreateForm(false)
   }
 
   function loadByDate(date) {
@@ -311,23 +314,34 @@ export default function FoodDiary({ dailyLogs, setDailyLogs }) {
   return (
     <div className="grid gap-5">
       <Card>
-        <SectionTitle title="Diario alimentare" eyebrow="giornata">
-          Salva peso, pasti, acqua e sensazioni. Se esiste gia una giornata con la stessa data, viene aggiornata.
-        </SectionTitle>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <SectionTitle title="Diario alimentare" eyebrow="giornata">
+            Controlla andamento e giornate salvate. Apri il form solo quando vuoi registrare una nuova giornata.
+          </SectionTitle>
+          <Button type="button" onClick={() => {
+            setForm(emptyLog)
+            setShowCreateForm(true)
+          }}>
+            <Plus size={18} aria-hidden="true" />
+            Nuova giornata
+          </Button>
+        </div>
 
-        <form onSubmit={saveLog} className="grid gap-4">
-          <DiaryFields value={form} onUpdate={update} onDateChange={loadByDate} />
-          <div className="flex flex-wrap gap-2">
-            <Button type="submit" className="w-full md:w-auto" disabled={!hasDailyContent(form)}>
-              <Save size={18} aria-hidden="true" />
-              Salva giornata
-            </Button>
-            <Button type="button" variant="ghost" className="w-full border border-blush-border md:w-auto" onClick={resetForm}>
-              <X size={18} aria-hidden="true" />
-              Annulla
-            </Button>
-          </div>
-        </form>
+        {showCreateForm ? (
+          <form onSubmit={saveLog} className="mt-4 grid gap-4 rounded-2xl border border-blush-border bg-pink-bg p-3">
+            <DiaryFields value={form} onUpdate={update} onDateChange={loadByDate} />
+            <div className="flex flex-wrap gap-2">
+              <Button type="submit" className="w-full md:w-auto" disabled={!hasDailyContent(form)}>
+                <Save size={18} aria-hidden="true" />
+                Salva giornata
+              </Button>
+              <Button type="button" variant="ghost" className="w-full border border-blush-border md:w-auto" onClick={resetForm}>
+                <X size={18} aria-hidden="true" />
+                Annulla
+              </Button>
+            </div>
+          </form>
+        ) : null}
       </Card>
 
       <Card>
