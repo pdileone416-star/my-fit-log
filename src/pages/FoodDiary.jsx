@@ -28,9 +28,28 @@ const emptyLog = {
   bodyPhoto: '',
 }
 
-function compressPhoto(file) {
+async function preparePhotoFile(file) {
+  const isHeic = file.type === 'image/heic'
+    || file.type === 'image/heif'
+    || /\.(heic|heif)$/i.test(file.name)
+
+  if (!isHeic) return file
+
+  const { default: heic2any } = await import('heic2any')
+  const converted = await heic2any({
+    blob: file,
+    toType: 'image/jpeg',
+    quality: 0.82,
+  })
+
+  return Array.isArray(converted) ? converted[0] : converted
+}
+
+async function compressPhoto(file) {
+  const readableFile = await preparePhotoFile(file)
+
   return new Promise((resolve, reject) => {
-    const imageUrl = URL.createObjectURL(file)
+    const imageUrl = URL.createObjectURL(readableFile)
     const image = new Image()
 
     image.onload = () => {
@@ -72,7 +91,7 @@ function PhotoField({ label, value, onChange }) {
       const compressed = await compressPhoto(file)
       onChange(compressed)
     } catch {
-      setError('Questa foto non si riesce a leggere. Prova uno screenshot o una foto JPG/PNG.')
+      setError('Questa foto non si riesce a leggere. Prova a convertirla in JPG oppure fai uno screenshot.')
     } finally {
       setLoading(false)
       event.target.value = ''
