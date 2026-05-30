@@ -1,4 +1,6 @@
 import { Activity, Camera, Droplets, LineChart, Scale } from 'lucide-react'
+import { useState } from 'react'
+import Button from '../components/Button'
 import Card from '../components/Card'
 import SectionTitle from '../components/SectionTitle'
 import { sortByDateDesc } from '../utils/storage'
@@ -19,7 +21,22 @@ function MiniStat({ icon: Icon, label, value }) {
   )
 }
 
+function PhotoModal({ photo, onClose }) {
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-title/80 p-4" role="dialog" aria-modal="true">
+      <div className="grid max-h-[92vh] w-full max-w-3xl gap-3 rounded-3xl bg-warm-white p-3 shadow-soft">
+        <div className="flex items-center justify-between gap-3">
+          <p className="font-bold text-title">{photo.label}</p>
+          <Button type="button" variant="ghost" onClick={onClose}>Chiudi</Button>
+        </div>
+        <img src={photo.src} alt="" className="max-h-[78vh] w-full rounded-2xl object-contain" />
+      </div>
+    </div>
+  )
+}
+
 export default function Progress({ dailyLogs, workoutSessions }) {
+  const [previewPhoto, setPreviewPhoto] = useState(null)
   const sortedLogs = sortByDateDesc(dailyLogs)
   const weights = sortedLogs.filter((log) => log.weight)
   const latestWeight = weights[0]?.weight || '-'
@@ -52,7 +69,9 @@ export default function Progress({ dailyLogs, workoutSessions }) {
               <div className="flex items-start gap-3">
                 <div className="grid size-20 shrink-0 place-items-center overflow-hidden rounded-2xl border border-blush-border bg-pink-bg text-accent">
                   {log.bodyPhoto ? (
-                    <img src={log.bodyPhoto} alt="" className="h-full w-full object-cover" onError={(event) => { event.currentTarget.style.display = 'none' }} />
+                    <button type="button" className="h-full w-full" onClick={() => setPreviewPhoto({ src: log.bodyPhoto, label: `Foto corpo - ${log.date}` })}>
+                      <img src={log.bodyPhoto} alt="" className="h-full w-full object-contain" onError={(event) => { event.currentTarget.style.display = 'none' }} />
+                    </button>
                   ) : (
                     <Camera size={22} aria-hidden="true" />
                   )}
@@ -84,7 +103,9 @@ export default function Progress({ dailyLogs, workoutSessions }) {
                   <td>{log.date}</td>
                   <td>
                     {log.bodyPhoto ? (
-                      <img src={log.bodyPhoto} alt="" className="h-16 w-16 rounded-xl border border-blush-border object-cover" onError={(event) => { event.currentTarget.style.display = 'none' }} />
+                      <button type="button" onClick={() => setPreviewPhoto({ src: log.bodyPhoto, label: `Foto corpo - ${log.date}` })}>
+                        <img src={log.bodyPhoto} alt="" className="h-16 w-16 rounded-xl border border-blush-border bg-pink-bg object-contain" onError={(event) => { event.currentTarget.style.display = 'none' }} />
+                      </button>
                     ) : '-'}
                   </td>
                   <td>{log.weight ? `${log.weight} kg` : '-'}</td>
@@ -102,6 +123,7 @@ export default function Progress({ dailyLogs, workoutSessions }) {
           </table>
         </div>
       </Card>
+      {previewPhoto ? <PhotoModal photo={previewPhoto} onClose={() => setPreviewPhoto(null)} /> : null}
     </div>
   )
 }

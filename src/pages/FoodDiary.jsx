@@ -79,6 +79,7 @@ async function compressPhoto(file) {
 function PhotoField({ label, value, onChange }) {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [preview, setPreview] = useState(null)
 
   async function handleFile(event) {
     const file = event.target.files?.[0]
@@ -102,12 +103,14 @@ function PhotoField({ label, value, onChange }) {
     <div className="grid gap-2 text-sm font-semibold text-title">
       <span>{label}</span>
       {value ? (
-        <img
-          src={value}
-          alt=""
-          className="max-h-48 w-full rounded-2xl border border-blush-border bg-white object-cover"
-          onError={() => setError('Foto salvata male: rimuovila e caricala di nuovo.')}
-        />
+        <button type="button" className="rounded-2xl" onClick={() => setPreview({ src: value, label })}>
+          <img
+            src={value}
+            alt=""
+            className="max-h-48 w-full rounded-2xl border border-blush-border bg-white object-contain p-1"
+            onError={() => setError('Foto salvata male: rimuovila e caricala di nuovo.')}
+          />
+        </button>
       ) : null}
       <div className="flex flex-wrap gap-2">
         <label className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl bg-blush px-4 py-2 text-sm font-semibold text-title transition hover:bg-sage">
@@ -120,6 +123,21 @@ function PhotoField({ label, value, onChange }) {
         ) : null}
       </div>
       {error ? <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700">{error}</p> : null}
+      {preview ? <PhotoModal photo={preview} onClose={() => setPreview(null)} /> : null}
+    </div>
+  )
+}
+
+function PhotoModal({ photo, onClose }) {
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-title/80 p-4" role="dialog" aria-modal="true">
+      <div className="grid max-h-[92vh] w-full max-w-3xl gap-3 rounded-3xl bg-warm-white p-3 shadow-soft">
+        <div className="flex items-center justify-between gap-3">
+          <p className="font-bold text-title">{photo.label}</p>
+          <Button type="button" variant="ghost" onClick={onClose}><X size={18} />Chiudi</Button>
+        </div>
+        <img src={photo.src} alt="" className="max-h-[78vh] w-full rounded-2xl object-contain" />
+      </div>
     </div>
   )
 }
@@ -178,6 +196,7 @@ export default function FoodDiary({ dailyLogs, setDailyLogs }) {
   const [inlineForm, setInlineForm] = useState(emptyLog)
   const [editingLogId, setEditingLogId] = useState(null)
   const [openDays, setOpenDays] = useState([])
+  const [previewPhoto, setPreviewPhoto] = useState(null)
   const sortedLogs = sortByDateDesc(dailyLogs)
   const progressLogs = [...dailyLogs].sort((a, b) => (a.date || '').localeCompare(b.date || '')).slice(-21)
 
@@ -402,7 +421,9 @@ export default function FoodDiary({ dailyLogs, setDailyLogs }) {
                           ['Corpo', log.bodyPhoto],
                         ].filter(([, photo]) => photo).map(([label, photo]) => (
                           <figure key={label} className="rounded-xl border border-blush-border bg-white p-2">
-                            <img src={photo} alt="" className="h-28 w-full rounded-lg object-cover" onError={(event) => { event.currentTarget.style.display = 'none' }} />
+                            <button type="button" className="block w-full" onClick={() => setPreviewPhoto({ src: photo, label })}>
+                              <img src={photo} alt="" className="h-28 w-full rounded-lg bg-pink-bg object-contain" onError={(event) => { event.currentTarget.style.display = 'none' }} />
+                            </button>
                             <figcaption className="mt-1 text-xs font-bold text-title">{label}</figcaption>
                           </figure>
                         ))}
@@ -484,6 +505,7 @@ export default function FoodDiary({ dailyLogs, setDailyLogs }) {
           </div>
         </div>
       </Card>
+      {previewPhoto ? <PhotoModal photo={previewPhoto} onClose={() => setPreviewPhoto(null)} /> : null}
     </div>
   )
 }
