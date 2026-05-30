@@ -1,4 +1,4 @@
-import { CheckCircle2, Droplets, Dumbbell, HeartPulse, Scale, Utensils } from 'lucide-react'
+import { CheckCircle2, Dumbbell, HeartPulse, Scale, Sparkles, Utensils } from 'lucide-react'
 import Button from '../components/Button'
 import Card from '../components/Card'
 import SectionTitle from '../components/SectionTitle'
@@ -31,9 +31,8 @@ export default function Home({ dailyLogs, workoutSessions, goTo }) {
     Boolean(todayLog?.weight),
     meals === 4,
     todayExercises.length > 0,
-    Boolean(todayLog?.energy),
-    Boolean(todayLog?.bloating),
-    Boolean(todayLog?.stress),
+    Boolean(todayLog?.feeling),
+    Boolean(todayLog?.supplements),
   ]
   const completed = Math.round((completionItems.filter(Boolean).length / completionItems.length) * 100)
 
@@ -54,12 +53,12 @@ export default function Home({ dailyLogs, workoutSessions, goTo }) {
         <Stat icon={Scale} title="Peso" value={todayLog?.weight ? `${todayLog.weight} kg` : 'Da inserire'} />
         <Stat icon={Utensils} title="Alimentazione" value={`${meals}/4 pasti`} tone="bg-sage" />
         <Stat icon={Dumbbell} title="Workout" value={todayExercises.length ? `${completedWorkouts}/${todayExercises.length} esercizi` : 'Non compilato'} />
-        <Stat icon={HeartPulse} title="Benessere" value={`E ${todayLog?.energy || '-'} | G ${todayLog?.bloating || '-'} | S ${todayLog?.stress || '-'}`} tone="bg-sage" />
+        <Stat icon={HeartPulse} title="Come ti senti" value={todayLog?.feeling || 'Da inserire'} tone="bg-sage" />
       </div>
 
       <Card>
         <SectionTitle title="Completamento giornata" eyebrow="riepilogo">
-          Acqua {todayLog?.water || '-'}, energia {todayLog?.energy || '-'}, gonfiore {todayLog?.bloating || '-'}, stress {todayLog?.stress || '-'}.
+          Integratori / applicazioni: {todayLog?.supplements || '-'}.
         </SectionTitle>
         <div className="h-4 overflow-hidden rounded-full bg-blush">
           <div className="h-full rounded-full bg-accent transition-all" style={{ width: `${completed}%` }} />
@@ -72,7 +71,7 @@ export default function Home({ dailyLogs, workoutSessions, goTo }) {
 
       <Card>
         <div className="flex items-center gap-3">
-          <Droplets className="text-accent" aria-hidden="true" />
+          <Sparkles className="text-accent" aria-hidden="true" />
           <div>
             <p className="font-bold text-title">Ultima nota</p>
             <p className="text-sm">{todayLog?.notes || 'Nessuna nota salvata per oggi.'}</p>

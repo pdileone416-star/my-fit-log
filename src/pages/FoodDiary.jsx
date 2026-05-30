@@ -19,11 +19,7 @@ const emptyLog = {
   dinner: '',
   dinnerPhoto: '',
   supplements: '',
-  water: '',
-  energy: '',
-  bloating: '',
-  stress: '',
-  cycle: '',
+  feeling: '',
   notes: '',
   bodyPhoto: '',
 }
@@ -154,11 +150,7 @@ function hasDailyContent(log) {
     'dinner',
     'dinnerPhoto',
     'supplements',
-    'water',
-    'energy',
-    'bloating',
-    'stress',
-    'cycle',
+    'feeling',
     'notes',
     'bodyPhoto',
   ].some((key) => String(log[key] || '').trim())
@@ -179,11 +171,7 @@ function DiaryFields({ value, onUpdate, onDateChange }) {
         <Textarea label="Cena" value={value.dinner || ''} onChange={(event) => onUpdate('dinner', event.target.value)} />
         <PhotoField label="Foto cena" value={value.dinnerPhoto || ''} onChange={(photo) => onUpdate('dinnerPhoto', photo)} />
         <Input label="Integratori / applicazioni" value={value.supplements || ''} onChange={(event) => onUpdate('supplements', event.target.value)} />
-        <Input label="Acqua" placeholder="Es. 2 litri" value={value.water || ''} onChange={(event) => onUpdate('water', event.target.value)} />
-        <Input label="Energia" placeholder="1-10 o testo libero" value={value.energy || ''} onChange={(event) => onUpdate('energy', event.target.value)} />
-        <Input label="Gonfiore" placeholder="1-10 o testo libero" value={value.bloating || ''} onChange={(event) => onUpdate('bloating', event.target.value)} />
-        <Input label="Stress" placeholder="1-10 o testo libero" value={value.stress || ''} onChange={(event) => onUpdate('stress', event.target.value)} />
-        <Input label="Ciclo / ritenzione" value={value.cycle || ''} onChange={(event) => onUpdate('cycle', event.target.value)} />
+        <Input label="Come ti senti" placeholder="Es. leggera, stanca, gonfia, energica..." value={value.feeling || ''} onChange={(event) => onUpdate('feeling', event.target.value)} />
       </div>
       <PhotoField label="Foto corpo / progressi" value={value.bodyPhoto || ''} onChange={(photo) => onUpdate('bodyPhoto', photo)} />
       <Textarea label="Note generali" rows={4} value={value.notes || ''} onChange={(event) => onUpdate('notes', event.target.value)} />
@@ -285,34 +273,22 @@ export default function FoodDiary({ dailyLogs, setDailyLogs }) {
 
   function foodRating(log) {
     const meals = mealCount(log)
-    const hasWater = Boolean(log.water?.trim())
     const hasNotes = Boolean(log.notes?.trim())
-    const score = meals + (hasWater ? 1 : 0) + (hasNotes ? 1 : 0)
+    const hasFeeling = Boolean(log.feeling?.trim())
+    const hasSupplements = Boolean(log.supplements?.trim())
+    const score = meals + (hasNotes ? 1 : 0) + (hasFeeling ? 1 : 0) + (hasSupplements ? 1 : 0)
     if (score >= 5) return 'Completa'
     if (score >= 3) return 'Buona'
     return 'Da completare'
   }
 
   function dayWentWell(log) {
-    const energy = Number(log.energy)
-    const bloating = Number(log.bloating)
-    const stress = Number(log.stress)
-    const hasNumericMood = Boolean(energy || bloating || stress)
-
     if (foodRating(log) === 'Completa') return true
-    if (!hasNumericMood) return foodRating(log) === 'Buona'
-    return (energy >= 6 || !energy) && (bloating <= 5 || !bloating) && (stress <= 5 || !stress)
+    return foodRating(log) === 'Buona'
   }
 
   function moodLabel(log) {
-    const energy = Number(log.energy)
-    const bloating = Number(log.bloating)
-    const stress = Number(log.stress)
-
-    if (energy >= 7 && (!stress || stress <= 5) && (!bloating || bloating <= 5)) return 'Mi sono sentita bene'
-    if (energy && energy <= 4) return 'Energia bassa'
-    if (stress >= 7) return 'Stress alto'
-    if (bloating >= 7) return 'Gonfiore alto'
+    if (log.feeling?.trim()) return log.feeling
     if (foodRating(log) === 'Completa') return 'Giornata completa'
     if (foodRating(log) === 'Buona') return 'Giornata buona'
     return 'Da completare'
@@ -380,8 +356,8 @@ export default function FoodDiary({ dailyLogs, setDailyLogs }) {
                   </div>
                   <div className="mt-3 grid gap-1 text-sm">
                     <p><strong>Peso:</strong> {log.weight ? `${log.weight} kg` : '-'}</p>
-                    <p><strong>Sensazione:</strong> {moodLabel(log)}</p>
-                    <p><strong>Energia:</strong> {log.energy || '-'} <span className="text-text">|</span> <strong>Stress:</strong> {log.stress || '-'}</p>
+                    <p><strong>Come ti senti:</strong> {moodLabel(log)}</p>
+                    <p><strong>Integratori / applicazioni:</strong> {log.supplements || '-'}</p>
                   </div>
                 </button>
               )
@@ -405,8 +381,9 @@ export default function FoodDiary({ dailyLogs, setDailyLogs }) {
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="font-black text-title">{formatDate(log.date)}</p>
-                    <p className="text-sm">Peso {log.weight || '-'} kg - {mealCount(log)}/4 pasti - Acqua {log.water || '-'}</p>
-                    <p className="text-sm">Energia {log.energy || '-'} - Gonfiore {log.bloating || '-'} - Stress {log.stress || '-'}</p>
+                    <p className="text-sm">Peso {log.weight || '-'} kg - {mealCount(log)}/4 pasti</p>
+                    <p className="text-sm">Come ti senti: {moodLabel(log)}</p>
+                    <p className="mt-1 rounded-xl bg-blush px-3 py-2 text-sm font-bold text-title">Integratori / applicazioni: {log.supplements || '-'}</p>
                   </div>
                   <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold ${foodRating(log) === 'Completa' ? 'bg-sage text-title' : 'bg-blush text-title'}`}>
                     {foodRating(log)}
@@ -431,6 +408,8 @@ export default function FoodDiary({ dailyLogs, setDailyLogs }) {
                     <p><strong>Pranzo:</strong> {log.lunch || '-'}</p>
                     <p><strong>Merenda:</strong> {log.snack || '-'}</p>
                     <p><strong>Cena:</strong> {log.dinner || '-'}</p>
+                    <p className="rounded-xl bg-white px-3 py-2"><strong>Integratori / applicazioni:</strong> {log.supplements || '-'}</p>
+                    <p><strong>Come ti senti:</strong> {moodLabel(log)}</p>
                     <p><strong>Note:</strong> {log.notes || '-'}</p>
                     {[log.breakfastPhoto, log.lunchPhoto, log.snackPhoto, log.dinnerPhoto, log.bodyPhoto].some(Boolean) ? (
                       <div className="mt-2 grid grid-cols-2 gap-2">
@@ -476,8 +455,8 @@ export default function FoodDiary({ dailyLogs, setDailyLogs }) {
                   <th>Data</th>
                   <th>Peso</th>
                   <th>Pasti</th>
-                  <th>Acqua</th>
-                  <th>Benessere</th>
+                  <th>Come ti senti</th>
+                  <th>Integratori / applicazioni</th>
                   <th>Valutazione</th>
                   <th>Note</th>
                   <th>Azioni</th>
@@ -490,8 +469,8 @@ export default function FoodDiary({ dailyLogs, setDailyLogs }) {
                       <td>{log.date}</td>
                       <td>{log.weight || '-'}</td>
                       <td>{mealCount(log)}/4</td>
-                      <td>{log.water || '-'}</td>
-                      <td>E {log.energy || '-'} / G {log.bloating || '-'} / S {log.stress || '-'}</td>
+                      <td>{moodLabel(log)}</td>
+                      <td>{log.supplements || '-'}</td>
                       <td>{foodRating(log)}</td>
                       <td>{log.notes || '-'}</td>
                       <td>

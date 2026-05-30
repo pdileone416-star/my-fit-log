@@ -1,4 +1,4 @@
-import { Activity, Camera, Droplets, LineChart, Scale } from 'lucide-react'
+import { Activity, Camera, HeartPulse, LineChart, Scale } from 'lucide-react'
 import { useState } from 'react'
 import Button from '../components/Button'
 import Card from '../components/Card'
@@ -44,9 +44,7 @@ export default function Progress({ dailyLogs, workoutSessions }) {
   const delta = latestWeight !== '-' && firstWeight ? (Number(latestWeight) - Number(firstWeight)).toFixed(1) : '-'
   const exercises = workoutSessions.flatMap((session) => session.exercises || [])
   const completed = exercises.filter((exercise) => exercise.completed).length
-  const avgEnergy = dailyLogs.length
-    ? (dailyLogs.reduce((sum, log) => sum + (Number(log.energy) || 0), 0) / dailyLogs.filter((log) => Number(log.energy)).length || 0).toFixed(1)
-    : '-'
+  const feelings = dailyLogs.filter((log) => log.feeling?.trim()).length
 
   return (
     <div className="grid gap-5">
@@ -58,7 +56,7 @@ export default function Progress({ dailyLogs, workoutSessions }) {
         <MiniStat icon={Scale} label="Peso attuale" value={latestWeight === '-' ? '-' : `${latestWeight} kg`} />
         <MiniStat icon={LineChart} label="Variazione" value={delta === '-' ? '-' : `${delta} kg`} />
         <MiniStat icon={Activity} label="Workout completati" value={completed} />
-        <MiniStat icon={Droplets} label="Energia media" value={avgEnergy} />
+        <MiniStat icon={HeartPulse} label="Sensazioni annotate" value={feelings} />
       </div>
 
       <Card>
@@ -79,7 +77,8 @@ export default function Progress({ dailyLogs, workoutSessions }) {
                 <div>
                   <p className="font-black text-title">{log.date}</p>
                   <p className="text-sm">Peso {log.weight ? `${log.weight} kg` : '-'}</p>
-                  <p className="text-sm">Energia {log.energy || '-'} - Gonfiore {log.bloating || '-'} - Stress {log.stress || '-'}</p>
+                  <p className="text-sm">Come ti senti: {log.feeling || '-'}</p>
+                  <p className="text-sm">Integratori / applicazioni: {log.supplements || '-'}</p>
                 </div>
               </div>
             </article>
@@ -92,9 +91,8 @@ export default function Progress({ dailyLogs, workoutSessions }) {
                 <th>Data</th>
                 <th>Foto corpo</th>
                 <th>Peso</th>
-                <th>Energia</th>
-                <th>Gonfiore</th>
-                <th>Stress</th>
+                <th>Come ti senti</th>
+                <th>Integratori / applicazioni</th>
               </tr>
             </thead>
             <tbody>
@@ -109,14 +107,13 @@ export default function Progress({ dailyLogs, workoutSessions }) {
                     ) : '-'}
                   </td>
                   <td>{log.weight ? `${log.weight} kg` : '-'}</td>
-                  <td>{log.energy || '-'}</td>
-                  <td>{log.bloating || '-'}</td>
-                  <td>{log.stress || '-'}</td>
+                  <td>{log.feeling || '-'}</td>
+                  <td>{log.supplements || '-'}</td>
                 </tr>
               ))}
               {sortedLogs.length === 0 ? (
                 <tr>
-                  <td colSpan="6">Nessuna giornata salvata.</td>
+                  <td colSpan="5">Nessuna giornata salvata.</td>
                 </tr>
               ) : null}
             </tbody>

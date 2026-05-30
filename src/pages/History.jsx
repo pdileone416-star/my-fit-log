@@ -48,7 +48,8 @@ export default function History({ dailyLogs, setDailyLogs, workoutSessions, setW
                 <th>Data</th>
                 <th>Peso</th>
                 <th>Pasti</th>
-                <th>Benessere</th>
+                <th>Come ti senti</th>
+                <th>Integratori / applicazioni</th>
                 <th>Note</th>
                 <th>Azioni</th>
               </tr>
@@ -59,7 +60,8 @@ export default function History({ dailyLogs, setDailyLogs, workoutSessions, setW
                   <td>{log.date}</td>
                   <td>{log.weight || '-'}</td>
                   <td>{[log.breakfast, log.lunch, log.snack, log.dinner].filter(Boolean).length}/4</td>
-                  <td>E {log.energy || '-'} / G {log.bloating || '-'} / S {log.stress || '-'}</td>
+                  <td>{log.feeling || '-'}</td>
+                  <td>{log.supplements || '-'}</td>
                   <td>{log.notes || '-'}</td>
                   <td>
                     <div className="flex gap-2">
@@ -69,7 +71,7 @@ export default function History({ dailyLogs, setDailyLogs, workoutSessions, setW
                   </td>
                 </tr>
               ))}
-              {foods.length === 0 ? <tr><td colSpan="6">Nessuna giornata trovata.</td></tr> : null}
+              {foods.length === 0 ? <tr><td colSpan="7">Nessuna giornata trovata.</td></tr> : null}
             </tbody>
           </table>
         </div>
