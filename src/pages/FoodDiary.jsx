@@ -382,8 +382,8 @@ export default function FoodDiary({ dailyLogs, setDailyLogs }) {
                   <div>
                     <p className="font-black text-title">{formatDate(log.date)}</p>
                     <p className="text-sm">Peso {log.weight || '-'} kg - {mealCount(log)}/4 pasti</p>
-                    <p className="text-sm">Come ti senti: {moodLabel(log)}</p>
-                    <p className="mt-1 rounded-xl bg-blush px-3 py-2 text-sm font-bold text-title">Integratori / applicazioni: {log.supplements || '-'}</p>
+                    <p className="mt-1 rounded-xl bg-blush px-3 py-2 text-sm font-bold text-title">Come ti senti: {moodLabel(log)}</p>
+                    <p className="text-sm">Integratori / applicazioni: {log.supplements || '-'}</p>
                   </div>
                   <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold ${foodRating(log) === 'Completa' ? 'bg-sage text-title' : 'bg-blush text-title'}`}>
                     {foodRating(log)}
@@ -408,8 +408,8 @@ export default function FoodDiary({ dailyLogs, setDailyLogs }) {
                     <p><strong>Pranzo:</strong> {log.lunch || '-'}</p>
                     <p><strong>Merenda:</strong> {log.snack || '-'}</p>
                     <p><strong>Cena:</strong> {log.dinner || '-'}</p>
-                    <p className="rounded-xl bg-white px-3 py-2"><strong>Integratori / applicazioni:</strong> {log.supplements || '-'}</p>
-                    <p><strong>Come ti senti:</strong> {moodLabel(log)}</p>
+                    <p className="rounded-xl bg-white px-3 py-2"><strong>Come ti senti:</strong> {moodLabel(log)}</p>
+                    <p><strong>Integratori / applicazioni:</strong> {log.supplements || '-'}</p>
                     <p><strong>Note:</strong> {log.notes || '-'}</p>
                     {[log.breakfastPhoto, log.lunchPhoto, log.snackPhoto, log.dinnerPhoto, log.bodyPhoto].some(Boolean) ? (
                       <div className="mt-2 grid grid-cols-2 gap-2">
