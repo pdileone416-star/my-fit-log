@@ -171,6 +171,10 @@ function hasAnyPhoto(log) {
   return Boolean(log.breakfastPhoto || log.lunchPhoto || log.snackPhoto || log.dinnerPhoto || log.bodyPhoto)
 }
 
+function photoCount(log) {
+  return [log.breakfastPhoto, log.lunchPhoto, log.snackPhoto, log.dinnerPhoto, log.bodyPhoto].filter(Boolean).length
+}
+
 function dailyCompletion(log) {
   const meals = mealCountFromLog(log)
   const checks = [
@@ -296,8 +300,17 @@ export default function FoodDiary({ dailyLogs, setDailyLogs }) {
       setOpenDays((days) => days.includes(log.id) ? days : [...days, log.id])
     }
 
+    function handleNewDaily() {
+      setForm(emptyLog)
+      setShowCreateForm(true)
+    }
+
     window.addEventListener('my-fit-log-edit-daily', handleEdit)
-    return () => window.removeEventListener('my-fit-log-edit-daily', handleEdit)
+    window.addEventListener('my-fit-log-new-daily', handleNewDaily)
+    return () => {
+      window.removeEventListener('my-fit-log-edit-daily', handleEdit)
+      window.removeEventListener('my-fit-log-new-daily', handleNewDaily)
+    }
   }, [])
 
   function update(field, value) {
@@ -485,7 +498,12 @@ export default function FoodDiary({ dailyLogs, setDailyLogs }) {
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="font-black text-title">{formatDate(log.date)}</p>
-                    <p className="text-sm">Peso {log.weight || '-'} kg - {mealCount(log)}/4 pasti</p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      <span className="rounded-full bg-pink-bg px-3 py-1 text-xs font-bold text-title">Peso {log.weight || '-'} kg</span>
+                      <span className="rounded-full bg-pink-bg px-3 py-1 text-xs font-bold text-title">{mealCount(log)}/4 pasti</span>
+                      <span className="rounded-full bg-pink-bg px-3 py-1 text-xs font-bold text-title">{photoCount(log)} foto</span>
+                      <span className="rounded-full bg-sage px-3 py-1 text-xs font-bold text-title">{dailyCompletion(log)}%</span>
+                    </div>
                     <p className="mt-1 rounded-xl bg-blush px-3 py-2 text-sm font-bold text-title">Come ti senti: {moodLabel(log)}</p>
                     <p className="text-sm">Integratori / applicazioni: {log.supplements || '-'}</p>
                   </div>

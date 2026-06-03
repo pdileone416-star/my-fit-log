@@ -1,4 +1,4 @@
-import { CheckCircle2, Dumbbell, HeartPulse, Scale, Sparkles, Utensils } from 'lucide-react'
+import { CalendarDays, CheckCircle2, Dumbbell, HeartPulse, LineChart, Plus, Scale, Sparkles, Utensils } from 'lucide-react'
 import Button from '../components/Button'
 import Card from '../components/Card'
 import SectionTitle from '../components/SectionTitle'
@@ -20,24 +20,29 @@ function Stat({ icon: Icon, title, value, tone = 'bg-blush' }) {
   )
 }
 
+function mealCount(log) {
+  return ['breakfast', 'lunch', 'snack', 'dinner'].filter((key) => log?.[key]?.trim()).length
+}
+
 export default function Home({ dailyLogs, workoutSessions, goTo }) {
   const today = todayISO()
   const todayLog = dailyLogs.find((log) => log.date === today)
   const todayWorkouts = workoutSessions.filter((session) => session.date === today)
   const todayExercises = todayWorkouts.flatMap((session) => session.exercises || [])
   const completedWorkouts = todayExercises.filter((exercise) => exercise.completed).length
-  const meals = ['breakfast', 'lunch', 'snack', 'dinner'].filter((key) => todayLog?.[key]?.trim()).length
+  const meals = mealCount(todayLog)
   const sortedWeights = [...dailyLogs].filter((log) => log.weight).sort((a, b) => (b.date || '').localeCompare(a.date || ''))
   const currentWeight = sortedWeights[0]?.weight
   const firstWeight = sortedWeights[sortedWeights.length - 1]?.weight
   const weightDelta = currentWeight && firstWeight ? (Number(currentWeight) - Number(firstWeight)).toFixed(1) : null
+  const recentLogs = [...dailyLogs].sort((a, b) => (b.date || '').localeCompare(a.date || ''))
   const last7Dates = Array.from({ length: 7 }, (_, index) => {
     const date = new Date(`${today}T12:00:00`)
     date.setDate(date.getDate() - index)
     return date.toISOString().slice(0, 10)
   })
   const last7Logs = last7Dates.map((date) => dailyLogs.find((log) => log.date === date)).filter(Boolean)
-  const last7Meals = last7Logs.reduce((sum, log) => sum + ['breakfast', 'lunch', 'snack', 'dinner'].filter((key) => log[key]?.trim()).length, 0)
+  const last7Meals = last7Logs.reduce((sum, log) => sum + mealCount(log), 0)
   const avgMeals = last7Logs.length ? (last7Meals / last7Logs.length).toFixed(1) : '-'
   const weightDays = last7Logs.filter((log) => log.weight).length
   const feelingDays = last7Logs.filter((log) => log.feelingStatus || log.feeling).length
@@ -58,7 +63,14 @@ export default function Home({ dailyLogs, workoutSessions, goTo }) {
             <h2 className="text-3xl font-black text-title">Ciao, oggi si registra con calma.</h2>
             <p className="mt-1 text-sm text-text">Peso, pasti, workout e benessere in un unico diario rosa e ordinato.</p>
           </div>
-          <Button onClick={() => goTo('diary')}>Compila giornata</Button>
+          <div className="grid gap-2 sm:grid-cols-2 md:flex md:flex-wrap">
+            <Button onClick={() => {
+              goTo('diary')
+              setTimeout(() => window.dispatchEvent(new Event('my-fit-log-new-daily')), 0)
+            }}><Plus size={17} />Nuova giornata</Button>
+            <Button type="button" variant="secondary" onClick={() => goTo('progress')}><LineChart size={17} />Progressi</Button>
+            <Button type="button" variant="ghost" className="border border-blush-border" onClick={() => goTo('workout')}><Dumbbell size={17} />Workout</Button>
+          </div>
         </div>
       </section>
 
@@ -72,7 +84,7 @@ export default function Home({ dailyLogs, workoutSessions, goTo }) {
 
       <Card>
         <SectionTitle title="Costanza ultimi 7 giorni" eyebrow="monitoraggio">
-          Una lettura rapida per capire se stai mantenendo continuità.
+          Una lettura rapida per capire se stai mantenendo continuita.
         </SectionTitle>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <div className="rounded-2xl bg-pink-bg p-3"><p className="text-xs font-bold uppercase text-accent">Giorni compilati</p><p className="text-2xl font-black text-title">{last7Logs.length}/7</p></div>
@@ -93,6 +105,25 @@ export default function Home({ dailyLogs, workoutSessions, goTo }) {
           <CheckCircle2 size={18} aria-hidden="true" />
           {completed}% completato
         </p>
+      </Card>
+
+      <Card>
+        <SectionTitle title="Ultime giornate" eyebrow="lettura veloce" />
+        <div className="grid gap-2">
+          {recentLogs.slice(0, 3).map((log) => (
+            <button key={log.id} type="button" onClick={() => goTo('diary')} className="rounded-2xl border border-blush-border bg-pink-bg p-3 text-left transition hover:border-accent">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="font-black text-title">{log.date}</p>
+                  <p className="text-sm">Peso {log.weight || '-'} kg - {mealCount(log)}/4 pasti</p>
+                  <p className="text-sm font-bold text-title">{log.feelingStatus || log.feeling || 'Sensazione non inserita'}</p>
+                </div>
+                <CalendarDays size={18} className="text-accent" aria-hidden="true" />
+              </div>
+            </button>
+          ))}
+          {dailyLogs.length === 0 ? <p className="text-sm">Salva una giornata per vedere qui il riepilogo.</p> : null}
+        </div>
       </Card>
 
       <Card>
