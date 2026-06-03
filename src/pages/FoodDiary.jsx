@@ -4,7 +4,7 @@ import Card from '../components/Card'
 import Input from '../components/Input'
 import SectionTitle from '../components/SectionTitle'
 import Textarea from '../components/Textarea'
-import { createId, formatDate, sortByDateDesc, todayISO } from '../utils/storage'
+import { createId, sortByDateDesc, todayISO } from '../utils/storage'
 import { Fragment, useEffect, useState } from 'react'
 
 const emptyLog = {
@@ -28,6 +28,8 @@ const emptyLog = {
 
 const feelingStatuses = ['Molto bene', 'Bene', 'Normale', 'Male', 'Molto male']
 const feelingTags = ['Gonfia', 'Ciclo', 'Fame', 'Stress', 'Energia alta', 'Stanchezza', 'Mal di testa', 'Pancia', 'Sonno', 'Digestione', 'Altro']
+const compactWeekdays = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab']
+const compactMonths = ['gen', 'feb', 'mar', 'apr', 'mag', 'giu', 'lug', 'ago', 'set', 'ott', 'nov', 'dic']
 
 async function preparePhotoFile(file) {
   const isHeic = file.type === 'image/heic'
@@ -165,6 +167,16 @@ function hasDailyContent(log) {
 
 function selectedFeelingTags(value) {
   return Array.isArray(value) ? value : []
+}
+
+function compactDate(date) {
+  if (!date) return { day: '-', month: '', weekday: '' }
+  const parsed = new Date(`${date}T12:00:00`)
+  return {
+    day: String(parsed.getDate()).padStart(2, '0'),
+    month: compactMonths[parsed.getMonth()],
+    weekday: compactWeekdays[parsed.getDay()],
+  }
 }
 
 function hasAnyPhoto(log) {
@@ -453,28 +465,32 @@ export default function FoodDiary({ dailyLogs, setDailyLogs }) {
           <p className="text-sm">Appena salvi una giornata, comparira qui il tuo percorso.</p>
         ) : (
           <div className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-2 lg:grid lg:grid-cols-3 lg:overflow-visible xl:grid-cols-4">
-            {progressLogs.map((log, index) => {
+            {progressLogs.map((log) => {
               const wentWell = dayWentWell(log)
+              const date = compactDate(log.date)
               return (
                 <button
                   type="button"
                   key={log.id}
                   onClick={() => openLogDetail(log)}
-                  className="min-w-[210px] rounded-2xl border border-blush-border bg-white p-3 text-left shadow-soft transition hover:-translate-y-0.5 hover:border-accent lg:min-w-0"
+                  className="min-w-[170px] rounded-2xl border border-blush-border bg-white p-3 text-left shadow-soft transition hover:-translate-y-0.5 hover:border-accent lg:min-w-0"
                 >
-                  <div className="flex items-center gap-3">
-                    <span className={`grid size-11 shrink-0 place-items-center rounded-2xl ${wentWell ? 'bg-sage text-title' : 'bg-blush text-title'}`}>
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-bold uppercase text-accent">{date.weekday}</p>
+                      <p className="text-3xl font-black leading-none text-title">{date.day}</p>
+                      <p className="text-xs font-bold uppercase text-text">{date.month}</p>
+                    </div>
+                    <span className={`grid size-10 shrink-0 place-items-center rounded-2xl ${wentWell ? 'bg-sage text-title' : 'bg-blush text-title'}`}>
                       <Heart size={20} className={wentWell ? 'fill-current' : ''} aria-hidden="true" />
                     </span>
-                    <div>
-                      <p className="text-xs font-bold uppercase tracking-wide text-accent">Giornata {index + 1}</p>
-                      <p className="font-black text-title">{formatDate(log.date)}</p>
-                    </div>
                   </div>
-                  <div className="mt-3 grid gap-1 text-sm">
-                    <p><strong>Peso:</strong> {log.weight ? `${log.weight} kg` : '-'}</p>
-                    <p><strong>Come ti senti:</strong> {moodLabel(log)}</p>
-                    <p><strong>Integratori / applicazioni:</strong> {log.supplements || '-'}</p>
+                  <div className="mt-3 grid gap-2">
+                    <p className="line-clamp-2 text-sm font-bold text-title">{moodLabel(log)}</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      <span className="rounded-full bg-pink-bg px-2.5 py-1 text-xs font-bold text-title">{mealCount(log)}/4 pasti</span>
+                      <span className="rounded-full bg-pink-bg px-2.5 py-1 text-xs font-bold text-title">{log.weight || '-'} kg</span>
+                    </div>
                   </div>
                 </button>
               )
@@ -493,23 +509,32 @@ export default function FoodDiary({ dailyLogs, setDailyLogs }) {
           {sortedLogs.map((log) => {
             const isOpen = openDays.includes(log.id)
             const isEditing = editingLogId === log.id
+            const date = compactDate(log.date)
             return (
-              <article key={log.id} className="rounded-2xl border border-blush-border bg-white p-3">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="font-black text-title">{formatDate(log.date)}</p>
+              <article key={log.id} className="rounded-3xl border border-blush-border bg-white p-3 shadow-soft">
+                <div className="flex items-start gap-3">
+                  <div className="grid w-16 shrink-0 place-items-center rounded-2xl bg-pink-bg px-2 py-3 text-center">
+                    <p className="text-xs font-bold uppercase text-accent">{date.weekday}</p>
+                    <p className="text-3xl font-black leading-none text-title">{date.day}</p>
+                    <p className="text-xs font-bold uppercase text-text">{date.month}</p>
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="rounded-xl bg-blush px-3 py-2 text-sm font-bold text-title">Come ti senti: {moodLabel(log)}</p>
+                      </div>
+                      <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold ${foodRating(log) === 'Completa' ? 'bg-sage text-title' : 'bg-blush text-title'}`}>
+                        {foodRating(log)}
+                      </span>
+                    </div>
                     <div className="mt-2 flex flex-wrap gap-2">
                       <span className="rounded-full bg-pink-bg px-3 py-1 text-xs font-bold text-title">Peso {log.weight || '-'} kg</span>
                       <span className="rounded-full bg-pink-bg px-3 py-1 text-xs font-bold text-title">{mealCount(log)}/4 pasti</span>
                       <span className="rounded-full bg-pink-bg px-3 py-1 text-xs font-bold text-title">{photoCount(log)} foto</span>
                       <span className="rounded-full bg-sage px-3 py-1 text-xs font-bold text-title">{dailyCompletion(log)}%</span>
                     </div>
-                    <p className="mt-1 rounded-xl bg-blush px-3 py-2 text-sm font-bold text-title">Come ti senti: {moodLabel(log)}</p>
-                    <p className="text-sm">Integratori / applicazioni: {log.supplements || '-'}</p>
+                    {log.supplements ? <p className="mt-2 text-sm">Integratori / applicazioni: {log.supplements}</p> : null}
                   </div>
-                  <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold ${foodRating(log) === 'Completa' ? 'bg-sage text-title' : 'bg-blush text-title'}`}>
-                    {foodRating(log)}
-                  </span>
                 </div>
 
                 {isEditing ? (
@@ -525,11 +550,20 @@ export default function FoodDiary({ dailyLogs, setDailyLogs }) {
                     </div>
                   </form>
                 ) : isOpen ? (
-                  <div className="mt-3 grid gap-2 rounded-xl bg-pink-bg p-3 text-sm">
-                    <p><strong>Colazione:</strong> {log.breakfast || '-'}</p>
-                    <p><strong>Pranzo:</strong> {log.lunch || '-'}</p>
-                    <p><strong>Merenda:</strong> {log.snack || '-'}</p>
-                    <p><strong>Cena:</strong> {log.dinner || '-'}</p>
+                  <div className="mt-3 grid gap-3 rounded-2xl bg-pink-bg p-3 text-sm">
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      {[
+                        ['Colazione', log.breakfast],
+                        ['Pranzo', log.lunch],
+                        ['Merenda', log.snack],
+                        ['Cena', log.dinner],
+                      ].map(([label, value]) => (
+                        <div key={label} className="rounded-xl bg-white px-3 py-2">
+                          <p className="text-xs font-bold uppercase text-accent">{label}</p>
+                          <p className="mt-1 text-sm text-text">{value || '-'}</p>
+                        </div>
+                      ))}
+                    </div>
                     <p className="rounded-xl bg-white px-3 py-2"><strong>Come ti senti:</strong> {moodLabel(log)}</p>
                     {selectedFeelingTags(log.feelingTags).length ? (
                       <div className="flex flex-wrap gap-2">
@@ -538,8 +572,8 @@ export default function FoodDiary({ dailyLogs, setDailyLogs }) {
                         ))}
                       </div>
                     ) : null}
-                    <p><strong>Integratori / applicazioni:</strong> {log.supplements || '-'}</p>
-                    <p><strong>Note:</strong> {log.notes || '-'}</p>
+                    {log.supplements ? <p><strong>Integratori / applicazioni:</strong> {log.supplements}</p> : null}
+                    {log.notes ? <p><strong>Note:</strong> {log.notes}</p> : null}
                     <CompletionChecklist log={log} />
                     {[log.breakfastPhoto, log.lunchPhoto, log.snackPhoto, log.dinnerPhoto, log.bodyPhoto].some(Boolean) ? (
                       <div className="mt-2 grid grid-cols-2 gap-2">
