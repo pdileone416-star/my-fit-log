@@ -41,7 +41,27 @@ export default function History({ dailyLogs, setDailyLogs, workoutSessions, setW
 
       <Card>
         <SectionTitle title="Giornate alimentari" eyebrow={`${foods.length} record`} />
-        <div className="table-wrap">
+        <div className="grid gap-3 lg:hidden">
+          {foods.length === 0 ? <p className="text-sm">Nessuna giornata trovata.</p> : null}
+          {foods.map((log) => {
+            const meals = [log.breakfast, log.lunch, log.snack, log.dinner].filter(Boolean).length
+            const photos = [log.breakfastPhoto, log.lunchPhoto, log.snackPhoto, log.dinnerPhoto, log.bodyPhoto].filter(Boolean).length
+            return (
+              <article key={log.id} className="rounded-2xl border border-blush-border bg-white p-3">
+                <p className="font-black text-title">{log.date}</p>
+                <p className="text-sm">Peso {log.weight || '-'} kg · {meals}/4 pasti · {photos} foto</p>
+                <p className="mt-2 rounded-xl bg-blush px-3 py-2 text-sm font-bold text-title">Come ti senti: {log.feelingStatus || log.feeling || '-'}</p>
+                <p className="mt-2 text-sm">Integratori / applicazioni: {log.supplements || '-'}</p>
+                {log.notes ? <p className="mt-2 text-sm">Note: {log.notes}</p> : null}
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Button type="button" variant="ghost" onClick={() => editDaily(log)}><Pencil size={16} />Modifica</Button>
+                  <Button type="button" variant="danger" onClick={() => setDailyLogs((logs) => logs.filter((item) => item.id !== log.id))}><Trash2 size={16} />Elimina</Button>
+                </div>
+              </article>
+            )
+          })}
+        </div>
+        <div className="table-wrap hidden lg:block">
           <table className="clean-table">
             <thead>
               <tr>
@@ -60,7 +80,7 @@ export default function History({ dailyLogs, setDailyLogs, workoutSessions, setW
                   <td>{log.date}</td>
                   <td>{log.weight || '-'}</td>
                   <td>{[log.breakfast, log.lunch, log.snack, log.dinner].filter(Boolean).length}/4</td>
-                  <td>{log.feeling || '-'}</td>
+                  <td>{log.feelingStatus || log.feeling || '-'}</td>
                   <td>{log.supplements || '-'}</td>
                   <td>{log.notes || '-'}</td>
                   <td>

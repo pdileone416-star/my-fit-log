@@ -38,13 +38,21 @@ function PhotoModal({ photo, onClose }) {
 export default function Progress({ dailyLogs, workoutSessions }) {
   const [previewPhoto, setPreviewPhoto] = useState(null)
   const sortedLogs = sortByDateDesc(dailyLogs)
+  const chronologicalLogs = [...dailyLogs].sort((a, b) => (a.date || '').localeCompare(b.date || ''))
   const weights = sortedLogs.filter((log) => log.weight)
   const latestWeight = weights[0]?.weight || '-'
   const firstWeight = weights[weights.length - 1]?.weight
   const delta = latestWeight !== '-' && firstWeight ? (Number(latestWeight) - Number(firstWeight)).toFixed(1) : '-'
   const exercises = workoutSessions.flatMap((session) => session.exercises || [])
   const completed = exercises.filter((exercise) => exercise.completed).length
-  const feelings = dailyLogs.filter((log) => log.feeling?.trim()).length
+  const feelings = dailyLogs.filter((log) => log.feelingStatus || log.feeling?.trim()).length
+  const avgMeals = dailyLogs.length
+    ? (dailyLogs.reduce((sum, log) => sum + ['breakfast', 'lunch', 'snack', 'dinner'].filter((key) => log[key]?.trim()).length, 0) / dailyLogs.length).toFixed(1)
+    : '-'
+  const tagCounts = dailyLogs.flatMap((log) => Array.isArray(log.feelingTags) ? log.feelingTags : [])
+    .reduce((counts, tag) => ({ ...counts, [tag]: (counts[tag] || 0) + 1 }), {})
+  const frequentTags = Object.entries(tagCounts).sort((a, b) => b[1] - a[1]).slice(0, 6)
+  const progressPhotos = chronologicalLogs.filter((log) => log.bodyPhoto)
 
   return (
     <div className="grid gap-5">
@@ -55,9 +63,40 @@ export default function Progress({ dailyLogs, workoutSessions }) {
       <div className="grid gap-4 md:grid-cols-2">
         <MiniStat icon={Scale} label="Peso attuale" value={latestWeight === '-' ? '-' : `${latestWeight} kg`} />
         <MiniStat icon={LineChart} label="Variazione" value={delta === '-' ? '-' : `${delta} kg`} />
+        <MiniStat icon={LineChart} label="Giornate compilate" value={dailyLogs.length} />
+        <MiniStat icon={LineChart} label="Media pasti" value={`${avgMeals}/4`} />
         <MiniStat icon={Activity} label="Workout completati" value={completed} />
         <MiniStat icon={HeartPulse} label="Sensazioni annotate" value={feelings} />
       </div>
+
+      <Card>
+        <SectionTitle title="Sensazioni frequenti" eyebrow="tag" />
+        {frequentTags.length ? (
+          <div className="flex flex-wrap gap-2">
+            {frequentTags.map(([tag, count]) => (
+              <span key={tag} className="rounded-full bg-blush px-3 py-2 text-sm font-bold text-title">{tag} · {count}</span>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm">Nessun tag sensazione ancora salvato.</p>
+        )}
+      </Card>
+
+      <Card>
+        <SectionTitle title="Foto progressi" eyebrow={`${progressPhotos.length} foto`} />
+        {progressPhotos.length ? (
+          <div className="flex gap-3 overflow-x-auto pb-2">
+            {progressPhotos.map((log) => (
+              <button key={log.id} type="button" className="min-w-36 rounded-2xl border border-blush-border bg-pink-bg p-2" onClick={() => setPreviewPhoto({ src: log.bodyPhoto, label: `Foto corpo - ${log.date}` })}>
+                <img src={log.bodyPhoto} alt="" className="h-40 w-full rounded-xl object-contain" />
+                <p className="mt-2 text-xs font-bold text-title">{log.date}</p>
+              </button>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm">Le foto corpo appariranno qui in ordine cronologico.</p>
+        )}
+      </Card>
 
       <Card>
         <SectionTitle title="Trend peso" eyebrow="ultimi record" />
@@ -77,7 +116,7 @@ export default function Progress({ dailyLogs, workoutSessions }) {
                 <div>
                   <p className="font-black text-title">{log.date}</p>
                   <p className="text-sm">Peso {log.weight ? `${log.weight} kg` : '-'}</p>
-                  <p className="text-sm">Come ti senti: {log.feeling || '-'}</p>
+                  <p className="text-sm">Come ti senti: {log.feelingStatus || log.feeling || '-'}</p>
                   <p className="text-sm">Integratori / applicazioni: {log.supplements || '-'}</p>
                 </div>
               </div>
@@ -107,7 +146,7 @@ export default function Progress({ dailyLogs, workoutSessions }) {
                     ) : '-'}
                   </td>
                   <td>{log.weight ? `${log.weight} kg` : '-'}</td>
-                  <td>{log.feeling || '-'}</td>
+                  <td>{log.feelingStatus || log.feeling || '-'}</td>
                   <td>{log.supplements || '-'}</td>
                 </tr>
               ))}

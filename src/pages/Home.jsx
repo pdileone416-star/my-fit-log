@@ -27,11 +27,24 @@ export default function Home({ dailyLogs, workoutSessions, goTo }) {
   const todayExercises = todayWorkouts.flatMap((session) => session.exercises || [])
   const completedWorkouts = todayExercises.filter((exercise) => exercise.completed).length
   const meals = ['breakfast', 'lunch', 'snack', 'dinner'].filter((key) => todayLog?.[key]?.trim()).length
+  const sortedWeights = [...dailyLogs].filter((log) => log.weight).sort((a, b) => (b.date || '').localeCompare(a.date || ''))
+  const currentWeight = sortedWeights[0]?.weight
+  const firstWeight = sortedWeights[sortedWeights.length - 1]?.weight
+  const weightDelta = currentWeight && firstWeight ? (Number(currentWeight) - Number(firstWeight)).toFixed(1) : null
+  const last7Dates = Array.from({ length: 7 }, (_, index) => {
+    const date = new Date(`${today}T12:00:00`)
+    date.setDate(date.getDate() - index)
+    return date.toISOString().slice(0, 10)
+  })
+  const last7Logs = last7Dates.map((date) => dailyLogs.find((log) => log.date === date)).filter(Boolean)
+  const last7Meals = last7Logs.reduce((sum, log) => sum + ['breakfast', 'lunch', 'snack', 'dinner'].filter((key) => log[key]?.trim()).length, 0)
+  const avgMeals = last7Logs.length ? (last7Meals / last7Logs.length).toFixed(1) : '-'
+  const weightDays = last7Logs.filter((log) => log.weight).length
+  const feelingDays = last7Logs.filter((log) => log.feelingStatus || log.feeling).length
   const completionItems = [
     Boolean(todayLog?.weight),
     meals === 4,
-    todayExercises.length > 0,
-    Boolean(todayLog?.feeling),
+    Boolean(todayLog?.feelingStatus || todayLog?.feeling),
     Boolean(todayLog?.supplements),
   ]
   const completed = Math.round((completionItems.filter(Boolean).length / completionItems.length) * 100)
@@ -51,10 +64,23 @@ export default function Home({ dailyLogs, workoutSessions, goTo }) {
 
       <div className="grid gap-4 md:grid-cols-2">
         <Stat icon={Scale} title="Peso" value={todayLog?.weight ? `${todayLog.weight} kg` : 'Da inserire'} />
+        <Stat icon={Scale} title="Variazione peso" value={weightDelta ? `${weightDelta} kg` : '-'} tone="bg-sage" />
         <Stat icon={Utensils} title="Alimentazione" value={`${meals}/4 pasti`} tone="bg-sage" />
         <Stat icon={Dumbbell} title="Workout" value={todayExercises.length ? `${completedWorkouts}/${todayExercises.length} esercizi` : 'Non compilato'} />
-        <Stat icon={HeartPulse} title="Come ti senti" value={todayLog?.feeling || 'Da inserire'} tone="bg-sage" />
+        <Stat icon={HeartPulse} title="Come ti senti" value={todayLog?.feelingStatus || todayLog?.feeling || 'Da inserire'} tone="bg-sage" />
       </div>
+
+      <Card>
+        <SectionTitle title="Costanza ultimi 7 giorni" eyebrow="monitoraggio">
+          Una lettura rapida per capire se stai mantenendo continuità.
+        </SectionTitle>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="rounded-2xl bg-pink-bg p-3"><p className="text-xs font-bold uppercase text-accent">Giorni compilati</p><p className="text-2xl font-black text-title">{last7Logs.length}/7</p></div>
+          <div className="rounded-2xl bg-pink-bg p-3"><p className="text-xs font-bold uppercase text-accent">Media pasti</p><p className="text-2xl font-black text-title">{avgMeals}/4</p></div>
+          <div className="rounded-2xl bg-pink-bg p-3"><p className="text-xs font-bold uppercase text-accent">Peso registrato</p><p className="text-2xl font-black text-title">{weightDays}/7</p></div>
+          <div className="rounded-2xl bg-pink-bg p-3"><p className="text-xs font-bold uppercase text-accent">Sensazioni</p><p className="text-2xl font-black text-title">{feelingDays}/7</p></div>
+        </div>
+      </Card>
 
       <Card>
         <SectionTitle title="Completamento giornata" eyebrow="riepilogo">

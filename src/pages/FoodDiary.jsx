@@ -19,10 +19,15 @@ const emptyLog = {
   dinner: '',
   dinnerPhoto: '',
   supplements: '',
+  feelingStatus: '',
+  feelingTags: [],
   feeling: '',
   notes: '',
   bodyPhoto: '',
 }
+
+const feelingStatuses = ['Molto bene', 'Bene', 'Normale', 'Male', 'Molto male']
+const feelingTags = ['Gonfia', 'Ciclo', 'Fame', 'Stress', 'Energia alta', 'Stanchezza', 'Mal di testa', 'Pancia', 'Sonno', 'Digestione', 'Altro']
 
 async function preparePhotoFile(file) {
   const isHeic = file.type === 'image/heic'
@@ -103,7 +108,7 @@ function PhotoField({ label, value, onChange }) {
           <img
             src={value}
             alt=""
-            className="max-h-48 w-full rounded-2xl border border-blush-border bg-white object-contain p-1"
+            className="h-28 w-full rounded-2xl border border-blush-border bg-white object-contain p-1 sm:h-36"
             onError={() => setError('Foto salvata male: rimuovila e caricala di nuovo.')}
           />
         </button>
@@ -150,13 +155,76 @@ function hasDailyContent(log) {
     'dinner',
     'dinnerPhoto',
     'supplements',
+    'feelingStatus',
+    'feelingTags',
     'feeling',
     'notes',
     'bodyPhoto',
-  ].some((key) => String(log[key] || '').trim())
+  ].some((key) => Array.isArray(log[key]) ? log[key].length > 0 : String(log[key] || '').trim())
+}
+
+function selectedFeelingTags(value) {
+  return Array.isArray(value) ? value : []
+}
+
+function hasAnyPhoto(log) {
+  return Boolean(log.breakfastPhoto || log.lunchPhoto || log.snackPhoto || log.dinnerPhoto || log.bodyPhoto)
+}
+
+function dailyCompletion(log) {
+  const meals = mealCountFromLog(log)
+  const checks = [
+    Boolean(log.weight),
+    meals === 4,
+    Boolean(log.feelingStatus || log.feeling),
+    Boolean(log.supplements),
+    hasAnyPhoto(log),
+  ]
+
+  return Math.round((checks.filter(Boolean).length / checks.length) * 100)
+}
+
+function mealCountFromLog(log) {
+  return ['breakfast', 'lunch', 'snack', 'dinner'].filter((key) => log[key]?.trim()).length
+}
+
+function CompletionChecklist({ log }) {
+  const meals = mealCountFromLog(log)
+  const items = [
+    ['Peso', log.weight ? 'compilato' : 'non compilato', Boolean(log.weight)],
+    ['Pasti', `${meals}/4`, meals === 4],
+    ['Sensazione', log.feelingStatus || log.feeling ? 'compilata' : 'non compilata', Boolean(log.feelingStatus || log.feeling)],
+    ['Integratori', log.supplements ? 'presenti' : 'assenti', Boolean(log.supplements)],
+    ['Foto', hasAnyPhoto(log) ? 'presenti' : 'assenti', hasAnyPhoto(log)],
+  ]
+
+  return (
+    <div className="grid gap-3 rounded-2xl border border-blush-border bg-white p-3">
+      <div className="flex items-center justify-between gap-3">
+        <p className="font-bold text-title">Completamento giornata</p>
+        <p className="text-sm font-black text-accent">{dailyCompletion(log)}%</p>
+      </div>
+      <div className="h-3 overflow-hidden rounded-full bg-blush">
+        <div className="h-full rounded-full bg-accent transition-all" style={{ width: `${dailyCompletion(log)}%` }} />
+      </div>
+      <div className="grid gap-2 sm:grid-cols-2">
+        {items.map(([label, value, done]) => (
+          <div key={label} className="flex items-center justify-between gap-2 rounded-xl bg-pink-bg px-3 py-2 text-sm">
+            <span className="font-bold text-title">{label}</span>
+            <span className={done ? 'font-bold text-title' : 'text-text'}>{done ? '✓' : '×'} {value}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
 }
 
 function DiaryFields({ value, onUpdate, onDateChange }) {
+  function toggleTag(tag) {
+    const current = selectedFeelingTags(value.feelingTags)
+    onUpdate('feelingTags', current.includes(tag) ? current.filter((item) => item !== tag) : [...current, tag])
+  }
+
   return (
     <>
       <div className="grid gap-4 md:grid-cols-2">
@@ -171,9 +239,40 @@ function DiaryFields({ value, onUpdate, onDateChange }) {
         <Textarea label="Cena" value={value.dinner || ''} onChange={(event) => onUpdate('dinner', event.target.value)} />
         <PhotoField label="Foto cena" value={value.dinnerPhoto || ''} onChange={(photo) => onUpdate('dinnerPhoto', photo)} />
         <Input label="Integratori / applicazioni" value={value.supplements || ''} onChange={(event) => onUpdate('supplements', event.target.value)} />
-        <Input label="Come ti senti" placeholder="Es. leggera, stanca, gonfia, energica..." value={value.feeling || ''} onChange={(event) => onUpdate('feeling', event.target.value)} />
+      </div>
+      <div className="grid gap-3 rounded-2xl border border-blush-border bg-white p-3">
+        <p className="font-bold text-title">Come ti senti</p>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+          {feelingStatuses.map((status) => (
+            <button
+              key={status}
+              type="button"
+              className={`min-h-11 rounded-xl px-3 py-2 text-sm font-bold transition ${value.feelingStatus === status ? 'bg-accent text-white' : 'bg-pink-bg text-title hover:bg-blush'}`}
+              onClick={() => onUpdate('feelingStatus', value.feelingStatus === status ? '' : status)}
+            >
+              {status}
+            </button>
+          ))}
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {feelingTags.map((tag) => {
+            const active = selectedFeelingTags(value.feelingTags).includes(tag)
+            return (
+              <button
+                key={tag}
+                type="button"
+                className={`rounded-full px-3 py-2 text-xs font-bold transition ${active ? 'bg-sage text-title' : 'bg-blush text-title hover:bg-sage'}`}
+                onClick={() => toggleTag(tag)}
+              >
+                {tag}
+              </button>
+            )
+          })}
+        </div>
+        <Textarea label="Nota libera" placeholder="Es. leggera, stanca, gonfia, energica..." value={value.feeling || ''} onChange={(event) => onUpdate('feeling', event.target.value)} />
       </div>
       <PhotoField label="Foto corpo / progressi" value={value.bodyPhoto || ''} onChange={(photo) => onUpdate('bodyPhoto', photo)} />
+      <CompletionChecklist log={value} />
       <Textarea label="Note generali" rows={4} value={value.notes || ''} onChange={(event) => onUpdate('notes', event.target.value)} />
     </>
   )
@@ -268,13 +367,13 @@ export default function FoodDiary({ dailyLogs, setDailyLogs }) {
   }
 
   function mealCount(log) {
-    return ['breakfast', 'lunch', 'snack', 'dinner'].filter((key) => log[key]?.trim()).length
+    return mealCountFromLog(log)
   }
 
   function foodRating(log) {
     const meals = mealCount(log)
     const hasNotes = Boolean(log.notes?.trim())
-    const hasFeeling = Boolean(log.feeling?.trim())
+    const hasFeeling = Boolean(log.feelingStatus || log.feeling?.trim())
     const hasSupplements = Boolean(log.supplements?.trim())
     const score = meals + (hasNotes ? 1 : 0) + (hasFeeling ? 1 : 0) + (hasSupplements ? 1 : 0)
     if (score >= 5) return 'Completa'
@@ -288,7 +387,12 @@ export default function FoodDiary({ dailyLogs, setDailyLogs }) {
   }
 
   function moodLabel(log) {
-    if (log.feeling?.trim()) return log.feeling
+    const parts = [
+      log.feelingStatus,
+      selectedFeelingTags(log.feelingTags).slice(0, 2).join(', '),
+      log.feeling,
+    ].filter(Boolean)
+    if (parts.length) return parts.join(' - ')
     if (foodRating(log) === 'Completa') return 'Giornata completa'
     if (foodRating(log) === 'Buona') return 'Giornata buona'
     return 'Da completare'
@@ -409,8 +513,16 @@ export default function FoodDiary({ dailyLogs, setDailyLogs }) {
                     <p><strong>Merenda:</strong> {log.snack || '-'}</p>
                     <p><strong>Cena:</strong> {log.dinner || '-'}</p>
                     <p className="rounded-xl bg-white px-3 py-2"><strong>Come ti senti:</strong> {moodLabel(log)}</p>
+                    {selectedFeelingTags(log.feelingTags).length ? (
+                      <div className="flex flex-wrap gap-2">
+                        {selectedFeelingTags(log.feelingTags).map((tag) => (
+                          <span key={tag} className="rounded-full bg-sage px-3 py-1 text-xs font-bold text-title">{tag}</span>
+                        ))}
+                      </div>
+                    ) : null}
                     <p><strong>Integratori / applicazioni:</strong> {log.supplements || '-'}</p>
                     <p><strong>Note:</strong> {log.notes || '-'}</p>
+                    <CompletionChecklist log={log} />
                     {[log.breakfastPhoto, log.lunchPhoto, log.snackPhoto, log.dinnerPhoto, log.bodyPhoto].some(Boolean) ? (
                       <div className="mt-2 grid grid-cols-2 gap-2">
                         {[
