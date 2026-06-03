@@ -24,6 +24,11 @@ function mealCount(log) {
   return ['breakfast', 'lunch', 'snack', 'dinner'].filter((key) => log?.[key]?.trim()).length
 }
 
+function dayRatingLabel(log) {
+  const value = Number(log?.dayRating)
+  return Number.isFinite(value) && value > 0 ? `${value}/5` : ''
+}
+
 export default function Home({ dailyLogs, workoutSessions, goTo }) {
   const today = todayISO()
   const todayLog = dailyLogs.find((log) => log.date === today)
@@ -115,8 +120,12 @@ export default function Home({ dailyLogs, workoutSessions, goTo }) {
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="font-black text-title">{log.date}</p>
-                  <p className="text-sm">Peso {log.weight || '-'} kg - {mealCount(log)}/4 pasti</p>
-                  <p className="text-sm font-bold text-title">{log.feelingStatus || log.feeling || 'Sensazione non inserita'}</p>
+                  <div className="mt-1 flex flex-wrap gap-2 text-xs font-bold text-title">
+                    {dayRatingLabel(log) ? <span className="rounded-full bg-sage px-2.5 py-1">Valutazione {dayRatingLabel(log)}</span> : null}
+                    {log.weight ? <span className="rounded-full bg-warm-white px-2.5 py-1">Peso {log.weight} kg</span> : null}
+                    {mealCount(log) > 0 ? <span className="rounded-full bg-warm-white px-2.5 py-1">{mealCount(log)} pasti</span> : null}
+                  </div>
+                  <p className="mt-1 text-sm font-bold text-title">{log.feelingStatus || log.feeling || 'Giornata salvata'}</p>
                 </div>
                 <CalendarDays size={18} className="text-accent" aria-hidden="true" />
               </div>

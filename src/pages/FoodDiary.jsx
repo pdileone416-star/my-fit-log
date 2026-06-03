@@ -22,6 +22,7 @@ const emptyLog = {
   feelingStatus: '',
   feelingTags: [],
   feeling: '',
+  dayRating: '',
   notes: '',
   bodyPhoto: '',
 }
@@ -160,6 +161,7 @@ function hasDailyContent(log) {
     'feelingStatus',
     'feelingTags',
     'feeling',
+    'dayRating',
     'notes',
     'bodyPhoto',
   ].some((key) => Array.isArray(log[key]) ? log[key].length > 0 : String(log[key] || '').trim())
@@ -187,17 +189,14 @@ function photoCount(log) {
   return [log.breakfastPhoto, log.lunchPhoto, log.snackPhoto, log.dinnerPhoto, log.bodyPhoto].filter(Boolean).length
 }
 
-function dailyCompletion(log) {
-  const meals = mealCountFromLog(log)
-  const checks = [
-    Boolean(log.weight),
-    meals === 4,
-    Boolean(log.feelingStatus || log.feeling),
-    Boolean(log.supplements),
-    hasAnyPhoto(log),
-  ]
+function dayRatingValue(log) {
+  const value = Number(log.dayRating)
+  return Number.isFinite(value) && value > 0 ? value : 0
+}
 
-  return Math.round((checks.filter(Boolean).length / checks.length) * 100)
+function dayRatingLabel(log) {
+  const value = dayRatingValue(log)
+  return value ? `${value}/5` : ''
 }
 
 function mealCountFromLog(log) {
@@ -207,27 +206,23 @@ function mealCountFromLog(log) {
 function CompletionChecklist({ log }) {
   const meals = mealCountFromLog(log)
   const items = [
-    ['Peso', log.weight ? 'compilato' : 'non compilato', Boolean(log.weight)],
-    ['Pasti', `${meals}/4`, meals === 4],
-    ['Sensazione', log.feelingStatus || log.feeling ? 'compilata' : 'non compilata', Boolean(log.feelingStatus || log.feeling)],
-    ['Integratori', log.supplements ? 'presenti' : 'assenti', Boolean(log.supplements)],
-    ['Foto', hasAnyPhoto(log) ? 'presenti' : 'assenti', hasAnyPhoto(log)],
-  ]
+    log.weight ? ['Peso', `${log.weight} kg`] : null,
+    meals > 0 ? ['Pasti', `${meals} ${meals === 1 ? 'pasto' : 'pasti'}`] : null,
+    log.feelingStatus || log.feeling ? ['Sensazione', log.feelingStatus || log.feeling] : null,
+    dayRatingLabel(log) ? ['Valutazione', dayRatingLabel(log)] : null,
+    log.supplements ? ['Integratori', 'presenti'] : null,
+    hasAnyPhoto(log) ? ['Foto', `${photoCount(log)} ${photoCount(log) === 1 ? 'foto' : 'foto'}`] : null,
+  ].filter(Boolean)
 
   return (
     <div className="grid gap-3 rounded-2xl border border-blush-border bg-white p-3">
-      <div className="flex items-center justify-between gap-3">
-        <p className="font-bold text-title">Completamento giornata</p>
-        <p className="text-sm font-black text-accent">{dailyCompletion(log)}%</p>
-      </div>
-      <div className="h-3 overflow-hidden rounded-full bg-blush">
-        <div className="h-full rounded-full bg-accent transition-all" style={{ width: `${dailyCompletion(log)}%` }} />
-      </div>
+      <p className="font-bold text-title">Riepilogo compilato</p>
+      {items.length === 0 ? <p className="text-sm text-text">Compila solo le cose che vuoi ricordare oggi.</p> : null}
       <div className="grid gap-2 sm:grid-cols-2">
-        {items.map(([label, value, done]) => (
+        {items.map(([label, value]) => (
           <div key={label} className="flex items-center justify-between gap-2 rounded-xl bg-pink-bg px-3 py-2 text-sm">
             <span className="font-bold text-title">{label}</span>
-            <span className={done ? 'font-bold text-title' : 'text-text'}>{done ? '✓' : '×'} {value}</span>
+            <span className="font-bold text-title">{value}</span>
           </div>
         ))}
       </div>
@@ -286,6 +281,28 @@ function DiaryFields({ value, onUpdate, onDateChange }) {
           })}
         </div>
         <Textarea label="Nota libera" placeholder="Es. leggera, stanca, gonfia, energica..." value={value.feeling || ''} onChange={(event) => onUpdate('feeling', event.target.value)} />
+      </div>
+      <div className="grid gap-3 rounded-2xl border border-blush-border bg-white p-3">
+        <div>
+          <p className="font-bold text-title">Valutazione giornata</p>
+          <p className="text-sm text-text">Da 1 a 5, scegli com'e andata nel complesso.</p>
+        </div>
+        <div className="grid grid-cols-5 gap-2">
+          {[1, 2, 3, 4, 5].map((rating) => {
+            const active = String(value.dayRating || '') === String(rating)
+            return (
+              <button
+                key={rating}
+                type="button"
+                className={`min-h-12 rounded-xl text-base font-black transition ${active ? 'bg-accent text-white shadow-soft' : 'bg-pink-bg text-title hover:bg-blush'}`}
+                onClick={() => onUpdate('dayRating', active ? '' : String(rating))}
+                aria-pressed={active}
+              >
+                {rating}
+              </button>
+            )
+          })}
+        </div>
       </div>
       <PhotoField label="Foto corpo / progressi" value={value.bodyPhoto || ''} onChange={(photo) => onUpdate('bodyPhoto', photo)} />
       <CompletionChecklist log={value} />
@@ -396,6 +413,11 @@ export default function FoodDiary({ dailyLogs, setDailyLogs }) {
   }
 
   function foodRating(log) {
+    const rating = dayRatingValue(log)
+    if (rating >= 4) return 'Ottima'
+    if (rating === 3) return 'Buona'
+    if (rating > 0) return 'Faticosa'
+
     const meals = mealCount(log)
     const hasNotes = Boolean(log.notes?.trim())
     const hasFeeling = Boolean(log.feelingStatus || log.feeling?.trim())
@@ -407,6 +429,8 @@ export default function FoodDiary({ dailyLogs, setDailyLogs }) {
   }
 
   function dayWentWell(log) {
+    const rating = dayRatingValue(log)
+    if (rating) return rating >= 4
     if (foodRating(log) === 'Completa') return true
     return foodRating(log) === 'Buona'
   }
@@ -418,9 +442,8 @@ export default function FoodDiary({ dailyLogs, setDailyLogs }) {
       log.feeling,
     ].filter(Boolean)
     if (parts.length) return parts.join(' - ')
-    if (foodRating(log) === 'Completa') return 'Giornata completa'
-    if (foodRating(log) === 'Buona') return 'Giornata buona'
-    return 'Da completare'
+    if (dayRatingLabel(log)) return `Valutazione ${dayRatingLabel(log)}`
+    return 'Giornata salvata'
   }
 
   return (
@@ -458,7 +481,7 @@ export default function FoodDiary({ dailyLogs, setDailyLogs }) {
 
       <Card>
         <SectionTitle title="Andamento giornate" eyebrow={`${progressLogs.length} ultimi record`}>
-          Una vista veloce per vedere peso e sensazioni giorno dopo giorno.
+          Una vista veloce per vedere sensazioni e valutazione giorno dopo giorno.
         </SectionTitle>
 
         {progressLogs.length === 0 ? (
@@ -488,8 +511,12 @@ export default function FoodDiary({ dailyLogs, setDailyLogs }) {
                   <div className="mt-3 grid gap-2">
                     <p className="line-clamp-2 text-sm font-bold text-title">{moodLabel(log)}</p>
                     <div className="flex flex-wrap gap-1.5">
-                      <span className="rounded-full bg-pink-bg px-2.5 py-1 text-xs font-bold text-title">{mealCount(log)}/4 pasti</span>
-                      <span className="rounded-full bg-pink-bg px-2.5 py-1 text-xs font-bold text-title">{log.weight || '-'} kg</span>
+                      {dayRatingLabel(log) ? (
+                        <span className="rounded-full bg-sage px-2.5 py-1 text-xs font-bold text-title">Valutazione {dayRatingLabel(log)}</span>
+                      ) : null}
+                      {log.weight ? (
+                        <span className="rounded-full bg-pink-bg px-2.5 py-1 text-xs font-bold text-title">Peso {log.weight} kg</span>
+                      ) : null}
                     </div>
                   </div>
                 </button>
@@ -523,15 +550,25 @@ export default function FoodDiary({ dailyLogs, setDailyLogs }) {
                       <div className="min-w-0">
                         <p className="rounded-xl bg-blush px-3 py-2 text-sm font-bold text-title">Come ti senti: {moodLabel(log)}</p>
                       </div>
-                      <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold ${foodRating(log) === 'Completa' ? 'bg-sage text-title' : 'bg-blush text-title'}`}>
-                        {foodRating(log)}
-                      </span>
+                      {dayRatingLabel(log) ? (
+                        <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold ${dayWentWell(log) ? 'bg-sage text-title' : 'bg-blush text-title'}`}>
+                          {foodRating(log)}
+                        </span>
+                      ) : null}
                     </div>
                     <div className="mt-2 flex flex-wrap gap-2">
-                      <span className="rounded-full bg-pink-bg px-3 py-1 text-xs font-bold text-title">Peso {log.weight || '-'} kg</span>
-                      <span className="rounded-full bg-pink-bg px-3 py-1 text-xs font-bold text-title">{mealCount(log)}/4 pasti</span>
-                      <span className="rounded-full bg-pink-bg px-3 py-1 text-xs font-bold text-title">{photoCount(log)} foto</span>
-                      <span className="rounded-full bg-sage px-3 py-1 text-xs font-bold text-title">{dailyCompletion(log)}%</span>
+                      {dayRatingLabel(log) ? (
+                        <span className="rounded-full bg-sage px-3 py-1 text-xs font-bold text-title">Valutazione {dayRatingLabel(log)}</span>
+                      ) : null}
+                      {log.weight ? (
+                        <span className="rounded-full bg-pink-bg px-3 py-1 text-xs font-bold text-title">Peso {log.weight} kg</span>
+                      ) : null}
+                      {mealCount(log) > 0 ? (
+                        <span className="rounded-full bg-pink-bg px-3 py-1 text-xs font-bold text-title">{mealCount(log)} pasti</span>
+                      ) : null}
+                      {photoCount(log) > 0 ? (
+                        <span className="rounded-full bg-pink-bg px-3 py-1 text-xs font-bold text-title">{photoCount(log)} foto</span>
+                      ) : null}
                     </div>
                     {log.supplements ? <p className="mt-2 text-sm">Integratori / applicazioni: {log.supplements}</p> : null}
                   </div>
@@ -551,20 +588,28 @@ export default function FoodDiary({ dailyLogs, setDailyLogs }) {
                   </form>
                 ) : isOpen ? (
                   <div className="mt-3 grid gap-3 rounded-2xl bg-pink-bg p-3 text-sm">
-                    <div className="grid gap-2 sm:grid-cols-2">
-                      {[
+                    {[
                         ['Colazione', log.breakfast],
                         ['Pranzo', log.lunch],
                         ['Merenda', log.snack],
                         ['Cena', log.dinner],
-                      ].map(([label, value]) => (
-                        <div key={label} className="rounded-xl bg-white px-3 py-2">
-                          <p className="text-xs font-bold uppercase text-accent">{label}</p>
-                          <p className="mt-1 text-sm text-text">{value || '-'}</p>
-                        </div>
-                      ))}
-                    </div>
+                      ].some(([, value]) => value?.trim()) ? (
+                      <div className="grid gap-2 sm:grid-cols-2">
+                        {[
+                          ['Colazione', log.breakfast],
+                          ['Pranzo', log.lunch],
+                          ['Merenda', log.snack],
+                          ['Cena', log.dinner],
+                        ].filter(([, value]) => value?.trim()).map(([label, value]) => (
+                          <div key={label} className="rounded-xl bg-white px-3 py-2">
+                            <p className="text-xs font-bold uppercase text-accent">{label}</p>
+                            <p className="mt-1 text-sm text-text">{value}</p>
+                          </div>
+                        ))}
+                      </div>
+                    ) : null}
                     <p className="rounded-xl bg-white px-3 py-2"><strong>Come ti senti:</strong> {moodLabel(log)}</p>
+                    {dayRatingLabel(log) ? <p className="rounded-xl bg-white px-3 py-2"><strong>Valutazione giornata:</strong> {dayRatingLabel(log)}</p> : null}
                     {selectedFeelingTags(log.feelingTags).length ? (
                       <div className="flex flex-wrap gap-2">
                         {selectedFeelingTags(log.feelingTags).map((tag) => (
@@ -620,8 +665,8 @@ export default function FoodDiary({ dailyLogs, setDailyLogs }) {
                   <th>Peso</th>
                   <th>Pasti</th>
                   <th>Come ti senti</th>
+                  <th>Valutazione giornata</th>
                   <th>Integratori / applicazioni</th>
-                  <th>Valutazione</th>
                   <th>Note</th>
                   <th>Azioni</th>
                 </tr>
@@ -631,12 +676,12 @@ export default function FoodDiary({ dailyLogs, setDailyLogs }) {
                   <Fragment key={log.id}>
                     <tr>
                       <td>{log.date}</td>
-                      <td>{log.weight || '-'}</td>
-                      <td>{mealCount(log)}/4</td>
+                      <td>{log.weight ? `${log.weight} kg` : ''}</td>
+                      <td>{mealCount(log) > 0 ? mealCount(log) : ''}</td>
                       <td>{moodLabel(log)}</td>
-                      <td>{log.supplements || '-'}</td>
-                      <td>{foodRating(log)}</td>
-                      <td>{log.notes || '-'}</td>
+                      <td>{dayRatingLabel(log)}</td>
+                      <td>{log.supplements || ''}</td>
+                      <td>{log.notes || ''}</td>
                       <td>
                         <div className="flex gap-2">
                           <Button type="button" variant="ghost" onClick={() => editLog(log)} disabled={editingLogId === log.id}><Pencil size={16} />Modifica</Button>
