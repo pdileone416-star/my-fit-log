@@ -371,6 +371,7 @@ export default function Workout({ workoutSessions, setWorkoutSessions, workoutPl
     }
 
     setWorkoutSessions((sessions) => [session, ...sessions])
+    setOpenSessions((sessions) => sessions.includes(session.id) ? sessions : [session.id, ...sessions])
     setMode('sessions')
   }
 

@@ -6,6 +6,7 @@ export const STORAGE_KEYS = {
   workoutLogsBackup: 'workoutLogs_backup',
   workoutSessions: 'workoutSessions',
   workoutPlans: 'workoutPlans',
+  supplementOptions: 'supplementOptions',
   users: 'myFitLogUsers',
   currentUser: 'myFitLogCurrentUser',
 }

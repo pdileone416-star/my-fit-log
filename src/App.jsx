@@ -30,6 +30,7 @@ function AppContent({ user, onLogout }) {
   const [dailyLogs, setDailyLogs] = useLocalStorage(storageKeyForUser(user.id, STORAGE_KEYS.dailyLogs), [])
   const [workoutSessions, setWorkoutSessions] = useLocalStorage(storageKeyForUser(user.id, STORAGE_KEYS.workoutSessions), [])
   const [workoutPlans, setWorkoutPlans] = useLocalStorage(storageKeyForUser(user.id, STORAGE_KEYS.workoutPlans), buildDefaultWorkoutPlans())
+  const [supplementOptions, setSupplementOptions] = useLocalStorage(storageKeyForUser(user.id, STORAGE_KEYS.supplementOptions), [])
 
   useEffect(() => {
     const seedKey = storageKeyForUser(user.id, 'workoutPlansSeeded')
@@ -67,6 +68,8 @@ function AppContent({ user, onLogout }) {
     setWorkoutSessions,
     workoutPlans,
     setWorkoutPlans,
+    supplementOptions,
+    setSupplementOptions,
     goTo: setActiveTab,
   }
 

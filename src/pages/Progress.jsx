@@ -35,93 +35,85 @@ function PhotoModal({ photo, onClose }) {
   )
 }
 
+function compactDate(date) {
+  if (!date) return ''
+  return new Intl.DateTimeFormat('it-IT', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  }).format(new Date(`${date}T12:00:00`))
+}
+
+function dayRatingValue(log) {
+  const value = Number(log?.dayRating)
+  return Number.isFinite(value) && value > 0 ? value : 0
+}
+
+function dayRatingLabel(log) {
+  const value = dayRatingValue(log)
+  return value ? `${value}/5` : ''
+}
+
+function feelingLabel(log) {
+  return [log.feelingStatus, log.feeling].filter(Boolean).join(' - ')
+}
+
 export default function Progress({ dailyLogs, workoutSessions }) {
   const [previewPhoto, setPreviewPhoto] = useState(null)
   const sortedLogs = sortByDateDesc(dailyLogs)
-  const chronologicalLogs = [...dailyLogs].sort((a, b) => (a.date || '').localeCompare(b.date || ''))
   const weights = sortedLogs.filter((log) => log.weight)
   const latestWeight = weights[0]?.weight || '-'
   const firstWeight = weights[weights.length - 1]?.weight
   const delta = latestWeight !== '-' && firstWeight ? (Number(latestWeight) - Number(firstWeight)).toFixed(1) : '-'
   const exercises = workoutSessions.flatMap((session) => session.exercises || [])
   const completed = exercises.filter((exercise) => exercise.completed).length
-  const feelings = dailyLogs.filter((log) => log.feelingStatus || log.feeling?.trim()).length
-  const avgMeals = dailyLogs.length
-    ? (dailyLogs.reduce((sum, log) => sum + ['breakfast', 'lunch', 'snack', 'dinner'].filter((key) => log[key]?.trim()).length, 0) / dailyLogs.length).toFixed(1)
-    : '-'
-  const tagCounts = dailyLogs.flatMap((log) => Array.isArray(log.feelingTags) ? log.feelingTags : [])
-    .reduce((counts, tag) => ({ ...counts, [tag]: (counts[tag] || 0) + 1 }), {})
-  const frequentTags = Object.entries(tagCounts).sort((a, b) => b[1] - a[1]).slice(0, 6)
-  const progressPhotos = chronologicalLogs.filter((log) => log.bodyPhoto)
+  const ratedDays = dailyLogs.filter((log) => dayRatingValue(log))
+  const goodDays = ratedDays.filter((log) => dayRatingValue(log) >= 4)
 
   return (
     <div className="grid gap-5">
       <SectionTitle title="Progressi" eyebrow="andamento">
-        Una vista semplice per controllare peso, allenamenti e benessere nel tempo.
+        Una vista semplice per controllare peso, valutazione e benessere nel tempo.
       </SectionTitle>
 
       <div className="grid gap-4 md:grid-cols-2">
         <MiniStat icon={Scale} label="Peso attuale" value={latestWeight === '-' ? '-' : `${latestWeight} kg`} />
         <MiniStat icon={LineChart} label="Variazione" value={delta === '-' ? '-' : `${delta} kg`} />
-        <MiniStat icon={LineChart} label="Giornate compilate" value={dailyLogs.length} />
-        <MiniStat icon={LineChart} label="Media pasti" value={`${avgMeals}/4`} />
+        <MiniStat icon={HeartPulse} label="Giornate da 4 in su" value={`${goodDays.length}/${ratedDays.length || 0}`} />
         <MiniStat icon={Activity} label="Workout completati" value={completed} />
-        <MiniStat icon={HeartPulse} label="Sensazioni annotate" value={feelings} />
       </div>
 
       <Card>
-        <SectionTitle title="Sensazioni frequenti" eyebrow="tag" />
-        {frequentTags.length ? (
-          <div className="flex flex-wrap gap-2">
-            {frequentTags.map(([tag, count]) => (
-              <span key={tag} className="rounded-full bg-blush px-3 py-2 text-sm font-bold text-title">{tag} · {count}</span>
-            ))}
-          </div>
-        ) : (
-          <p className="text-sm">Nessun tag sensazione ancora salvato.</p>
-        )}
-      </Card>
-
-      <Card>
-        <SectionTitle title="Foto progressi" eyebrow={`${progressPhotos.length} foto`} />
-        {progressPhotos.length ? (
-          <div className="flex gap-3 overflow-x-auto pb-2">
-            {progressPhotos.map((log) => (
-              <button key={log.id} type="button" className="min-w-36 rounded-2xl border border-blush-border bg-pink-bg p-2" onClick={() => setPreviewPhoto({ src: log.bodyPhoto, label: `Foto corpo - ${log.date}` })}>
-                <img src={log.bodyPhoto} alt="" className="h-40 w-full rounded-xl object-contain" />
-                <p className="mt-2 text-xs font-bold text-title">{log.date}</p>
-              </button>
-            ))}
-          </div>
-        ) : (
-          <p className="text-sm">Le foto corpo appariranno qui in ordine cronologico.</p>
-        )}
-      </Card>
-
-      <Card>
-        <SectionTitle title="Trend peso" eyebrow="ultimi record" />
+        <SectionTitle title="Trend peso" eyebrow="ultimi record">
+          Foto corpo, peso, sensazione e valutazione giornata nello stesso punto.
+        </SectionTitle>
         <div className="mb-4 grid gap-3 md:grid-cols-2 lg:hidden">
           {sortedLogs.slice(0, 12).map((log) => (
             <article key={log.id} className="rounded-2xl border border-blush-border bg-white p-3">
               <div className="flex items-start gap-3">
-                <div className="grid size-20 shrink-0 place-items-center overflow-hidden rounded-2xl border border-blush-border bg-pink-bg text-accent">
+                <div className="grid size-24 shrink-0 place-items-center overflow-hidden rounded-2xl border border-blush-border bg-pink-bg text-accent">
                   {log.bodyPhoto ? (
-                    <button type="button" className="h-full w-full" onClick={() => setPreviewPhoto({ src: log.bodyPhoto, label: `Foto corpo - ${log.date}` })}>
+                    <button type="button" className="h-full w-full" onClick={() => setPreviewPhoto({ src: log.bodyPhoto, label: `Foto corpo - ${compactDate(log.date)}` })}>
                       <img src={log.bodyPhoto} alt="" className="h-full w-full object-contain" onError={(event) => { event.currentTarget.style.display = 'none' }} />
                     </button>
                   ) : (
                     <Camera size={22} aria-hidden="true" />
                   )}
                 </div>
-                <div>
-                  <p className="font-black text-title">{log.date}</p>
-                  <p className="text-sm">Peso {log.weight ? `${log.weight} kg` : '-'}</p>
-                  <p className="text-sm">Come ti senti: {log.feelingStatus || log.feeling || '-'}</p>
-                  <p className="text-sm">Integratori / applicazioni: {log.supplements || '-'}</p>
+                <div className="min-w-0">
+                  <p className="font-black text-title">{compactDate(log.date)}</p>
+                  {log.weight ? <p className="text-sm">Peso: {log.weight} kg</p> : null}
+                  {feelingLabel(log) ? <p className="text-sm">Come ti senti: {feelingLabel(log)}</p> : null}
+                  {dayRatingLabel(log) ? (
+                    <p className={`mt-1 w-fit rounded-full px-3 py-1 text-xs font-bold ${dayRatingValue(log) >= 4 ? 'bg-sage text-title' : 'bg-blush text-title'}`}>
+                      Valutazione {dayRatingLabel(log)}
+                    </p>
+                  ) : null}
                 </div>
               </div>
             </article>
           ))}
+          {sortedLogs.length === 0 ? <p className="text-sm">Nessuna giornata salvata.</p> : null}
         </div>
         <div className="table-wrap hidden lg:block">
           <table className="clean-table">
@@ -131,23 +123,23 @@ export default function Progress({ dailyLogs, workoutSessions }) {
                 <th>Foto corpo</th>
                 <th>Peso</th>
                 <th>Come ti senti</th>
-                <th>Integratori / applicazioni</th>
+                <th>Valutazione giornata</th>
               </tr>
             </thead>
             <tbody>
               {sortedLogs.slice(0, 12).map((log) => (
                 <tr key={log.id}>
-                  <td>{log.date}</td>
+                  <td>{compactDate(log.date)}</td>
                   <td>
                     {log.bodyPhoto ? (
-                      <button type="button" onClick={() => setPreviewPhoto({ src: log.bodyPhoto, label: `Foto corpo - ${log.date}` })}>
+                      <button type="button" onClick={() => setPreviewPhoto({ src: log.bodyPhoto, label: `Foto corpo - ${compactDate(log.date)}` })}>
                         <img src={log.bodyPhoto} alt="" className="h-16 w-16 rounded-xl border border-blush-border bg-pink-bg object-contain" onError={(event) => { event.currentTarget.style.display = 'none' }} />
                       </button>
-                    ) : '-'}
+                    ) : ''}
                   </td>
-                  <td>{log.weight ? `${log.weight} kg` : '-'}</td>
-                  <td>{log.feelingStatus || log.feeling || '-'}</td>
-                  <td>{log.supplements || '-'}</td>
+                  <td>{log.weight ? `${log.weight} kg` : ''}</td>
+                  <td>{feelingLabel(log)}</td>
+                  <td>{dayRatingLabel(log)}</td>
                 </tr>
               ))}
               {sortedLogs.length === 0 ? (

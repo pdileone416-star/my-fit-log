@@ -19,6 +19,7 @@ const emptyLog = {
   dinner: '',
   dinnerPhoto: '',
   supplements: '',
+  supplementItems: [],
   feelingStatus: '',
   feelingTags: [],
   feeling: '',
@@ -158,6 +159,7 @@ function hasDailyContent(log) {
     'dinner',
     'dinnerPhoto',
     'supplements',
+    'supplementItems',
     'feelingStatus',
     'feelingTags',
     'feeling',
@@ -171,6 +173,26 @@ function selectedFeelingTags(value) {
   return Array.isArray(value) ? value : []
 }
 
+function selectedSupplements(value) {
+  return Array.isArray(value) ? value : []
+}
+
+function supplementsLabel(log) {
+  if (Array.isArray(log.supplementItems) && log.supplementItems.length) {
+    return log.supplementItems.join(', ')
+  }
+
+  return log.supplements || ''
+}
+
+function hydrateDailyLog(log) {
+  if (!log) return emptyLog
+  const supplementItems = Array.isArray(log.supplementItems) && log.supplementItems.length
+    ? log.supplementItems
+    : String(log.supplements || '').split(',').map((item) => item.trim()).filter(Boolean)
+  return { ...emptyLog, ...log, supplementItems }
+}
+
 function compactDate(date) {
   if (!date) return { day: '-', month: '', weekday: '' }
   const parsed = new Date(`${date}T12:00:00`)
@@ -179,10 +201,6 @@ function compactDate(date) {
     month: compactMonths[parsed.getMonth()],
     weekday: compactWeekdays[parsed.getDay()],
   }
-}
-
-function hasAnyPhoto(log) {
-  return Boolean(log.breakfastPhoto || log.lunchPhoto || log.snackPhoto || log.dinnerPhoto || log.bodyPhoto)
 }
 
 function photoCount(log) {
@@ -203,34 +221,58 @@ function mealCountFromLog(log) {
   return ['breakfast', 'lunch', 'snack', 'dinner'].filter((key) => log[key]?.trim()).length
 }
 
-function CompletionChecklist({ log }) {
-  const meals = mealCountFromLog(log)
-  const items = [
-    log.weight ? ['Peso', `${log.weight} kg`] : null,
-    meals > 0 ? ['Pasti', `${meals} ${meals === 1 ? 'pasto' : 'pasti'}`] : null,
-    log.feelingStatus || log.feeling ? ['Sensazione', log.feelingStatus || log.feeling] : null,
-    dayRatingLabel(log) ? ['Valutazione', dayRatingLabel(log)] : null,
-    log.supplements ? ['Integratori', 'presenti'] : null,
-    hasAnyPhoto(log) ? ['Foto', `${photoCount(log)} ${photoCount(log) === 1 ? 'foto' : 'foto'}`] : null,
-  ].filter(Boolean)
+function SupplementPicker({ value, options, onUpdate, onAddOption, onDeleteOption }) {
+  const [newOption, setNewOption] = useState('')
+  const selected = selectedSupplements(value.supplementItems)
+
+  function toggleSupplement(option) {
+    onUpdate('supplementItems', selected.includes(option)
+      ? selected.filter((item) => item !== option)
+      : [...selected, option])
+  }
+
+  function addOption() {
+    const label = newOption.trim()
+    if (!label) return
+    onAddOption(label)
+    onUpdate('supplementItems', selected.includes(label) ? selected : [...selected, label])
+    setNewOption('')
+  }
 
   return (
-    <div className="grid gap-3 rounded-2xl border border-blush-border bg-white p-3">
-      <p className="font-bold text-title">Riepilogo compilato</p>
-      {items.length === 0 ? <p className="text-sm text-text">Compila solo le cose che vuoi ricordare oggi.</p> : null}
-      <div className="grid gap-2 sm:grid-cols-2">
-        {items.map(([label, value]) => (
-          <div key={label} className="flex items-center justify-between gap-2 rounded-xl bg-pink-bg px-3 py-2 text-sm">
-            <span className="font-bold text-title">{label}</span>
-            <span className="font-bold text-title">{value}</span>
+    <details className="rounded-2xl border border-blush-border bg-white p-3 md:col-span-2" open={selected.length > 0 || options.length === 0}>
+      <summary className="cursor-pointer list-none">
+        <p className="font-bold text-title">Integratori / applicazioni</p>
+        <p className="text-sm text-text">{selected.length ? selected.join(', ') : 'Apri e seleziona cosa hai preso oggi.'}</p>
+      </summary>
+      <div className="mt-3 grid gap-3">
+        {options.length ? (
+          <div className="flex flex-wrap gap-2">
+            {options.map((option) => {
+              const active = selected.includes(option)
+              return (
+                <span key={option} className={`inline-flex items-center gap-1 rounded-full px-3 py-2 text-xs font-bold ${active ? 'bg-sage text-title' : 'bg-blush text-title'}`}>
+                  <button type="button" onClick={() => toggleSupplement(option)}>{option}</button>
+                  <button type="button" className="grid size-5 place-items-center rounded-full bg-white/70" onClick={() => onDeleteOption(option)} aria-label={`Elimina ${option}`}>
+                    <X size={12} aria-hidden="true" />
+                  </button>
+                </span>
+              )
+            })}
           </div>
-        ))}
+        ) : (
+          <p className="rounded-xl bg-pink-bg px-3 py-2 text-sm">Aggiungi il primo integratore o applicazione.</p>
+        )}
+      <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
+        <Input label="Nuova scelta" value={newOption} onChange={(event) => setNewOption(event.target.value)} placeholder="Es. Omega 3, creatina, crema..." />
+        <Button type="button" className="self-end" onClick={addOption}><Plus size={16} />Aggiungi</Button>
       </div>
-    </div>
+      </div>
+    </details>
   )
 }
 
-function DiaryFields({ value, onUpdate, onDateChange }) {
+function DiaryFields({ value, onUpdate, onDateChange, supplementOptions, onAddSupplementOption, onDeleteSupplementOption }) {
   function toggleTag(tag) {
     const current = selectedFeelingTags(value.feelingTags)
     onUpdate('feelingTags', current.includes(tag) ? current.filter((item) => item !== tag) : [...current, tag])
@@ -249,7 +291,13 @@ function DiaryFields({ value, onUpdate, onDateChange }) {
         <PhotoField label="Foto merenda" value={value.snackPhoto || ''} onChange={(photo) => onUpdate('snackPhoto', photo)} />
         <Textarea label="Cena" value={value.dinner || ''} onChange={(event) => onUpdate('dinner', event.target.value)} />
         <PhotoField label="Foto cena" value={value.dinnerPhoto || ''} onChange={(photo) => onUpdate('dinnerPhoto', photo)} />
-        <Input label="Integratori / applicazioni" value={value.supplements || ''} onChange={(event) => onUpdate('supplements', event.target.value)} />
+        <SupplementPicker
+          value={value}
+          options={supplementOptions}
+          onUpdate={onUpdate}
+          onAddOption={onAddSupplementOption}
+          onDeleteOption={onDeleteSupplementOption}
+        />
       </div>
       <div className="grid gap-3 rounded-2xl border border-blush-border bg-white p-3">
         <p className="font-bold text-title">Come ti senti</p>
@@ -305,13 +353,12 @@ function DiaryFields({ value, onUpdate, onDateChange }) {
         </div>
       </div>
       <PhotoField label="Foto corpo / progressi" value={value.bodyPhoto || ''} onChange={(photo) => onUpdate('bodyPhoto', photo)} />
-      <CompletionChecklist log={value} />
       <Textarea label="Note generali" rows={4} value={value.notes || ''} onChange={(event) => onUpdate('notes', event.target.value)} />
     </>
   )
 }
 
-export default function FoodDiary({ dailyLogs, setDailyLogs }) {
+export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions = [], setSupplementOptions }) {
   const [form, setForm] = useState(emptyLog)
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [inlineForm, setInlineForm] = useState(emptyLog)
@@ -324,7 +371,7 @@ export default function FoodDiary({ dailyLogs, setDailyLogs }) {
   useEffect(() => {
     function handleEdit(event) {
       const log = event.detail
-      setInlineForm({ ...emptyLog, ...log })
+      setInlineForm(hydrateDailyLog(log))
       setEditingLogId(log.id)
       setOpenDays((days) => days.includes(log.id) ? days : [...days, log.id])
     }
@@ -342,14 +389,50 @@ export default function FoodDiary({ dailyLogs, setDailyLogs }) {
     }
   }, [])
 
+  useEffect(() => {
+    if (!setSupplementOptions) return
+
+    const legacyOptions = dailyLogs
+      .flatMap((log) => String(log.supplements || '').split(','))
+      .map((item) => item.trim())
+      .filter(Boolean)
+    const nextOptions = Array.from(new Set([...(supplementOptions || []), ...legacyOptions]))
+
+    if (nextOptions.length !== (supplementOptions || []).length) {
+      setSupplementOptions(nextOptions)
+    }
+  }, [dailyLogs, setSupplementOptions, supplementOptions])
+
   function update(field, value) {
     setForm((current) => ({ ...current, [field]: value }))
+  }
+
+  function addSupplementOption(label) {
+    if (!setSupplementOptions) return
+    setSupplementOptions((options) => options.includes(label) ? options : [...options, label])
+  }
+
+  function deleteSupplementOption(label) {
+    if (!setSupplementOptions) return
+    setSupplementOptions((options) => options.filter((option) => option !== label))
+    setForm((current) => ({ ...current, supplementItems: selectedSupplements(current.supplementItems).filter((item) => item !== label) }))
+    setInlineForm((current) => ({ ...current, supplementItems: selectedSupplements(current.supplementItems).filter((item) => item !== label) }))
+  }
+
+  function normalizeDailyPayload(log, id) {
+    const supplementItems = selectedSupplements(log.supplementItems)
+    return {
+      ...log,
+      id,
+      supplementItems,
+      supplements: supplementItems.length ? supplementItems.join(', ') : (log.supplements || ''),
+    }
   }
 
   function saveLog(event) {
     event.preventDefault()
     if (!hasDailyContent(form)) return
-    const payload = { ...form, id: dailyLogs.find((log) => log.date === form.date)?.id || createId() }
+    const payload = normalizeDailyPayload(form, dailyLogs.find((log) => log.date === form.date)?.id || createId())
     setDailyLogs((logs) => [payload, ...logs.filter((log) => log.date !== form.date)])
     setForm(emptyLog)
     setShowCreateForm(false)
@@ -362,11 +445,11 @@ export default function FoodDiary({ dailyLogs, setDailyLogs }) {
 
   function loadByDate(date) {
     const existing = dailyLogs.find((log) => log.date === date)
-    setForm(existing || { ...emptyLog, date })
+    setForm(existing ? hydrateDailyLog(existing) : { ...emptyLog, date })
   }
 
   function editLog(log) {
-    setInlineForm({ ...emptyLog, ...log })
+    setInlineForm(hydrateDailyLog(log))
     setEditingLogId(log.id)
     setOpenDays((days) => days.includes(log.id) ? days : [...days, log.id])
   }
@@ -391,7 +474,7 @@ export default function FoodDiary({ dailyLogs, setDailyLogs }) {
     event.preventDefault()
     if (!editingLogId || !hasDailyContent(inlineForm)) return
 
-    const payload = { ...inlineForm, id: editingLogId }
+    const payload = normalizeDailyPayload(inlineForm, editingLogId)
     setDailyLogs((logs) => [payload, ...logs.filter((log) => log.id !== editingLogId && log.date !== payload.date)])
     setOpenDays((days) => days.filter((dayId) => dayId !== editingLogId))
     cancelInlineEdit()
@@ -421,7 +504,7 @@ export default function FoodDiary({ dailyLogs, setDailyLogs }) {
     const meals = mealCount(log)
     const hasNotes = Boolean(log.notes?.trim())
     const hasFeeling = Boolean(log.feelingStatus || log.feeling?.trim())
-    const hasSupplements = Boolean(log.supplements?.trim())
+    const hasSupplements = Boolean(supplementsLabel(log).trim())
     const score = meals + (hasNotes ? 1 : 0) + (hasFeeling ? 1 : 0) + (hasSupplements ? 1 : 0)
     if (score >= 5) return 'Completa'
     if (score >= 3) return 'Buona'
@@ -464,7 +547,14 @@ export default function FoodDiary({ dailyLogs, setDailyLogs }) {
 
         {showCreateForm ? (
           <form onSubmit={saveLog} className="mt-4 grid gap-4 rounded-2xl border border-blush-border bg-pink-bg p-3">
-            <DiaryFields value={form} onUpdate={update} onDateChange={loadByDate} />
+            <DiaryFields
+              value={form}
+              onUpdate={update}
+              onDateChange={loadByDate}
+              supplementOptions={supplementOptions}
+              onAddSupplementOption={addSupplementOption}
+              onDeleteSupplementOption={deleteSupplementOption}
+            />
             <div className="flex flex-wrap gap-2">
               <Button type="submit" className="w-full md:w-auto" disabled={!hasDailyContent(form)}>
                 <Save size={18} aria-hidden="true" />
@@ -563,14 +653,11 @@ export default function FoodDiary({ dailyLogs, setDailyLogs }) {
                       {log.weight ? (
                         <span className="rounded-full bg-pink-bg px-3 py-1 text-xs font-bold text-title">Peso {log.weight} kg</span>
                       ) : null}
-                      {mealCount(log) > 0 ? (
-                        <span className="rounded-full bg-pink-bg px-3 py-1 text-xs font-bold text-title">{mealCount(log)} pasti</span>
-                      ) : null}
                       {photoCount(log) > 0 ? (
                         <span className="rounded-full bg-pink-bg px-3 py-1 text-xs font-bold text-title">{photoCount(log)} foto</span>
                       ) : null}
                     </div>
-                    {log.supplements ? <p className="mt-2 text-sm">Integratori / applicazioni: {log.supplements}</p> : null}
+                    {supplementsLabel(log) ? <p className="mt-2 text-sm">Integratori / applicazioni: {supplementsLabel(log)}</p> : null}
                   </div>
                 </div>
 
@@ -580,6 +667,9 @@ export default function FoodDiary({ dailyLogs, setDailyLogs }) {
                       value={inlineForm}
                       onUpdate={updateInline}
                       onDateChange={(date) => updateInline('date', date)}
+                      supplementOptions={supplementOptions}
+                      onAddSupplementOption={addSupplementOption}
+                      onDeleteSupplementOption={deleteSupplementOption}
                     />
                     <div className="flex flex-wrap gap-2">
                       <Button type="submit" disabled={!hasDailyContent(inlineForm)}><Save size={16} />Aggiorna giornata</Button>
@@ -617,9 +707,8 @@ export default function FoodDiary({ dailyLogs, setDailyLogs }) {
                         ))}
                       </div>
                     ) : null}
-                    {log.supplements ? <p><strong>Integratori / applicazioni:</strong> {log.supplements}</p> : null}
+                    {supplementsLabel(log) ? <p><strong>Integratori / applicazioni:</strong> {supplementsLabel(log)}</p> : null}
                     {log.notes ? <p><strong>Note:</strong> {log.notes}</p> : null}
-                    <CompletionChecklist log={log} />
                     {[log.breakfastPhoto, log.lunchPhoto, log.snackPhoto, log.dinnerPhoto, log.bodyPhoto].some(Boolean) ? (
                       <div className="mt-2 grid grid-cols-2 gap-2">
                         {[
@@ -663,7 +752,6 @@ export default function FoodDiary({ dailyLogs, setDailyLogs }) {
                 <tr>
                   <th>Data</th>
                   <th>Peso</th>
-                  <th>Pasti</th>
                   <th>Come ti senti</th>
                   <th>Valutazione giornata</th>
                   <th>Integratori / applicazioni</th>
@@ -677,10 +765,9 @@ export default function FoodDiary({ dailyLogs, setDailyLogs }) {
                     <tr>
                       <td>{log.date}</td>
                       <td>{log.weight ? `${log.weight} kg` : ''}</td>
-                      <td>{mealCount(log) > 0 ? mealCount(log) : ''}</td>
                       <td>{moodLabel(log)}</td>
                       <td>{dayRatingLabel(log)}</td>
-                      <td>{log.supplements || ''}</td>
+                      <td>{supplementsLabel(log)}</td>
                       <td>{log.notes || ''}</td>
                       <td>
                         <div className="flex gap-2">
@@ -691,12 +778,15 @@ export default function FoodDiary({ dailyLogs, setDailyLogs }) {
                     </tr>
                     {editingLogId === log.id ? (
                       <tr>
-                        <td colSpan="8">
+                        <td colSpan="7">
                           <form onSubmit={saveInlineLog} className="grid gap-4 rounded-xl bg-pink-bg p-3">
                             <DiaryFields
                               value={inlineForm}
                               onUpdate={updateInline}
                               onDateChange={(date) => updateInline('date', date)}
+                              supplementOptions={supplementOptions}
+                              onAddSupplementOption={addSupplementOption}
+                              onDeleteSupplementOption={deleteSupplementOption}
                             />
                             <div className="flex flex-wrap gap-2">
                               <Button type="submit" disabled={!hasDailyContent(inlineForm)}><Save size={16} />Aggiorna giornata</Button>
@@ -708,7 +798,7 @@ export default function FoodDiary({ dailyLogs, setDailyLogs }) {
                     ) : null}
                   </Fragment>
                 ))}
-                {sortedLogs.length === 0 ? <tr><td colSpan="8">Nessuna giornata salvata.</td></tr> : null}
+                {sortedLogs.length === 0 ? <tr><td colSpan="7">Nessuna giornata salvata.</td></tr> : null}
               </tbody>
             </table>
           </div>
