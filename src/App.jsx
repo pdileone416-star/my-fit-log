@@ -1,12 +1,11 @@
 import { useEffect, useState } from 'react'
-import { Activity, CalendarDays, Dumbbell, Home as HomeIcon, LineChart, LogOut, Utensils } from 'lucide-react'
+import { Activity, Dumbbell, Home as HomeIcon, LineChart, LogOut, Utensils } from 'lucide-react'
 import Button from './components/Button'
 import Tabs from './components/Tabs'
 import Home from './pages/Home'
 import FoodDiary from './pages/FoodDiary'
 import Workout from './pages/Workout'
 import Progress from './pages/Progress'
-import History from './pages/History'
 import Login from './pages/Login'
 import { buildDefaultWorkoutPlans } from './data/workoutPlan'
 import { getCurrentUser, logoutUser, migrateWorkoutLogsToSessions, readStorage, STORAGE_KEYS, storageKeyForUser, useLocalStorage, writeStorage } from './utils/storage'
@@ -58,7 +57,6 @@ function AppContent({ user, onLogout }) {
     { id: 'diary', label: 'Diario', icon: Utensils },
     { id: 'workout', label: 'Workout', icon: Dumbbell },
     { id: 'progress', label: 'Progressi', icon: LineChart },
-    { id: 'history', label: 'Storico', icon: CalendarDays },
   ]
 
   const sharedProps = {
@@ -102,7 +100,6 @@ function AppContent({ user, onLogout }) {
           {activeTab === 'diary' && <FoodDiary {...sharedProps} />}
           {activeTab === 'workout' && <Workout {...sharedProps} />}
           {activeTab === 'progress' && <Progress {...sharedProps} />}
-          {activeTab === 'history' && <History {...sharedProps} />}
         </main>
       </div>
     </div>
