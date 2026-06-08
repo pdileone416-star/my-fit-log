@@ -234,7 +234,7 @@ function mealCountFromLog(log) {
   return ['breakfast', 'lunch', 'snack', 'dinner'].filter((key) => log[key]?.trim()).length
 }
 
-function SupplementPicker({ value, options, onUpdate, onAddOption, onDeleteOption }) {
+function SupplementPicker({ value, options, onUpdate, onAddOption }) {
   const [newOption, setNewOption] = useState('')
   const selected = selectedSupplements(value.supplementItems)
 
@@ -266,9 +266,11 @@ function SupplementPicker({ value, options, onUpdate, onAddOption, onDeleteOptio
               return (
                 <span key={option} className={`inline-flex items-center gap-1 rounded-full px-3 py-2 text-xs font-bold ${active ? 'bg-sage text-title' : 'bg-blush text-title'}`}>
                   <button type="button" onClick={() => toggleSupplement(option)}>{option}</button>
-                  <button type="button" className="grid size-5 place-items-center rounded-full bg-white/70" onClick={() => onDeleteOption(option)} aria-label={`Elimina ${option}`}>
-                    <X size={12} aria-hidden="true" />
-                  </button>
+                  {active ? (
+                    <button type="button" className="grid size-5 place-items-center rounded-full bg-white/70" onClick={() => toggleSupplement(option)} aria-label={`Rimuovi ${option} dalla giornata`}>
+                      <X size={12} aria-hidden="true" />
+                    </button>
+                  ) : null}
                 </span>
               )
             })}
@@ -285,7 +287,7 @@ function SupplementPicker({ value, options, onUpdate, onAddOption, onDeleteOptio
   )
 }
 
-function DiaryFields({ value, onUpdate, onDateChange, supplementOptions, onAddSupplementOption, onDeleteSupplementOption }) {
+function DiaryFields({ value, onUpdate, onDateChange, supplementOptions, onAddSupplementOption }) {
   function toggleTag(tag) {
     const current = selectedFeelingTags(value.feelingTags)
     onUpdate('feelingTags', current.includes(tag) ? current.filter((item) => item !== tag) : [...current, tag])
@@ -309,7 +311,6 @@ function DiaryFields({ value, onUpdate, onDateChange, supplementOptions, onAddSu
           options={supplementOptions}
           onUpdate={onUpdate}
           onAddOption={onAddSupplementOption}
-          onDeleteOption={onDeleteSupplementOption}
         />
       </div>
       <div className="grid gap-3 rounded-2xl border border-blush-border bg-white p-3">
@@ -441,20 +442,13 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
     setSupplementOptions((options) => options.includes(label) ? options : [...options, label])
   }
 
-  function deleteSupplementOption(label) {
-    if (!setSupplementOptions) return
-    setSupplementOptions((options) => options.filter((option) => option !== label))
-    setForm((current) => ({ ...current, supplementItems: selectedSupplements(current.supplementItems).filter((item) => item !== label) }))
-    setInlineForm((current) => ({ ...current, supplementItems: selectedSupplements(current.supplementItems).filter((item) => item !== label) }))
-  }
-
   function normalizeDailyPayload(log, id) {
     const supplementItems = selectedSupplements(log.supplementItems)
     return {
       ...log,
       id,
       supplementItems,
-      supplements: supplementItems.length ? supplementItems.join(', ') : (log.supplements || ''),
+      supplements: supplementItems.join(', '),
     }
   }
 
@@ -590,7 +584,6 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
               onDateChange={loadByDate}
               supplementOptions={supplementOptions}
               onAddSupplementOption={addSupplementOption}
-              onDeleteSupplementOption={deleteSupplementOption}
             />
             <div className="flex flex-wrap gap-2">
               <Button type="submit" className="w-full md:w-auto" disabled={!hasDailyContent(form)}>
@@ -726,7 +719,6 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
                           onDateChange={(date) => updateInline('date', date)}
                           supplementOptions={supplementOptions}
                           onAddSupplementOption={addSupplementOption}
-                          onDeleteSupplementOption={deleteSupplementOption}
                         />
                         <div className="flex flex-wrap gap-2">
                           <Button type="submit" disabled={!hasDailyContent(inlineForm)}><Save size={16} />Aggiorna giornata</Button>
@@ -843,7 +835,6 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
                               onDateChange={(date) => updateInline('date', date)}
                               supplementOptions={supplementOptions}
                               onAddSupplementOption={addSupplementOption}
-                              onDeleteSupplementOption={deleteSupplementOption}
                             />
                             <div className="flex flex-wrap gap-2">
                               <Button type="submit" disabled={!hasDailyContent(inlineForm)}><Save size={16} />Aggiorna giornata</Button>
