@@ -376,11 +376,15 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
   const [editingLogId, setEditingLogId] = useState(null)
   const [openDays, setOpenDays] = useState([])
   const [previewPhoto, setPreviewPhoto] = useState(null)
+  const [selectedProgressMonth, setSelectedProgressMonth] = useState('all')
   const [selectedMonth, setSelectedMonth] = useState('all')
   const [visibleSavedCount, setVisibleSavedCount] = useState(20)
   const sortedLogs = sortByDateDesc(dailyLogs)
-  const progressLogs = [...dailyLogs].sort((a, b) => (a.date || '').localeCompare(b.date || '')).slice(-21)
   const monthOptions = Array.from(new Map(sortedLogs.map((log) => [monthKey(log.date), monthLabel(log.date)])).entries())
+  const filteredProgressLogs = selectedProgressMonth === 'all'
+    ? sortedLogs
+    : sortedLogs.filter((log) => monthKey(log.date) === selectedProgressMonth)
+  const progressLogs = filteredProgressLogs.slice(0, selectedProgressMonth === 'all' ? 21 : 31)
   const filteredSavedLogs = selectedMonth === 'all'
     ? sortedLogs
     : sortedLogs.filter((log) => monthKey(log.date) === selectedMonth)
@@ -614,6 +618,25 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
         <SectionTitle title="Andamento giornate" eyebrow={`${progressLogs.length} ultimi record`}>
           Una vista veloce per vedere sensazioni e valutazione giorno dopo giorno.
         </SectionTitle>
+
+        <div className="mb-4 grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
+          <label className="grid gap-1.5 text-sm font-bold text-title">
+            <span>Filtra andamento</span>
+            <select
+              value={selectedProgressMonth}
+              onChange={(event) => setSelectedProgressMonth(event.target.value)}
+              className="min-h-11 rounded-xl border border-blush-border bg-white px-3 text-text outline-none focus:border-accent"
+            >
+              <option value="all">Tutti i mesi</option>
+              {monthOptions.map(([key, label]) => (
+                <option key={key} value={key}>{label}</option>
+              ))}
+            </select>
+          </label>
+          <p className="rounded-2xl bg-pink-bg px-3 py-2 text-sm font-bold text-title">
+            {filteredProgressLogs.length} giornate
+          </p>
+        </div>
 
         {progressLogs.length === 0 ? (
           <p className="text-sm">Appena salvi una giornata, comparira qui il tuo percorso.</p>
