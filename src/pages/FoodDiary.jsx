@@ -628,19 +628,20 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
           Diario ordinato dalla giornata piu recente alla piu vecchia.
         </SectionTitle>
 
-        <div className="grid gap-3 lg:hidden">
+        <div className="-mx-2 flex snap-x gap-3 overflow-x-auto px-2 pb-3 lg:hidden">
           {sortedLogs.length === 0 ? <p className="text-sm">Nessuna giornata salvata.</p> : null}
           {sortedLogs.map((log) => {
             const isOpen = openDays.includes(log.id)
             const isEditing = editingLogId === log.id
             const date = compactDate(log.date)
             return (
-              <article key={log.id} className="rounded-3xl border border-blush-border bg-white p-3 shadow-soft">
+              <article key={log.id} className="min-w-[310px] snap-start rounded-3xl border border-blush-border bg-white p-3 shadow-soft sm:min-w-[360px]">
                 <div className="flex items-start gap-3">
                   <div className="grid w-16 shrink-0 place-items-center rounded-2xl bg-pink-bg px-2 py-3 text-center">
                     <p className="text-xs font-bold uppercase text-accent">{date.weekday}</p>
                     <p className="text-3xl font-black leading-none text-title">{date.day}</p>
                     <p className="text-xs font-bold uppercase text-text">{date.month}</p>
+                    <p className="mt-1 text-[10px] font-black uppercase text-accent">Giorno {dayNumber(log)}</p>
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-start justify-between gap-2">
