@@ -10,6 +10,8 @@ import Login from './pages/Login'
 import { buildDefaultWorkoutPlans } from './data/workoutPlan'
 import { getCurrentUser, logoutUser, migrateWorkoutLogsToSessions, readStorage, STORAGE_KEYS, storageKeyForUser, useLocalStorage, writeStorage } from './utils/storage'
 
+const defaultSupplementOptions = ['L-teanina', 'Magnesio', 'Zafferano', 'Somatoline', 'Fanghi']
+
 function App() {
   const [user, setUser] = useState(() => getCurrentUser())
 
@@ -29,7 +31,7 @@ function AppContent({ user, onLogout }) {
   const [dailyLogs, setDailyLogs] = useLocalStorage(storageKeyForUser(user.id, STORAGE_KEYS.dailyLogs), [])
   const [workoutSessions, setWorkoutSessions] = useLocalStorage(storageKeyForUser(user.id, STORAGE_KEYS.workoutSessions), [])
   const [workoutPlans, setWorkoutPlans] = useLocalStorage(storageKeyForUser(user.id, STORAGE_KEYS.workoutPlans), buildDefaultWorkoutPlans())
-  const [supplementOptions, setSupplementOptions] = useLocalStorage(storageKeyForUser(user.id, STORAGE_KEYS.supplementOptions), [])
+  const [supplementOptions, setSupplementOptions] = useLocalStorage(storageKeyForUser(user.id, STORAGE_KEYS.supplementOptions), defaultSupplementOptions)
 
   useEffect(() => {
     const seedKey = storageKeyForUser(user.id, 'workoutPlansSeeded')

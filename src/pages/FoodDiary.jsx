@@ -32,6 +32,7 @@ const feelingStatuses = ['Molto bene', 'Bene', 'Normale', 'Male', 'Molto male']
 const feelingTags = ['Gonfia', 'Ciclo', 'Fame', 'Stress', 'Energia alta', 'Stanchezza', 'Mal di testa', 'Pancia', 'Sonno', 'Digestione', 'Altro']
 const compactWeekdays = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab']
 const compactMonths = ['gen', 'feb', 'mar', 'apr', 'mag', 'giu', 'lug', 'ago', 'set', 'ott', 'nov', 'dic']
+const defaultSupplementOptions = ['L-teanina', 'Magnesio', 'Zafferano', 'Somatoline', 'Fanghi']
 
 async function preparePhotoFile(file) {
   const isHeic = file.type === 'image/heic'
@@ -396,7 +397,7 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
       .flatMap((log) => String(log.supplements || '').split(','))
       .map((item) => item.trim())
       .filter(Boolean)
-    const nextOptions = Array.from(new Set([...(supplementOptions || []), ...legacyOptions]))
+    const nextOptions = Array.from(new Set([...defaultSupplementOptions, ...(supplementOptions || []), ...legacyOptions]))
 
     if (nextOptions.length !== (supplementOptions || []).length) {
       setSupplementOptions(nextOptions)
@@ -529,6 +530,12 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
     return 'Giornata salvata'
   }
 
+  function dayNumber(log) {
+    const chronological = [...dailyLogs].sort((a, b) => (a.date || '').localeCompare(b.date || ''))
+    const index = chronological.findIndex((item) => item.id === log.id)
+    return index >= 0 ? index + 1 : chronological.length
+  }
+
   return (
     <div className="grid gap-5">
       <Card>
@@ -577,7 +584,7 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
         {progressLogs.length === 0 ? (
           <p className="text-sm">Appena salvi una giornata, comparira qui il tuo percorso.</p>
         ) : (
-          <div className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-2 lg:grid lg:grid-cols-3 lg:overflow-visible xl:grid-cols-4">
+          <div className="-mx-2 flex snap-x gap-3 overflow-x-auto px-2 pb-3">
             {progressLogs.map((log) => {
               const wentWell = dayWentWell(log)
               const date = compactDate(log.date)
@@ -586,13 +593,13 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
                   type="button"
                   key={log.id}
                   onClick={() => openLogDetail(log)}
-                  className="min-w-[170px] rounded-2xl border border-blush-border bg-white p-3 text-left shadow-soft transition hover:-translate-y-0.5 hover:border-accent lg:min-w-0"
+                  className="min-w-[235px] snap-start rounded-2xl border border-blush-border bg-white p-3 text-left shadow-soft transition hover:-translate-y-0.5 hover:border-accent sm:min-w-[260px]"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="text-xs font-bold uppercase text-accent">{date.weekday}</p>
+                      <p className="text-xs font-bold uppercase text-accent">{date.weekday} {date.day} {date.month}</p>
                       <p className="text-3xl font-black leading-none text-title">{date.day}</p>
-                      <p className="text-xs font-bold uppercase text-text">{date.month}</p>
+                      <p className="text-xs font-bold uppercase text-text">Giorno {dayNumber(log)}</p>
                     </div>
                     <span className={`grid size-10 shrink-0 place-items-center rounded-2xl ${wentWell ? 'bg-sage text-title' : 'bg-blush text-title'}`}>
                       <Heart size={20} className={wentWell ? 'fill-current' : ''} aria-hidden="true" />

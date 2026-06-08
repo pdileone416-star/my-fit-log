@@ -29,6 +29,16 @@ function supplementsTaken(log) {
   return Array.isArray(log?.supplementItems) ? log.supplementItems.length > 0 : Boolean(log?.supplements?.trim())
 }
 
+function missingMeals(log) {
+  if (!log) return ['colazione', 'pranzo', 'merenda', 'cena']
+  return [
+    ['breakfast', 'colazione'],
+    ['lunch', 'pranzo'],
+    ['snack', 'merenda'],
+    ['dinner', 'cena'],
+  ].filter(([key]) => !log[key]?.trim()).map(([, label]) => label)
+}
+
 function miniDate(date) {
   if (!date) return ''
   return new Intl.DateTimeFormat('it-IT', { day: '2-digit', month: 'short' }).format(new Date(`${date}T12:00:00`))
@@ -53,18 +63,21 @@ export default function Home({ dailyLogs, goTo }) {
     return date.toISOString().slice(0, 10)
   })
   const last7Logs = last7Dates.map((date) => dailyLogs.find((log) => log.date === date)).filter(Boolean)
+  const mealsToComplete = missingMeals(todayLog)
   const completionItems = [
     Boolean(todayLog?.weight),
+    mealsToComplete.length === 0,
     Boolean(todayLog?.feelingStatus || todayLog?.feeling),
     Boolean(dayRatingValue(todayLog)),
     supplementsTaken(todayLog),
   ]
   const completed = Math.round((completionItems.filter(Boolean).length / completionItems.length) * 100)
-  const missingItems = [
-    !todayLog?.weight ? 'peso' : '',
-    !(todayLog?.feelingStatus || todayLog?.feeling) ? 'come ti senti' : '',
-    !dayRatingValue(todayLog) ? 'valutazione giornata' : '',
-    !supplementsTaken(todayLog) ? 'integratori / applicazioni' : '',
+  const reminderItems = [
+    !dayRatingValue(todayLog) ? 'Inserisci la valutazione da 1 a 5.' : '',
+    !todayLog?.weight ? 'Inserisci il peso, se oggi ti sei pesata.' : '',
+    mealsToComplete.length ? `Completa pasti: ${mealsToComplete.join(', ')}.` : '',
+    !(todayLog?.feelingStatus || todayLog?.feeling) ? 'Aggiungi come ti senti.' : '',
+    !supplementsTaken(todayLog) ? 'Seleziona integratori / applicazioni presi oggi.' : '',
   ].filter(Boolean)
 
   return (
@@ -104,7 +117,7 @@ export default function Home({ dailyLogs, goTo }) {
 
       <Card>
         <SectionTitle title="Completamento giornata" eyebrow="oggi">
-          {missingItems.length ? `Da completare: ${missingItems.join(', ')}.` : 'Giornata compilata bene.'}
+          {reminderItems.length ? 'Piccoli promemoria per chiudere meglio la giornata.' : 'Giornata compilata bene.'}
         </SectionTitle>
         <div className="h-4 overflow-hidden rounded-full bg-blush">
           <div className="h-full rounded-full bg-accent transition-all" style={{ width: `${completed}%` }} />
@@ -113,10 +126,19 @@ export default function Home({ dailyLogs, goTo }) {
           <CheckCircle2 size={18} aria-hidden="true" />
           {completed}% completato
         </p>
-        {missingItems.length ? (
-          <div className="mt-3 flex gap-2 rounded-2xl border border-blush-border bg-pink-bg p-3 text-sm font-bold text-title">
-            <AlertCircle size={18} className="shrink-0 text-accent" aria-hidden="true" />
-            <span>Puoi completare: {missingItems.join(', ')}.</span>
+        {reminderItems.length ? (
+          <div className="mt-4 rounded-3xl border-2 border-accent bg-blush p-4 shadow-soft">
+            <div className="mb-3 flex items-center gap-2 text-title">
+              <span className="grid size-10 shrink-0 place-items-center rounded-2xl bg-accent text-white">
+                <AlertCircle size={21} aria-hidden="true" />
+              </span>
+              <p className="font-black">Reminder di oggi</p>
+            </div>
+            <div className="grid gap-2">
+              {reminderItems.map((item) => (
+                <p key={item} className="rounded-2xl bg-warm-white px-3 py-2 text-sm font-bold text-title">{item}</p>
+              ))}
+            </div>
           </div>
         ) : null}
       </Card>
