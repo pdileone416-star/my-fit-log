@@ -253,35 +253,33 @@ function SupplementPicker({ value, options, onUpdate, onAddOption, onDeleteOptio
   }
 
   return (
-    <details className="rounded-2xl border border-blush-border bg-white p-3 md:col-span-2" open={selected.length > 0 || options.length === 0}>
-      <summary className="cursor-pointer list-none">
+    <div className="grid gap-3 rounded-2xl border border-blush-border bg-white p-3 md:col-span-2">
+      <div>
         <p className="font-bold text-title">Integratori / applicazioni</p>
-        <p className="text-sm text-text">{selected.length ? selected.join(', ') : 'Apri e seleziona cosa hai preso oggi.'}</p>
-      </summary>
-      <div className="mt-3 grid gap-3">
-        {options.length ? (
-          <div className="flex flex-wrap gap-2">
-            {options.map((option) => {
-              const active = selected.includes(option)
-              return (
-                <span key={option} className={`inline-flex items-center gap-1 rounded-full px-3 py-2 text-xs font-bold ${active ? 'bg-sage text-title' : 'bg-blush text-title'}`}>
-                  <button type="button" onClick={() => toggleSupplement(option)}>{option}</button>
-                  <button type="button" className="grid size-5 place-items-center rounded-full bg-white/70" onClick={() => onDeleteOption(option)} aria-label={`Elimina ${option} dal sistema`}>
-                    <X size={12} aria-hidden="true" />
-                  </button>
-                </span>
-              )
-            })}
-          </div>
-        ) : (
-          <p className="rounded-xl bg-pink-bg px-3 py-2 text-sm">Aggiungi il primo integratore o applicazione.</p>
-        )}
+        <p className="text-sm text-text">{selected.length ? `Selezionati: ${selected.join(', ')}` : 'Seleziona cosa hai preso oggi.'}</p>
+      </div>
+      {options.length ? (
+        <div className="flex flex-wrap gap-2">
+          {options.map((option) => {
+            const active = selected.includes(option)
+            return (
+              <span key={option} className={`inline-flex items-center gap-1 rounded-full px-3 py-2 text-xs font-bold ${active ? 'bg-sage text-title' : 'bg-blush text-title'}`}>
+                <button type="button" onClick={() => toggleSupplement(option)}>{option}</button>
+                <button type="button" className="grid size-5 place-items-center rounded-full bg-white/70" onClick={() => onDeleteOption(option)} aria-label={`Elimina ${option} dal sistema`}>
+                  <X size={12} aria-hidden="true" />
+                </button>
+              </span>
+            )
+          })}
+        </div>
+      ) : (
+        <p className="rounded-xl bg-pink-bg px-3 py-2 text-sm">Aggiungi il primo integratore o applicazione.</p>
+      )}
       <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
         <Input label="Nuova scelta" value={newOption} onChange={(event) => setNewOption(event.target.value)} placeholder="Es. Omega 3, creatina, crema..." />
         <Button type="button" className="self-end" onClick={addOption}><Plus size={16} />Aggiungi</Button>
       </div>
-      </div>
-    </details>
+    </div>
   )
 }
 
