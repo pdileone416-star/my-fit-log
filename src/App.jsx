@@ -74,8 +74,8 @@ function AppContent({ user, onLogout }) {
   }
 
   return (
-    <div className="min-h-screen px-3 py-4 sm:px-4 sm:py-5 md:px-6">
-      <div className="mx-auto max-w-5xl">
+    <div className="min-h-screen max-w-full overflow-x-hidden px-3 py-4 sm:px-4 sm:py-5 md:px-6">
+      <div className="mx-auto min-w-0 max-w-5xl">
         <header className="mb-5 rounded-3xl border border-blush-border bg-warm-white p-4 shadow-soft sm:p-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
@@ -97,7 +97,7 @@ function AppContent({ user, onLogout }) {
 
         <Tabs tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
 
-        <main>
+        <main className="min-w-0">
           {activeTab === 'home' && <Home {...sharedProps} />}
           {activeTab === 'diary' && <FoodDiary {...sharedProps} />}
           {activeTab === 'workout' && <Workout {...sharedProps} />}

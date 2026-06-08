@@ -567,11 +567,13 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
   return (
     <div className="grid gap-5">
       <Card>
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <SectionTitle title="Diario alimentare" eyebrow="giornata">
-            Controlla andamento e giornate salvate. Apri il form solo quando vuoi registrare una nuova giornata.
-          </SectionTitle>
-          <Button type="button" onClick={() => {
+        <div className="grid min-w-0 gap-3 sm:grid-cols-[1fr_auto] sm:items-start">
+          <div className="min-w-0">
+            <SectionTitle title="Diario alimentare" eyebrow="giornata">
+              Controlla andamento e giornate salvate. Apri il form solo quando vuoi registrare una nuova giornata.
+            </SectionTitle>
+          </div>
+          <Button type="button" className="w-full sm:w-auto" onClick={() => {
             setForm(emptyLog)
             setShowCreateForm(true)
           }}>
@@ -612,7 +614,7 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
         {progressLogs.length === 0 ? (
           <p className="text-sm">Appena salvi una giornata, comparira qui il tuo percorso.</p>
         ) : (
-          <div className="-mx-2 flex snap-x gap-3 overflow-x-auto px-2 pb-3">
+          <div className="flex w-full max-w-full snap-x gap-3 overflow-x-auto pb-3">
             {progressLogs.map((log) => {
               const wentWell = dayWentWell(log)
               const date = compactDate(log.date)
@@ -634,7 +636,7 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
                     </span>
                   </div>
                   <div className="mt-3 grid gap-2">
-                    <p className="line-clamp-2 text-sm font-bold text-title">{moodLabel(log)}</p>
+                    <p className="break-anywhere line-clamp-2 text-sm font-bold text-title">{moodLabel(log)}</p>
                     <div className="flex flex-wrap gap-1.5">
                       {dayRatingLabel(log) ? (
                         <span className="rounded-full bg-sage px-2.5 py-1 text-xs font-bold text-title">Valutazione {dayRatingLabel(log)}</span>
@@ -678,7 +680,7 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
           </p>
         </div>
 
-        <div className="grid gap-4 lg:hidden">
+        <div className="grid min-w-0 gap-4 lg:hidden">
           {filteredSavedLogs.length === 0 ? <p className="text-sm">Nessuna giornata salvata.</p> : null}
           {groupedSavedLogs.map((group) => (
             <div key={group.key} className="grid gap-2">
@@ -688,7 +690,7 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
                 const isEditing = editingLogId === log.id
                 const date = compactDate(log.date)
                 return (
-                  <article key={log.id} className="rounded-2xl border border-blush-border bg-white p-3 shadow-soft">
+                  <article key={log.id} className="min-w-0 rounded-2xl border border-blush-border bg-white p-3 shadow-soft">
                     <div className="flex items-start gap-3">
                       <button type="button" className="grid w-16 shrink-0 place-items-center rounded-2xl bg-pink-bg px-2 py-3 text-center" onClick={() => toggleDay(log.id)} disabled={isEditing}>
                         <p className="text-xs font-bold uppercase text-accent">{date.weekday}</p>
@@ -699,8 +701,8 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
                       <div className="min-w-0 flex-1">
                         <div className="flex items-start justify-between gap-2">
                           <button type="button" className="min-w-0 text-left" onClick={() => toggleDay(log.id)} disabled={isEditing}>
-                            <p className="line-clamp-2 text-sm font-black text-title">{moodLabel(log)}</p>
-                            {log.notes ? <p className="mt-1 line-clamp-1 text-xs text-text">{log.notes}</p> : null}
+                            <p className="break-anywhere line-clamp-2 text-sm font-black text-title">{moodLabel(log)}</p>
+                            {log.notes ? <p className="break-anywhere mt-1 line-clamp-1 text-xs text-text">{log.notes}</p> : null}
                           </button>
                           {dayRatingLabel(log) ? (
                             <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold ${dayWentWell(log) ? 'bg-sage text-title' : 'bg-blush text-title'}`}>
@@ -748,12 +750,12 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
                             ].filter(([, value]) => value?.trim()).map(([label, value]) => (
                               <div key={label} className="rounded-xl bg-white px-3 py-2">
                                 <p className="text-xs font-bold uppercase text-accent">{label}</p>
-                                <p className="mt-1 text-sm text-text">{value}</p>
+                                <p className="break-anywhere mt-1 text-sm text-text">{value}</p>
                               </div>
                             ))}
                           </div>
                         ) : null}
-                        <p className="rounded-xl bg-white px-3 py-2"><strong>Come ti senti:</strong> {moodLabel(log)}</p>
+                        <p className="break-anywhere rounded-xl bg-white px-3 py-2"><strong>Come ti senti:</strong> {moodLabel(log)}</p>
                         {dayRatingLabel(log) ? <p className="rounded-xl bg-white px-3 py-2"><strong>Valutazione giornata:</strong> {dayRatingLabel(log)}</p> : null}
                         {selectedFeelingTags(log.feelingTags).length ? (
                           <div className="flex flex-wrap gap-2">
@@ -762,8 +764,8 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
                             ))}
                           </div>
                         ) : null}
-                        {supplementsLabel(log) ? <p><strong>Integratori / applicazioni:</strong> {supplementsLabel(log)}</p> : null}
-                        {log.notes ? <p><strong>Note:</strong> {log.notes}</p> : null}
+                        {supplementsLabel(log) ? <p className="break-anywhere"><strong>Integratori / applicazioni:</strong> {supplementsLabel(log)}</p> : null}
+                        {log.notes ? <p className="break-anywhere"><strong>Note:</strong> {log.notes}</p> : null}
                         {[log.breakfastPhoto, log.lunchPhoto, log.snackPhoto, log.dinnerPhoto, log.bodyPhoto].some(Boolean) ? (
                           <div className="mt-2 grid grid-cols-2 gap-2">
                             {[
@@ -785,13 +787,13 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
                       </div>
                     ) : null}
 
-                    <div className="mt-3 flex flex-wrap gap-2">
+                    <div className="mt-3 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
                       <Button type="button" variant="secondary" onClick={() => toggleDay(log.id)} disabled={isEditing}>
                         {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                         {isOpen ? 'Chiudi' : 'Apri'}
                       </Button>
-                      <Button type="button" variant="ghost" onClick={() => editLog(log)} disabled={isEditing}><Pencil size={16} />Modifica</Button>
-                      <Button type="button" variant="danger" onClick={() => deleteLog(log.id)}><Trash2 size={16} />Elimina</Button>
+                      <Button type="button" variant="ghost" className="border border-blush-border" onClick={() => editLog(log)} disabled={isEditing}><Pencil size={16} />Modifica</Button>
+                      <Button type="button" variant="danger" className="col-span-2 sm:col-span-1" onClick={() => deleteLog(log.id)}><Trash2 size={16} />Elimina</Button>
                     </div>
                   </article>
                 )

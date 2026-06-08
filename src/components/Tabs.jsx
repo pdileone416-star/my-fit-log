@@ -1,7 +1,7 @@
 export default function Tabs({ tabs, activeTab, onChange }) {
   return (
-    <nav className="sticky top-0 z-20 -mx-4 mb-5 overflow-x-auto border-b border-blush-border bg-pink-bg/95 px-4 py-3 backdrop-blur md:static md:mx-0 md:rounded-2xl md:border md:bg-warm-white">
-      <div className="flex min-w-max gap-2 md:min-w-0 md:flex-wrap">
+    <nav className="sticky top-0 z-20 mb-5 max-w-full overflow-x-auto border-b border-blush-border bg-pink-bg/95 py-3 backdrop-blur md:static md:rounded-2xl md:border md:bg-warm-white md:px-3">
+      <div className="flex w-max max-w-none gap-2 px-1 md:w-full md:flex-wrap md:px-0">
         {tabs.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
