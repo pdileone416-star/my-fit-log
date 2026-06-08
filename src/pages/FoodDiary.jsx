@@ -204,6 +204,18 @@ function compactDate(date) {
   }
 }
 
+function monthKey(date) {
+  return date ? date.slice(0, 7) : 'senza-data'
+}
+
+function monthLabel(date) {
+  if (!date) return 'Senza data'
+  return new Intl.DateTimeFormat('it-IT', {
+    month: 'long',
+    year: 'numeric',
+  }).format(new Date(`${date}T12:00:00`))
+}
+
 function photoCount(log) {
   return [log.breakfastPhoto, log.lunchPhoto, log.snackPhoto, log.dinnerPhoto, log.bodyPhoto].filter(Boolean).length
 }
@@ -366,8 +378,24 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
   const [editingLogId, setEditingLogId] = useState(null)
   const [openDays, setOpenDays] = useState([])
   const [previewPhoto, setPreviewPhoto] = useState(null)
+  const [selectedMonth, setSelectedMonth] = useState('all')
+  const [visibleSavedCount, setVisibleSavedCount] = useState(20)
   const sortedLogs = sortByDateDesc(dailyLogs)
   const progressLogs = [...dailyLogs].sort((a, b) => (a.date || '').localeCompare(b.date || '')).slice(-21)
+  const monthOptions = Array.from(new Map(sortedLogs.map((log) => [monthKey(log.date), monthLabel(log.date)])).entries())
+  const filteredSavedLogs = selectedMonth === 'all'
+    ? sortedLogs
+    : sortedLogs.filter((log) => monthKey(log.date) === selectedMonth)
+  const visibleSavedLogs = filteredSavedLogs.slice(0, visibleSavedCount)
+  const groupedSavedLogs = visibleSavedLogs.reduce((groups, log) => {
+    const key = monthKey(log.date)
+    const existing = groups.find((group) => group.key === key)
+    if (existing) {
+      existing.logs.push(log)
+      return groups
+    }
+    return [...groups, { key, label: monthLabel(log.date), logs: [log] }]
+  }, [])
 
   useEffect(() => {
     function handleEdit(event) {
@@ -625,132 +653,151 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
 
       <Card>
         <SectionTitle title="Giornate salvate" eyebrow={`${sortedLogs.length} giorni`}>
-          Diario ordinato dalla giornata piu recente alla piu vecchia.
+          Archivio compatto per consultare tante giornate senza perdere il filo.
         </SectionTitle>
 
-        <div className="-mx-2 flex snap-x gap-3 overflow-x-auto px-2 pb-3 lg:hidden">
-          {sortedLogs.length === 0 ? <p className="text-sm">Nessuna giornata salvata.</p> : null}
-          {sortedLogs.map((log) => {
-            const isOpen = openDays.includes(log.id)
-            const isEditing = editingLogId === log.id
-            const date = compactDate(log.date)
-            return (
-              <article key={log.id} className="min-w-[310px] snap-start rounded-3xl border border-blush-border bg-white p-3 shadow-soft sm:min-w-[360px]">
-                <div className="flex items-start gap-3">
-                  <div className="grid w-16 shrink-0 place-items-center rounded-2xl bg-pink-bg px-2 py-3 text-center">
-                    <p className="text-xs font-bold uppercase text-accent">{date.weekday}</p>
-                    <p className="text-3xl font-black leading-none text-title">{date.day}</p>
-                    <p className="text-xs font-bold uppercase text-text">{date.month}</p>
-                    <p className="mt-1 text-[10px] font-black uppercase text-accent">Giorno {dayNumber(log)}</p>
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <p className="rounded-xl bg-blush px-3 py-2 text-sm font-bold text-title">Come ti senti: {moodLabel(log)}</p>
-                      </div>
-                      {dayRatingLabel(log) ? (
-                        <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold ${dayWentWell(log) ? 'bg-sage text-title' : 'bg-blush text-title'}`}>
-                          {foodRating(log)}
-                        </span>
-                      ) : null}
-                    </div>
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {dayRatingLabel(log) ? (
-                        <span className="rounded-full bg-sage px-3 py-1 text-xs font-bold text-title">Valutazione {dayRatingLabel(log)}</span>
-                      ) : null}
-                      {log.weight ? (
-                        <span className="rounded-full bg-pink-bg px-3 py-1 text-xs font-bold text-title">Peso {log.weight} kg</span>
-                      ) : null}
-                      {photoCount(log) > 0 ? (
-                        <span className="rounded-full bg-pink-bg px-3 py-1 text-xs font-bold text-title">{photoCount(log)} foto</span>
-                      ) : null}
-                    </div>
-                    {supplementsLabel(log) ? <p className="mt-2 text-sm">Integratori / applicazioni: {supplementsLabel(log)}</p> : null}
-                  </div>
-                </div>
+        <div className="mb-4 grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
+          <label className="grid gap-1.5 text-sm font-bold text-title">
+            <span>Filtra per mese</span>
+            <select
+              value={selectedMonth}
+              onChange={(event) => {
+                setSelectedMonth(event.target.value)
+                setVisibleSavedCount(20)
+              }}
+              className="min-h-11 rounded-xl border border-blush-border bg-white px-3 text-text outline-none focus:border-accent"
+            >
+              <option value="all">Tutti i mesi</option>
+              {monthOptions.map(([key, label]) => (
+                <option key={key} value={key}>{label}</option>
+              ))}
+            </select>
+          </label>
+          <p className="rounded-2xl bg-pink-bg px-3 py-2 text-sm font-bold text-title">
+            {filteredSavedLogs.length} giornate trovate
+          </p>
+        </div>
 
-                {isEditing ? (
-                  <form onSubmit={saveInlineLog} className="mt-3 grid gap-4 rounded-xl bg-pink-bg p-3">
-                    <DiaryFields
-                      value={inlineForm}
-                      onUpdate={updateInline}
-                      onDateChange={(date) => updateInline('date', date)}
-                      supplementOptions={supplementOptions}
-                      onAddSupplementOption={addSupplementOption}
-                      onDeleteSupplementOption={deleteSupplementOption}
-                    />
-                    <div className="flex flex-wrap gap-2">
-                      <Button type="submit" disabled={!hasDailyContent(inlineForm)}><Save size={16} />Aggiorna giornata</Button>
-                      <Button type="button" variant="ghost" className="border border-blush-border" onClick={cancelInlineEdit}><X size={16} />Annulla</Button>
+        <div className="grid gap-4 lg:hidden">
+          {filteredSavedLogs.length === 0 ? <p className="text-sm">Nessuna giornata salvata.</p> : null}
+          {groupedSavedLogs.map((group) => (
+            <div key={group.key} className="grid gap-2">
+              <p className="px-1 text-xs font-black uppercase text-accent">{group.label}</p>
+              {group.logs.map((log) => {
+                const isOpen = openDays.includes(log.id)
+                const isEditing = editingLogId === log.id
+                const date = compactDate(log.date)
+                return (
+                  <article key={log.id} className="rounded-2xl border border-blush-border bg-white p-3 shadow-soft">
+                    <div className="flex items-start gap-3">
+                      <button type="button" className="grid w-16 shrink-0 place-items-center rounded-2xl bg-pink-bg px-2 py-3 text-center" onClick={() => toggleDay(log.id)} disabled={isEditing}>
+                        <p className="text-xs font-bold uppercase text-accent">{date.weekday}</p>
+                        <p className="text-3xl font-black leading-none text-title">{date.day}</p>
+                        <p className="text-xs font-bold uppercase text-text">{date.month}</p>
+                        <p className="mt-1 text-[10px] font-black uppercase text-accent">Giorno {dayNumber(log)}</p>
+                      </button>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-start justify-between gap-2">
+                          <button type="button" className="min-w-0 text-left" onClick={() => toggleDay(log.id)} disabled={isEditing}>
+                            <p className="line-clamp-2 text-sm font-black text-title">{moodLabel(log)}</p>
+                            {log.notes ? <p className="mt-1 line-clamp-1 text-xs text-text">{log.notes}</p> : null}
+                          </button>
+                          {dayRatingLabel(log) ? (
+                            <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold ${dayWentWell(log) ? 'bg-sage text-title' : 'bg-blush text-title'}`}>
+                              {dayRatingLabel(log)}
+                            </span>
+                          ) : null}
+                        </div>
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {log.weight ? <span className="rounded-full bg-pink-bg px-3 py-1 text-xs font-bold text-title">Peso {log.weight} kg</span> : null}
+                          {photoCount(log) > 0 ? <span className="rounded-full bg-pink-bg px-3 py-1 text-xs font-bold text-title">{photoCount(log)} foto</span> : null}
+                          {supplementsLabel(log) ? <span className="rounded-full bg-pink-bg px-3 py-1 text-xs font-bold text-title">Integratori</span> : null}
+                        </div>
+                      </div>
                     </div>
-                  </form>
-                ) : isOpen ? (
-                  <div className="mt-3 grid gap-3 rounded-2xl bg-pink-bg p-3 text-sm">
-                    {[
-                        ['Colazione', log.breakfast],
-                        ['Pranzo', log.lunch],
-                        ['Merenda', log.snack],
-                        ['Cena', log.dinner],
-                      ].some(([, value]) => value?.trim()) ? (
-                      <div className="grid gap-2 sm:grid-cols-2">
+
+                    {isEditing ? (
+                      <form onSubmit={saveInlineLog} className="mt-3 grid gap-4 rounded-xl bg-pink-bg p-3">
+                        <DiaryFields
+                          value={inlineForm}
+                          onUpdate={updateInline}
+                          onDateChange={(date) => updateInline('date', date)}
+                          supplementOptions={supplementOptions}
+                          onAddSupplementOption={addSupplementOption}
+                          onDeleteSupplementOption={deleteSupplementOption}
+                        />
+                        <div className="flex flex-wrap gap-2">
+                          <Button type="submit" disabled={!hasDailyContent(inlineForm)}><Save size={16} />Aggiorna giornata</Button>
+                          <Button type="button" variant="ghost" className="border border-blush-border" onClick={cancelInlineEdit}><X size={16} />Annulla</Button>
+                        </div>
+                      </form>
+                    ) : isOpen ? (
+                      <div className="mt-3 grid gap-3 rounded-2xl bg-pink-bg p-3 text-sm">
                         {[
                           ['Colazione', log.breakfast],
                           ['Pranzo', log.lunch],
                           ['Merenda', log.snack],
                           ['Cena', log.dinner],
-                        ].filter(([, value]) => value?.trim()).map(([label, value]) => (
-                          <div key={label} className="rounded-xl bg-white px-3 py-2">
-                            <p className="text-xs font-bold uppercase text-accent">{label}</p>
-                            <p className="mt-1 text-sm text-text">{value}</p>
+                        ].some(([, value]) => value?.trim()) ? (
+                          <div className="grid gap-2">
+                            {[
+                              ['Colazione', log.breakfast],
+                              ['Pranzo', log.lunch],
+                              ['Merenda', log.snack],
+                              ['Cena', log.dinner],
+                            ].filter(([, value]) => value?.trim()).map(([label, value]) => (
+                              <div key={label} className="rounded-xl bg-white px-3 py-2">
+                                <p className="text-xs font-bold uppercase text-accent">{label}</p>
+                                <p className="mt-1 text-sm text-text">{value}</p>
+                              </div>
+                            ))}
                           </div>
-                        ))}
+                        ) : null}
+                        <p className="rounded-xl bg-white px-3 py-2"><strong>Come ti senti:</strong> {moodLabel(log)}</p>
+                        {dayRatingLabel(log) ? <p className="rounded-xl bg-white px-3 py-2"><strong>Valutazione giornata:</strong> {dayRatingLabel(log)}</p> : null}
+                        {selectedFeelingTags(log.feelingTags).length ? (
+                          <div className="flex flex-wrap gap-2">
+                            {selectedFeelingTags(log.feelingTags).map((tag) => (
+                              <span key={tag} className="rounded-full bg-sage px-3 py-1 text-xs font-bold text-title">{tag}</span>
+                            ))}
+                          </div>
+                        ) : null}
+                        {supplementsLabel(log) ? <p><strong>Integratori / applicazioni:</strong> {supplementsLabel(log)}</p> : null}
+                        {log.notes ? <p><strong>Note:</strong> {log.notes}</p> : null}
+                        {[log.breakfastPhoto, log.lunchPhoto, log.snackPhoto, log.dinnerPhoto, log.bodyPhoto].some(Boolean) ? (
+                          <div className="mt-2 grid grid-cols-2 gap-2">
+                            {[
+                              ['Colazione', log.breakfastPhoto],
+                              ['Pranzo', log.lunchPhoto],
+                              ['Merenda', log.snackPhoto],
+                              ['Cena', log.dinnerPhoto],
+                              ['Corpo', log.bodyPhoto],
+                            ].filter(([, photo]) => photo).map(([label, photo]) => (
+                              <figure key={label} className="rounded-xl border border-blush-border bg-white p-2">
+                                <button type="button" className="block w-full" onClick={() => setPreviewPhoto({ src: photo, label })}>
+                                  <img src={photo} alt="" className="h-28 w-full rounded-lg bg-pink-bg object-contain" onError={(event) => { event.currentTarget.style.display = 'none' }} />
+                                </button>
+                                <figcaption className="mt-1 text-xs font-bold text-title">{label}</figcaption>
+                              </figure>
+                            ))}
+                          </div>
+                        ) : null}
                       </div>
                     ) : null}
-                    <p className="rounded-xl bg-white px-3 py-2"><strong>Come ti senti:</strong> {moodLabel(log)}</p>
-                    {dayRatingLabel(log) ? <p className="rounded-xl bg-white px-3 py-2"><strong>Valutazione giornata:</strong> {dayRatingLabel(log)}</p> : null}
-                    {selectedFeelingTags(log.feelingTags).length ? (
-                      <div className="flex flex-wrap gap-2">
-                        {selectedFeelingTags(log.feelingTags).map((tag) => (
-                          <span key={tag} className="rounded-full bg-sage px-3 py-1 text-xs font-bold text-title">{tag}</span>
-                        ))}
-                      </div>
-                    ) : null}
-                    {supplementsLabel(log) ? <p><strong>Integratori / applicazioni:</strong> {supplementsLabel(log)}</p> : null}
-                    {log.notes ? <p><strong>Note:</strong> {log.notes}</p> : null}
-                    {[log.breakfastPhoto, log.lunchPhoto, log.snackPhoto, log.dinnerPhoto, log.bodyPhoto].some(Boolean) ? (
-                      <div className="mt-2 grid grid-cols-2 gap-2">
-                        {[
-                          ['Colazione', log.breakfastPhoto],
-                          ['Pranzo', log.lunchPhoto],
-                          ['Merenda', log.snackPhoto],
-                          ['Cena', log.dinnerPhoto],
-                          ['Corpo', log.bodyPhoto],
-                        ].filter(([, photo]) => photo).map(([label, photo]) => (
-                          <figure key={label} className="rounded-xl border border-blush-border bg-white p-2">
-                            <button type="button" className="block w-full" onClick={() => setPreviewPhoto({ src: photo, label })}>
-                              <img src={photo} alt="" className="h-28 w-full rounded-lg bg-pink-bg object-contain" onError={(event) => { event.currentTarget.style.display = 'none' }} />
-                            </button>
-                            <figcaption className="mt-1 text-xs font-bold text-title">{label}</figcaption>
-                          </figure>
-                        ))}
-                      </div>
-                    ) : null}
-                  </div>
-                ) : log.notes ? (
-                  <p className="mt-2 text-sm">{log.notes}</p>
-                ) : null}
 
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <Button type="button" variant="secondary" onClick={() => toggleDay(log.id)} disabled={isEditing}>
-                    {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                    {isOpen ? 'Chiudi' : 'Apri'}
-                  </Button>
-                  <Button type="button" variant="ghost" onClick={() => editLog(log)} disabled={isEditing}><Pencil size={16} />Modifica</Button>
-                  <Button type="button" variant="danger" onClick={() => deleteLog(log.id)}><Trash2 size={16} />Elimina</Button>
-                </div>
-              </article>
-            )
-          })}
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <Button type="button" variant="secondary" onClick={() => toggleDay(log.id)} disabled={isEditing}>
+                        {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                        {isOpen ? 'Chiudi' : 'Apri'}
+                      </Button>
+                      <Button type="button" variant="ghost" onClick={() => editLog(log)} disabled={isEditing}><Pencil size={16} />Modifica</Button>
+                      <Button type="button" variant="danger" onClick={() => deleteLog(log.id)}><Trash2 size={16} />Elimina</Button>
+                    </div>
+                  </article>
+                )
+              })}
+            </div>
+          ))}
         </div>
 
         <div className="hidden lg:block">
@@ -768,7 +815,7 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
                 </tr>
               </thead>
               <tbody>
-                {sortedLogs.map((log) => (
+                {visibleSavedLogs.map((log) => (
                   <Fragment key={log.id}>
                     <tr>
                       <td>{log.date}</td>
@@ -806,11 +853,18 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
                     ) : null}
                   </Fragment>
                 ))}
-                {sortedLogs.length === 0 ? <tr><td colSpan="7">Nessuna giornata salvata.</td></tr> : null}
+                {filteredSavedLogs.length === 0 ? <tr><td colSpan="7">Nessuna giornata salvata.</td></tr> : null}
               </tbody>
             </table>
           </div>
         </div>
+        {visibleSavedCount < filteredSavedLogs.length ? (
+          <div className="mt-4 flex justify-center">
+            <Button type="button" variant="secondary" onClick={() => setVisibleSavedCount((count) => count + 20)}>
+              Mostra altre 20
+            </Button>
+          </div>
+        ) : null}
       </Card>
       {previewPhoto ? <PhotoModal photo={previewPhoto} onClose={() => setPreviewPhoto(null)} /> : null}
     </div>
