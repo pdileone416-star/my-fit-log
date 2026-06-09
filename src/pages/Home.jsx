@@ -44,8 +44,37 @@ function miniDate(date) {
   return new Intl.DateTimeFormat('it-IT', { day: '2-digit', month: 'short' }).format(new Date(`${date}T12:00:00`))
 }
 
+function dateFromISO(date) {
+  return new Date(`${date}T12:00:00`)
+}
+
+function addDays(date, days) {
+  const nextDate = dateFromISO(date)
+  nextDate.setDate(nextDate.getDate() + days)
+  return nextDate.toISOString().slice(0, 10)
+}
+
+function diffDays(fromDate, toDate) {
+  const dayMs = 24 * 60 * 60 * 1000
+  return Math.round((dateFromISO(toDate) - dateFromISO(fromDate)) / dayMs)
+}
+
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value))
+}
+
 export default function Home({ dailyLogs, goTo }) {
   const today = todayISO()
+  const challengeStart = '2026-06-09'
+  const challengeLength = 50
+  const challengeEnd = addDays(challengeStart, challengeLength - 1)
+  const juneEnd = '2026-06-30'
+  const rawChallengeDay = diffDays(challengeStart, today) + 1
+  const challengeDay = clamp(rawChallengeDay, 0, challengeLength)
+  const challengeRemaining = Math.max(challengeLength - challengeDay, 0)
+  const juneRemaining = today <= juneEnd ? Math.max(diffDays(today, juneEnd), 0) : 0
+  const challengeProgress = Math.round((challengeDay / challengeLength) * 100)
+  const challengeLogs = dailyLogs.filter((log) => log.date >= challengeStart && log.date <= challengeEnd).length
   const todayLog = dailyLogs.find((log) => log.date === today)
   const sortedWeights = [...dailyLogs].filter((log) => log.weight).sort((a, b) => (b.date || '').localeCompare(a.date || ''))
   const currentWeight = sortedWeights[0]?.weight
@@ -99,6 +128,39 @@ export default function Home({ dailyLogs, goTo }) {
           </div>
         </div>
       </section>
+
+      <Card className="border-2 border-accent bg-blush">
+        <SectionTitle title="Sfida 50 giorni" eyebrow="primo obiettivo">
+          Dal 9 giugno al {formatDate(challengeEnd)}. Un giorno alla volta, senza fare casino.
+        </SectionTitle>
+        <div className="grid gap-3">
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="rounded-2xl bg-warm-white p-3">
+              <p className="text-xs font-bold uppercase text-accent">Oggi sei al</p>
+              <p className="text-3xl font-black text-title">Giorno {challengeDay || 0}</p>
+              <p className="text-sm font-bold text-text">su {challengeLength}</p>
+            </div>
+            <div className="rounded-2xl bg-warm-white p-3">
+              <p className="text-xs font-bold uppercase text-accent">Mancano</p>
+              <p className="text-3xl font-black text-title">{challengeRemaining}</p>
+              <p className="text-sm font-bold text-text">giorni al primo obiettivo</p>
+            </div>
+            <div className="rounded-2xl bg-warm-white p-3">
+              <p className="text-xs font-bold uppercase text-accent">Fine giugno</p>
+              <p className="text-3xl font-black text-title">{juneRemaining}</p>
+              <p className="text-sm font-bold text-text">giorni al checkpoint</p>
+            </div>
+          </div>
+          <div>
+            <div className="h-4 overflow-hidden rounded-full bg-warm-white">
+              <div className="h-full rounded-full bg-accent transition-all" style={{ width: `${challengeProgress}%` }} />
+            </div>
+            <p className="mt-2 text-sm font-bold text-title">
+              {challengeProgress}% completato - {challengeLogs} giornate registrate nella sfida.
+            </p>
+          </div>
+        </div>
+      </Card>
 
       <div className="grid gap-4 md:grid-cols-2">
         <Stat icon={Scale} title="Variazione peso" value={weightDelta ? `${weightDelta} kg` : '-'} tone="bg-sage" />
