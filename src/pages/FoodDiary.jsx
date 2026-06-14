@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronUp, Heart, ImagePlus, Pencil, Plus, Save, Trash2, X } from 'lucide-react'
+import { Heart, ImagePlus, Pencil, Plus, Save, Trash2, X } from 'lucide-react'
 import Button from '../components/Button'
 import Card from '../components/Card'
 import Input from '../components/Input'
@@ -374,7 +374,6 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [inlineForm, setInlineForm] = useState(emptyLog)
   const [editingLogId, setEditingLogId] = useState(null)
-  const [openDays, setOpenDays] = useState([])
   const [previewPhoto, setPreviewPhoto] = useState(null)
   const [selectedMonth, setSelectedMonth] = useState('all')
   const [visibleSavedCount, setVisibleSavedCount] = useState(20)
@@ -390,7 +389,6 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
       const log = event.detail
       setInlineForm(hydrateDailyLog(log))
       setEditingLogId(log.id)
-      setOpenDays((days) => days.includes(log.id) ? days : [...days, log.id])
     }
 
     function handleNewDaily() {
@@ -464,7 +462,6 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
   function editLog(log) {
     setInlineForm(hydrateDailyLog(log))
     setEditingLogId(log.id)
-    setOpenDays((days) => days.includes(log.id) ? days : [...days, log.id])
   }
 
   function updateInline(field, value) {
@@ -482,7 +479,6 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
 
     const payload = normalizeDailyPayload(inlineForm, editingLogId)
     setDailyLogs((logs) => [payload, ...logs.filter((log) => log.id !== editingLogId && log.date !== payload.date)])
-    setOpenDays((days) => days.filter((dayId) => dayId !== editingLogId))
     cancelInlineEdit()
   }
 
@@ -491,10 +487,6 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
     if (editingLogId === id) {
       cancelInlineEdit()
     }
-  }
-
-  function toggleDay(id) {
-    setOpenDays((days) => days.includes(id) ? days.filter((dayId) => dayId !== id) : [...days, id])
   }
 
   function moodLabel(log) {
@@ -584,7 +576,7 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
         </div>
 
         <div className="table-wrap">
-          <table className="clean-table min-w-[1680px]">
+          <table className="clean-table min-w-[1580px]">
             <thead>
               <tr>
                 <th className="sticky left-0 z-10 min-w-44 bg-pink-bg">Giorno</th>
@@ -607,7 +599,6 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
             </thead>
             <tbody>
               {visibleSavedLogs.map((log) => {
-                const isOpen = openDays.includes(log.id)
                 const isEditing = editingLogId === log.id
                 const date = compactDate(log.date)
                 const passed = dayRatingValue(log) > 3
@@ -657,11 +648,7 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
                       <td className="min-w-56 break-anywhere">{log.notes || ''}</td>
                       <td>{photoButton(log.bodyPhoto, 'Foto corpo')}</td>
                       <td>
-                        <div className="flex min-w-60 flex-wrap gap-2">
-                          <Button type="button" variant="secondary" onClick={() => toggleDay(log.id)} disabled={isEditing}>
-                            {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                            {isOpen ? 'Chiudi' : 'Apri'}
-                          </Button>
+                        <div className="flex min-w-44 flex-wrap gap-2">
                           <Button type="button" variant="ghost" className="border border-blush-border" onClick={() => editLog(log)} disabled={isEditing}><Pencil size={16} />Modifica</Button>
                           <Button type="button" variant="danger" onClick={() => deleteLog(log.id)}><Trash2 size={16} />Elimina</Button>
                         </div>
@@ -684,17 +671,6 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
                               <Button type="button" variant="ghost" className="border border-blush-border" onClick={cancelInlineEdit}><X size={16} />Annulla</Button>
                             </div>
                           </form>
-                        </td>
-                      </tr>
-                    ) : isOpen ? (
-                      <tr>
-                        <td colSpan="16">
-                          <div className="grid gap-3 rounded-2xl bg-pink-bg p-3 text-sm">
-                            <p className="break-anywhere rounded-xl bg-white px-3 py-2"><strong>Come ti senti:</strong> {moodLabel(log)}</p>
-                            {dayRatingLabel(log) ? <p className="rounded-xl bg-white px-3 py-2"><strong>Valutazione giornata:</strong> {dayRatingLabel(log)}</p> : null}
-                            {supplementsLabel(log) ? <p className="break-anywhere"><strong>Integratori / applicazioni:</strong> {supplementsLabel(log)}</p> : null}
-                            {log.notes ? <p className="break-anywhere"><strong>Note:</strong> {log.notes}</p> : null}
-                          </div>
                         </td>
                       </tr>
                     ) : null}
