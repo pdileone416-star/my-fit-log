@@ -7,10 +7,11 @@ import FoodDiary from './pages/FoodDiary'
 import Workout from './pages/Workout'
 import Progress from './pages/Progress'
 import Login from './pages/Login'
-import { buildDefaultWorkoutPlans } from './data/workoutPlan'
+import { DEFAULT_WORKOUT_PLAN_VERSION, buildDefaultWorkoutPlans } from './data/workoutPlan'
 import { getCurrentUser, logoutUser, migrateWorkoutLogsToSessions, readStorage, STORAGE_KEYS, storageKeyForUser, useLocalStorage, writeStorage } from './utils/storage'
 
 const defaultSupplementOptions = ['L-teanina', 'Magnesio', 'Zafferano', 'Somatoline', 'Fanghi']
+const defaultWorkoutPlanNames = ['Scheda base', 'Allenamento casa']
 
 function App() {
   const [user, setUser] = useState(() => getCurrentUser())
@@ -42,10 +43,11 @@ function AppContent({ user, onLogout }) {
       && workoutPlans.some((plan) => plan.name === 'Scheda Giorno 2')
       && workoutPlans.some((plan) => plan.name === 'Scheda Giorno 3')
       && !workoutPlans.some((plan) => plan.name === 'Scheda base')
-    const hasOutdatedBase = workoutPlans.some((plan) => plan.name === 'Scheda base' && plan.version !== 'sheet-images-2026-05-27')
+    const hasMissingDefaultPlan = defaultWorkoutPlanNames.some((name) => !workoutPlans.some((plan) => plan.name === name))
+    const hasOutdatedDefaultPlan = workoutPlans.some((plan) => defaultWorkoutPlanNames.includes(plan.name) && plan.version !== DEFAULT_WORKOUT_PLAN_VERSION)
 
-    if (hasOldSplitBase || hasOutdatedBase) {
-      const customPlans = workoutPlans.filter((plan) => !['Scheda Giorno 1', 'Scheda Giorno 2', 'Scheda Giorno 3', 'Scheda base'].includes(plan.name))
+    if (hasOldSplitBase || hasMissingDefaultPlan || hasOutdatedDefaultPlan) {
+      const customPlans = workoutPlans.filter((plan) => !['Scheda Giorno 1', 'Scheda Giorno 2', 'Scheda Giorno 3', ...defaultWorkoutPlanNames].includes(plan.name))
       setWorkoutPlans([...buildDefaultWorkoutPlans(), ...customPlans])
       writeStorage(seedKey, true)
       return
