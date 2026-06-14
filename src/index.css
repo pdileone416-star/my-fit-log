@@ -96,3 +96,49 @@ table {
 .clean-table tr:last-child td {
   border-bottom: 0;
 }
+
+.diary-table-wrap {
+  box-shadow: inset -18px 0 18px -22px rgba(138, 58, 93, 0.45);
+  scrollbar-color: #D96C9F #FFF4F7;
+}
+
+.diary-table-wrap::-webkit-scrollbar {
+  height: 0.75rem;
+}
+
+.diary-table-wrap::-webkit-scrollbar-track {
+  background: #FFF4F7;
+  border-radius: 999px;
+}
+
+.diary-table-wrap::-webkit-scrollbar-thumb {
+  background: #D96C9F;
+  border-radius: 999px;
+}
+
+.diary-table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.diary-table th {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  border-bottom: 2px solid #E8DDE2;
+  font-size: 0.78rem;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.diary-table td {
+  background: #FFFDFB;
+}
+
+.diary-table tbody tr:nth-child(4n + 1) td {
+  background: #fff9fb;
+}
+
+.diary-table tbody tr:hover td {
+  background: #FFF4F7;
+}

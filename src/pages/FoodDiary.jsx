@@ -528,25 +528,21 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
           </p>
         </div>
 
-        <div className="table-wrap">
-          <table className="clean-table min-w-[1580px]">
+        <div className="table-wrap diary-table-wrap">
+          <table className="clean-table diary-table min-w-[1320px]">
             <thead>
               <tr>
                 <th className="sticky left-0 z-10 min-w-44 bg-pink-bg">Giorno</th>
                 <th>Peso</th>
                 <th>Colazione</th>
-                <th>Foto col.</th>
                 <th>Pranzo</th>
-                <th>Foto pranzo</th>
                 <th>Merenda</th>
-                <th>Foto merenda</th>
                 <th>Cena</th>
-                <th>Foto cena</th>
                 <th>Integratori</th>
-                <th>Come ti senti</th>
+                <th>Sensazione</th>
                 <th>Tag</th>
                 <th>Note</th>
-                <th>Foto corpo</th>
+                <th>Corpo</th>
                 <th>Azioni</th>
               </tr>
             </thead>
@@ -560,15 +556,27 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
                   : dayRatingValue(log)
                     ? 'border-red-200 bg-red-50 text-red-600'
                     : 'border-blush-border bg-pink-bg text-title'
+                const emptyCell = <span className="text-xs font-semibold text-text/40">-</span>
                 const photoButton = (photo, label) => photo ? (
-                  <button type="button" className="rounded-full bg-pink-bg px-3 py-1 text-xs font-bold text-title" onClick={() => setPreviewPhoto({ src: photo, label })}>
-                    Apri foto
+                  <button type="button" className="mt-2 rounded-full bg-blush px-3 py-1 text-xs font-bold text-title transition hover:bg-sage" onClick={() => setPreviewPhoto({ src: photo, label })}>
+                    Foto
                   </button>
-                ) : ''
+                ) : null
+                const mealCell = (value, photo, label) => (
+                  <div className="grid min-w-40 max-w-52 gap-1">
+                    {value ? <p className="line-clamp-3 break-anywhere text-sm leading-5">{value}</p> : emptyCell}
+                    {photoButton(photo, label)}
+                  </div>
+                )
+                const chipCell = (value, tone = 'bg-pink-bg') => value ? (
+                  <span className={`inline-flex max-w-52 rounded-full px-3 py-1 text-xs font-bold text-title ${tone}`}>
+                    <span className="break-anywhere line-clamp-2">{value}</span>
+                  </span>
+                ) : emptyCell
 
                 return (
                   <Fragment key={log.id}>
-                    <tr>
+                    <tr className="align-top">
                       <td className="sticky left-0 z-10 bg-warm-white">
                         <div className="flex items-center gap-3">
                           <span className={`grid size-11 shrink-0 place-items-center rounded-2xl ${passed ? 'bg-sage text-title' : 'bg-blush text-title'}`}>
@@ -586,20 +594,16 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
                           </div>
                         </div>
                       </td>
-                      <td>{log.weight ? `${log.weight} kg` : ''}</td>
-                      <td className="min-w-44 break-anywhere">{log.breakfast || ''}</td>
-                      <td>{photoButton(log.breakfastPhoto, 'Foto colazione')}</td>
-                      <td className="min-w-44 break-anywhere">{log.lunch || ''}</td>
-                      <td>{photoButton(log.lunchPhoto, 'Foto pranzo')}</td>
-                      <td className="min-w-44 break-anywhere">{log.snack || ''}</td>
-                      <td>{photoButton(log.snackPhoto, 'Foto merenda')}</td>
-                      <td className="min-w-44 break-anywhere">{log.dinner || ''}</td>
-                      <td>{photoButton(log.dinnerPhoto, 'Foto cena')}</td>
-                      <td className="min-w-40 break-anywhere">{supplementsLabel(log)}</td>
-                      <td className="min-w-48 break-anywhere">{moodLabel(log)}</td>
-                      <td className="min-w-40 break-anywhere">{selectedFeelingTags(log.feelingTags).join(', ')}</td>
-                      <td className="min-w-56 break-anywhere">{log.notes || ''}</td>
-                      <td>{photoButton(log.bodyPhoto, 'Foto corpo')}</td>
+                      <td>{log.weight ? <span className="rounded-full bg-sage px-3 py-1 text-xs font-black text-title">{log.weight} kg</span> : emptyCell}</td>
+                      <td>{mealCell(log.breakfast, log.breakfastPhoto, 'Foto colazione')}</td>
+                      <td>{mealCell(log.lunch, log.lunchPhoto, 'Foto pranzo')}</td>
+                      <td>{mealCell(log.snack, log.snackPhoto, 'Foto merenda')}</td>
+                      <td>{mealCell(log.dinner, log.dinnerPhoto, 'Foto cena')}</td>
+                      <td>{chipCell(supplementsLabel(log))}</td>
+                      <td>{chipCell(moodLabel(log), dayRatingValue(log) > 3 ? 'bg-sage' : 'bg-pink-bg')}</td>
+                      <td>{chipCell(selectedFeelingTags(log.feelingTags).join(', '), 'bg-blush')}</td>
+                      <td className="min-w-52 max-w-64">{log.notes ? <p className="line-clamp-4 break-anywhere text-sm leading-5">{log.notes}</p> : emptyCell}</td>
+                      <td>{photoButton(log.bodyPhoto, 'Foto corpo') || emptyCell}</td>
                       <td>
                         <div className="flex min-w-44 flex-wrap gap-2">
                           <Button type="button" variant="ghost" className="border border-blush-border" onClick={() => editLog(log)} disabled={isEditing}><Pencil size={16} />Modifica</Button>
@@ -609,7 +613,7 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
                     </tr>
                     {isEditing ? (
                       <tr>
-                        <td colSpan="16">
+                        <td colSpan="12">
                           <form onSubmit={saveInlineLog} className="grid gap-4 rounded-xl bg-pink-bg p-3">
                             <DiaryFields
                               value={inlineForm}
@@ -630,7 +634,7 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
                   </Fragment>
                 )
               })}
-              {filteredSavedLogs.length === 0 ? <tr><td colSpan="16">Nessuna giornata salvata.</td></tr> : null}
+              {filteredSavedLogs.length === 0 ? <tr><td colSpan="12">Nessuna giornata salvata.</td></tr> : null}
             </tbody>
           </table>
         </div>
