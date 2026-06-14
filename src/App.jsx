@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
-import { Dumbbell, Home as HomeIcon, LineChart, LogOut, Utensils } from 'lucide-react'
+import { Apple, Dumbbell, Home as HomeIcon, LineChart, LogOut, Utensils } from 'lucide-react'
 import Button from './components/Button'
 import Tabs from './components/Tabs'
 import Home from './pages/Home'
 import FoodDiary from './pages/FoodDiary'
+import Diet from './pages/Diet'
 import Workout from './pages/Workout'
 import Progress from './pages/Progress'
 import Login from './pages/Login'
@@ -62,6 +63,7 @@ function AppContent({ user, onLogout }) {
   const tabs = [
     { id: 'home', label: 'Home', icon: HomeIcon },
     { id: 'diary', label: 'Diario', icon: Utensils },
+    { id: 'diet', label: 'Dieta', icon: Apple },
     { id: 'workout', label: 'Workout', icon: Dumbbell },
     { id: 'progress', label: 'Progressi', icon: LineChart },
   ]
@@ -105,6 +107,7 @@ function AppContent({ user, onLogout }) {
         <main className="min-w-0">
           {activeTab === 'home' && <Home {...sharedProps} />}
           {activeTab === 'diary' && <FoodDiary {...sharedProps} />}
+          {activeTab === 'diet' && <Diet {...sharedProps} />}
           {activeTab === 'workout' && <Workout {...sharedProps} />}
           {activeTab === 'progress' && <Progress {...sharedProps} />}
         </main>
