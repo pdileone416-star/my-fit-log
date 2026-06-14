@@ -135,15 +135,51 @@ table {
   background: #FFFDFB;
 }
 
+.diary-cell-text {
+  hyphens: auto;
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+
 .diary-table .diary-weight-col {
   min-width: 6.75rem;
   width: 6.75rem;
   white-space: nowrap;
 }
 
+.diary-table .diary-meal-col {
+  min-width: 11.5rem;
+  width: 12.5rem;
+}
+
 .diary-table .diary-supplements-col {
-  min-width: 12.5rem;
-  width: 13.5rem;
+  min-width: 13.5rem;
+  width: 14.5rem;
+}
+
+.diary-table .diary-mood-col {
+  min-width: 13rem;
+  width: 14rem;
+}
+
+.diary-table .diary-tags-col {
+  min-width: 10.5rem;
+  width: 11.5rem;
+}
+
+.diary-table .diary-notes-col {
+  min-width: 14rem;
+  width: 16rem;
+}
+
+.diary-table .diary-photo-col {
+  min-width: 6.5rem;
+  width: 6.5rem;
+}
+
+.diary-table .diary-actions-col {
+  min-width: 11rem;
+  width: 11rem;
 }
 
 .diary-table tbody tr:nth-child(4n + 1) td {

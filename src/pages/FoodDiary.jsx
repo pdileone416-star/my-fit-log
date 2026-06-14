@@ -529,21 +529,21 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
         </div>
 
         <div className="table-wrap diary-table-wrap">
-          <table className="clean-table diary-table min-w-[1320px]">
+          <table className="clean-table diary-table min-w-[1560px]">
             <thead>
               <tr>
-                <th className="sticky left-0 z-10 min-w-44 bg-pink-bg">Giorno</th>
+                <th className="sticky left-0 z-10 min-w-48 bg-pink-bg">Giorno</th>
                 <th className="diary-weight-col">Peso</th>
-                <th>Colazione</th>
-                <th>Pranzo</th>
-                <th>Merenda</th>
-                <th>Cena</th>
+                <th className="diary-meal-col">Colazione</th>
+                <th className="diary-meal-col">Pranzo</th>
+                <th className="diary-meal-col">Merenda</th>
+                <th className="diary-meal-col">Cena</th>
                 <th className="diary-supplements-col">Integratori</th>
-                <th>Sensazione</th>
-                <th>Tag</th>
-                <th>Note</th>
-                <th>Corpo</th>
-                <th>Azioni</th>
+                <th className="diary-mood-col">Sensazione</th>
+                <th className="diary-tags-col">Tag</th>
+                <th className="diary-notes-col">Note</th>
+                <th className="diary-photo-col">Corpo</th>
+                <th className="diary-actions-col">Azioni</th>
               </tr>
             </thead>
             <tbody>
@@ -563,14 +563,14 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
                   </button>
                 ) : null
                 const mealCell = (value, photo, label) => (
-                  <div className="grid min-w-40 max-w-52 gap-1">
-                    {value ? <p className="line-clamp-3 break-anywhere text-sm leading-5">{value}</p> : emptyCell}
+                  <div className="grid gap-1">
+                    {value ? <p className="diary-cell-text line-clamp-3 text-sm leading-5">{value}</p> : emptyCell}
                     {photoButton(photo, label)}
                   </div>
                 )
                 const chipCell = (value, tone = 'bg-pink-bg') => value ? (
-                  <span className={`inline-flex max-w-52 rounded-2xl px-3 py-2 text-xs font-bold leading-4 text-title ${tone}`}>
-                    <span className="break-anywhere line-clamp-3">{value}</span>
+                  <span className={`inline-flex max-w-full rounded-2xl px-3 py-2 text-xs font-bold leading-4 text-title ${tone}`}>
+                    <span className="diary-cell-text line-clamp-3">{value}</span>
                   </span>
                 ) : emptyCell
 
@@ -595,17 +595,17 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
                         </div>
                       </td>
                       <td className="diary-weight-col">{log.weight ? <span className="inline-flex whitespace-nowrap rounded-full bg-sage px-3 py-1 text-xs font-black text-title">{log.weight} kg</span> : emptyCell}</td>
-                      <td>{mealCell(log.breakfast, log.breakfastPhoto, 'Foto colazione')}</td>
-                      <td>{mealCell(log.lunch, log.lunchPhoto, 'Foto pranzo')}</td>
-                      <td>{mealCell(log.snack, log.snackPhoto, 'Foto merenda')}</td>
-                      <td>{mealCell(log.dinner, log.dinnerPhoto, 'Foto cena')}</td>
+                      <td className="diary-meal-col">{mealCell(log.breakfast, log.breakfastPhoto, 'Foto colazione')}</td>
+                      <td className="diary-meal-col">{mealCell(log.lunch, log.lunchPhoto, 'Foto pranzo')}</td>
+                      <td className="diary-meal-col">{mealCell(log.snack, log.snackPhoto, 'Foto merenda')}</td>
+                      <td className="diary-meal-col">{mealCell(log.dinner, log.dinnerPhoto, 'Foto cena')}</td>
                       <td className="diary-supplements-col">{chipCell(supplementsLabel(log))}</td>
-                      <td>{chipCell(moodLabel(log), dayRatingValue(log) > 3 ? 'bg-sage' : 'bg-pink-bg')}</td>
-                      <td>{chipCell(selectedFeelingTags(log.feelingTags).join(', '), 'bg-blush')}</td>
-                      <td className="min-w-52 max-w-64">{log.notes ? <p className="line-clamp-4 break-anywhere text-sm leading-5">{log.notes}</p> : emptyCell}</td>
-                      <td>{photoButton(log.bodyPhoto, 'Foto corpo') || emptyCell}</td>
-                      <td>
-                        <div className="flex min-w-44 flex-wrap gap-2">
+                      <td className="diary-mood-col">{chipCell(moodLabel(log), dayRatingValue(log) > 3 ? 'bg-sage' : 'bg-pink-bg')}</td>
+                      <td className="diary-tags-col">{chipCell(selectedFeelingTags(log.feelingTags).join(', '), 'bg-blush')}</td>
+                      <td className="diary-notes-col">{log.notes ? <p className="diary-cell-text line-clamp-4 text-sm leading-5">{log.notes}</p> : emptyCell}</td>
+                      <td className="diary-photo-col">{photoButton(log.bodyPhoto, 'Foto corpo') || emptyCell}</td>
+                      <td className="diary-actions-col">
+                        <div className="flex flex-wrap gap-2">
                           <Button type="button" variant="ghost" className="border border-blush-border" onClick={() => editLog(log)} disabled={isEditing}><Pencil size={16} />Modifica</Button>
                           <Button type="button" variant="danger" onClick={() => deleteLog(log.id)}><Trash2 size={16} />Elimina</Button>
                         </div>
