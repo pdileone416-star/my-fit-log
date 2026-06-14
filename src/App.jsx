@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Activity, Dumbbell, Home as HomeIcon, LineChart, LogOut, Utensils } from 'lucide-react'
+import { Dumbbell, Home as HomeIcon, LineChart, LogOut, Utensils } from 'lucide-react'
 import Button from './components/Button'
 import Tabs from './components/Tabs'
 import Home from './pages/Home'
@@ -82,8 +82,8 @@ function AppContent({ user, onLogout }) {
         <header className="mb-5 rounded-3xl border border-blush-border bg-warm-white p-4 shadow-soft sm:p-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
-              <span className="grid size-12 place-items-center rounded-2xl bg-blush text-title">
-                <Activity size={24} aria-hidden="true" />
+              <span className="grid size-12 place-items-center overflow-hidden rounded-2xl bg-blush text-title">
+                <img src="/favicon.svg" alt="" className="size-10" />
               </span>
               <div>
                 <p className="text-xs font-bold uppercase tracking-wide text-accent sm:text-sm">diario personale</p>

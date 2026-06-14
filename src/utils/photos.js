@@ -29,7 +29,7 @@ export async function compressPhoto(file, { maxSide = 1200, quality = 0.78 } = {
       canvas.height = Math.max(1, Math.round(image.naturalHeight * scale))
 
       const context = canvas.getContext('2d')
-      context.fillStyle = '#FFFDFB'
+      context.fillStyle = '#FFFCF7'
       context.fillRect(0, 0, canvas.width, canvas.height)
       context.drawImage(image, 0, 0, canvas.width, canvas.height)
       URL.revokeObjectURL(imageUrl)

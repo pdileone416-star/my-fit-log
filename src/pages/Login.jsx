@@ -1,4 +1,4 @@
-import { Heart, LockKeyhole, LogIn, UserPlus } from 'lucide-react'
+import { LockKeyhole, LogIn, UserPlus } from 'lucide-react'
 import { useState } from 'react'
 import Button from '../components/Button'
 import Card from '../components/Card'
@@ -47,8 +47,8 @@ export default function Login({ onLogin }) {
     <div className="min-h-screen px-4 py-6 sm:px-6">
       <main className="mx-auto grid min-h-[calc(100vh-3rem)] max-w-5xl items-center gap-5 lg:grid-cols-[0.95fr_1.05fr]">
         <section className="rounded-3xl border border-blush-border bg-warm-white p-5 shadow-soft sm:p-7">
-          <span className="mb-4 grid size-14 place-items-center rounded-2xl bg-blush text-title">
-            <Heart size={28} aria-hidden="true" />
+          <span className="mb-4 grid size-14 place-items-center overflow-hidden rounded-2xl bg-blush text-title">
+            <img src="/favicon.svg" alt="" className="size-12" />
           </span>
           <p className="text-sm font-bold uppercase tracking-wide text-accent">My Fit Log</p>
           <h1 className="mt-2 text-3xl font-black leading-tight text-title sm:text-4xl">
