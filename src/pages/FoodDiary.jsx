@@ -4,6 +4,7 @@ import Card from '../components/Card'
 import Input from '../components/Input'
 import SectionTitle from '../components/SectionTitle'
 import Textarea from '../components/Textarea'
+import { compressPhoto } from '../utils/photos'
 import { createId, sortByDateDesc, todayISO } from '../utils/storage'
 import { Fragment, useEffect, useState } from 'react'
 
@@ -32,54 +33,6 @@ const feelingStatuses = ['Molto bene', 'Bene', 'Normale', 'Male', 'Molto male']
 const feelingTags = ['Gonfia', 'Ciclo', 'Fame', 'Stress', 'Energia alta', 'Stanchezza', 'Mal di testa', 'Pancia', 'Sonno', 'Digestione', 'Altro']
 const compactWeekdays = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab']
 const compactMonths = ['gen', 'feb', 'mar', 'apr', 'mag', 'giu', 'lug', 'ago', 'set', 'ott', 'nov', 'dic']
-
-async function preparePhotoFile(file) {
-  const isHeic = file.type === 'image/heic'
-    || file.type === 'image/heif'
-    || /\.(heic|heif)$/i.test(file.name)
-
-  if (!isHeic) return file
-
-  const { default: heic2any } = await import('heic2any')
-  const converted = await heic2any({
-    blob: file,
-    toType: 'image/jpeg',
-    quality: 0.82,
-  })
-
-  return Array.isArray(converted) ? converted[0] : converted
-}
-
-async function compressPhoto(file) {
-  const readableFile = await preparePhotoFile(file)
-
-  return new Promise((resolve, reject) => {
-    const imageUrl = URL.createObjectURL(readableFile)
-    const image = new Image()
-
-    image.onload = () => {
-      const maxSide = 1200
-      const scale = Math.min(1, maxSide / Math.max(image.naturalWidth, image.naturalHeight))
-      const canvas = document.createElement('canvas')
-      canvas.width = Math.max(1, Math.round(image.naturalWidth * scale))
-      canvas.height = Math.max(1, Math.round(image.naturalHeight * scale))
-
-      const context = canvas.getContext('2d')
-      context.fillStyle = '#FFFDFB'
-      context.fillRect(0, 0, canvas.width, canvas.height)
-      context.drawImage(image, 0, 0, canvas.width, canvas.height)
-      URL.revokeObjectURL(imageUrl)
-      resolve(canvas.toDataURL('image/jpeg', 0.78))
-    }
-
-    image.onerror = () => {
-      URL.revokeObjectURL(imageUrl)
-      reject(new Error('Formato immagine non leggibile.'))
-    }
-
-    image.src = imageUrl
-  })
-}
 
 function PhotoField({ label, value, onChange }) {
   const [error, setError] = useState('')

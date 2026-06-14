@@ -16,8 +16,20 @@ export default function Login({ onLogin }) {
     setError('')
   }
 
+  function passwordIsReady(password) {
+    return password.length >= 8
+      && /[A-Z]/.test(password)
+      && /[a-z]/.test(password)
+      && /\d/.test(password)
+  }
+
   async function submit(event) {
     event.preventDefault()
+    if (mode === 'register' && !passwordIsReady(form.password)) {
+      setError('La password deve avere almeno 8 caratteri, una maiuscola, una minuscola e un numero.')
+      return
+    }
+
     setLoading(true)
     setError('')
 
@@ -74,11 +86,16 @@ export default function Login({ onLogin }) {
               label="Password"
               type="password"
               autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-              minLength="6"
+              minLength={mode === 'register' ? 8 : undefined}
               value={form.password}
               onChange={(e) => update('password', e.target.value)}
               required
             />
+            {mode === 'register' ? (
+              <p className="rounded-xl bg-pink-bg px-3 py-2 text-xs font-semibold text-title">
+                Usa almeno 8 caratteri con maiuscola, minuscola e numero.
+              </p>
+            ) : null}
 
             {error ? <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700">{error}</p> : null}
 

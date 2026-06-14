@@ -12,11 +12,15 @@ export const STORAGE_KEYS = {
 }
 
 export function createId() {
-  return crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`
+  return globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`
 }
 
 export function todayISO() {
-  return new Date().toISOString().slice(0, 10)
+  const today = new Date()
+  const year = today.getFullYear()
+  const month = String(today.getMonth() + 1).padStart(2, '0')
+  const day = String(today.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
 }
 
 export function readStorage(key, fallback = []) {
@@ -29,7 +33,13 @@ export function readStorage(key, fallback = []) {
 }
 
 export function writeStorage(key, value) {
-  localStorage.setItem(key, JSON.stringify(value))
+  try {
+    localStorage.setItem(key, JSON.stringify(value))
+    return true
+  } catch (error) {
+    console.warn(`My Fit Log: impossibile salvare ${key}`, error)
+    return false
+  }
 }
 
 export function useLocalStorage(key, fallback = []) {
@@ -47,12 +57,12 @@ export function storageKeyForUser(userId, key) {
 }
 
 export async function hashSecret(value) {
-  if (!crypto?.subtle) {
+  if (!globalThis.crypto?.subtle) {
     return fallbackHash(value)
   }
 
   const data = new TextEncoder().encode(value)
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data)
+  const hashBuffer = await globalThis.crypto.subtle.digest('SHA-256', data)
   return Array.from(new Uint8Array(hashBuffer))
     .map((byte) => byte.toString(16).padStart(2, '0'))
     .join('')

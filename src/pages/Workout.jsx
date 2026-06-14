@@ -6,6 +6,7 @@ import Input from '../components/Input'
 import SectionTitle from '../components/SectionTitle'
 import Tabs from '../components/Tabs'
 import Textarea from '../components/Textarea'
+import { compressPhoto } from '../utils/photos'
 import { createId, normalizeWorkoutDay, todayISO } from '../utils/storage'
 
 const emptySession = {
@@ -42,13 +43,25 @@ const emptyPlanExercise = {
 }
 
 function ImageField({ label, value, onChange }) {
-  function handleFile(event) {
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  async function handleFile(event) {
     const file = event.target.files?.[0]
     if (!file) return
 
-    const reader = new FileReader()
-    reader.onload = () => onChange(String(reader.result || ''))
-    reader.readAsDataURL(file)
+    setLoading(true)
+    setError('')
+
+    try {
+      const compressed = await compressPhoto(file, { maxSide: 1100, quality: 0.76 })
+      onChange(compressed)
+    } catch {
+      setError('Immagine non leggibile. Prova JPG/PNG oppure fai uno screenshot.')
+    } finally {
+      setLoading(false)
+      event.target.value = ''
+    }
   }
 
   return (
@@ -59,13 +72,14 @@ function ImageField({ label, value, onChange }) {
       ) : null}
       <div className="flex flex-wrap gap-2">
         <label className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-xl bg-blush px-4 py-2 text-sm font-semibold text-title transition hover:bg-sage">
-          Carica immagine
+          {loading ? 'Carico...' : 'Carica immagine'}
           <input type="file" accept="image/*" className="sr-only" onChange={handleFile} />
         </label>
         {value ? (
           <Button type="button" variant="ghost" onClick={() => onChange('')}>Rimuovi immagine</Button>
         ) : null}
       </div>
+      {error ? <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700">{error}</p> : null}
     </div>
   )
 }

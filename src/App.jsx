@@ -26,12 +26,15 @@ function App() {
 }
 
 function AppContent({ user, onLogout }) {
-  migrateWorkoutLogsToSessions(user.id)
   const [activeTab, setActiveTab] = useState('home')
   const [dailyLogs, setDailyLogs] = useLocalStorage(storageKeyForUser(user.id, STORAGE_KEYS.dailyLogs), [])
   const [workoutSessions, setWorkoutSessions] = useLocalStorage(storageKeyForUser(user.id, STORAGE_KEYS.workoutSessions), [])
   const [workoutPlans, setWorkoutPlans] = useLocalStorage(storageKeyForUser(user.id, STORAGE_KEYS.workoutPlans), buildDefaultWorkoutPlans())
   const [supplementOptions, setSupplementOptions] = useLocalStorage(storageKeyForUser(user.id, STORAGE_KEYS.supplementOptions), defaultSupplementOptions)
+
+  useEffect(() => {
+    migrateWorkoutLogsToSessions(user.id)
+  }, [user.id])
 
   useEffect(() => {
     const seedKey = storageKeyForUser(user.id, 'workoutPlansSeeded')
