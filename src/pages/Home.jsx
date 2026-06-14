@@ -65,14 +65,12 @@ function clamp(value, min, max) {
 
 export default function Home({ dailyLogs, goTo }) {
   const today = todayISO()
-  const challengeStart = '2026-06-09'
+  const challengeStart = '2026-06-15'
   const challengeLength = 50
   const challengeEnd = addDays(challengeStart, challengeLength - 1)
-  const juneEnd = '2026-06-30'
   const rawChallengeDay = diffDays(challengeStart, today) + 1
   const challengeDay = clamp(rawChallengeDay, 0, challengeLength)
   const challengeRemaining = Math.max(challengeLength - challengeDay, 0)
-  const juneRemaining = today <= juneEnd ? Math.max(diffDays(today, juneEnd), 0) : 0
   const challengeProgress = Math.round((challengeDay / challengeLength) * 100)
   const challengeLogs = dailyLogs.filter((log) => log.date >= challengeStart && log.date <= challengeEnd).length
   const todayLog = dailyLogs.find((log) => log.date === today)
@@ -130,14 +128,14 @@ export default function Home({ dailyLogs, goTo }) {
       </section>
 
       <Card className="border-2 border-accent bg-blush">
-        <SectionTitle title="Sfida 50 giorni" eyebrow="primo obiettivo">
-          Dal 9 giugno al {formatDate(challengeEnd)}. Un giorno alla volta, senza fare casino.
+        <SectionTitle title="Nuova sfida 50 giorni" eyebrow="primo obiettivo">
+          Parte domani, 15 giugno 2026, e arriva fino al {formatDate(challengeEnd)}.
         </SectionTitle>
         <div className="grid gap-3">
           <div className="grid gap-3 sm:grid-cols-3">
             <div className="rounded-2xl bg-warm-white p-3">
-              <p className="text-xs font-bold uppercase text-accent">Oggi sei al</p>
-              <p className="text-3xl font-black text-title">Giorno {challengeDay || 0}</p>
+              <p className="text-xs font-bold uppercase text-accent">{challengeDay ? 'Oggi sei al' : 'Partenza'}</p>
+              <p className="text-3xl font-black text-title">{challengeDay ? `Giorno ${challengeDay}` : 'Domani'}</p>
               <p className="text-sm font-bold text-text">su {challengeLength}</p>
             </div>
             <div className="rounded-2xl bg-warm-white p-3">
@@ -146,9 +144,9 @@ export default function Home({ dailyLogs, goTo }) {
               <p className="text-sm font-bold text-text">giorni al primo obiettivo</p>
             </div>
             <div className="rounded-2xl bg-warm-white p-3">
-              <p className="text-xs font-bold uppercase text-accent">Fine giugno</p>
-              <p className="text-3xl font-black text-title">{juneRemaining}</p>
-              <p className="text-sm font-bold text-text">giorni al checkpoint</p>
+              <p className="text-xs font-bold uppercase text-accent">Giornate registrate</p>
+              <p className="text-3xl font-black text-title">{challengeLogs}</p>
+              <p className="text-sm font-bold text-text">dentro la sfida</p>
             </div>
           </div>
           <div>
@@ -156,7 +154,7 @@ export default function Home({ dailyLogs, goTo }) {
               <div className="h-full rounded-full bg-accent transition-all" style={{ width: `${challengeProgress}%` }} />
             </div>
             <p className="mt-2 text-sm font-bold text-title">
-              {challengeProgress}% completato - {challengeLogs} giornate registrate nella sfida.
+              {challengeProgress}% completato - traguardo: {formatDate(challengeEnd)}.
             </p>
           </div>
         </div>

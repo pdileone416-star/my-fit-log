@@ -32,7 +32,6 @@ const feelingStatuses = ['Molto bene', 'Bene', 'Normale', 'Male', 'Molto male']
 const feelingTags = ['Gonfia', 'Ciclo', 'Fame', 'Stress', 'Energia alta', 'Stanchezza', 'Mal di testa', 'Pancia', 'Sonno', 'Digestione', 'Altro']
 const compactWeekdays = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab']
 const compactMonths = ['gen', 'feb', 'mar', 'apr', 'mag', 'giu', 'lug', 'ago', 'set', 'ott', 'nov', 'dic']
-const defaultSupplementOptions = ['L-teanina', 'Magnesio', 'Zafferano', 'Somatoline', 'Fanghi']
 
 async function preparePhotoFile(file) {
   const isHeic = file.type === 'image/heic'
@@ -204,6 +203,15 @@ function compactDate(date) {
   }
 }
 
+function numericDate(date) {
+  if (!date) return '-'
+  return new Intl.DateTimeFormat('it-IT', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  }).format(new Date(`${date}T12:00:00`))
+}
+
 function monthKey(date) {
   return date ? date.slice(0, 7) : 'senza-data'
 }
@@ -216,10 +224,6 @@ function monthLabel(date) {
   }).format(new Date(`${date}T12:00:00`))
 }
 
-function photoCount(log) {
-  return [log.breakfastPhoto, log.lunchPhoto, log.snackPhoto, log.dinnerPhoto, log.bodyPhoto].filter(Boolean).length
-}
-
 function dayRatingValue(log) {
   const value = Number(log.dayRating)
   return Number.isFinite(value) && value > 0 ? value : 0
@@ -228,10 +232,6 @@ function dayRatingValue(log) {
 function dayRatingLabel(log) {
   const value = dayRatingValue(log)
   return value ? `${value}/5` : ''
-}
-
-function mealCountFromLog(log) {
-  return ['breakfast', 'lunch', 'snack', 'dinner'].filter((key) => log[key]?.trim()).length
 }
 
 function SupplementPicker({ value, options, onUpdate, onAddOption, onDeleteOption }) {
@@ -376,28 +376,14 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
   const [editingLogId, setEditingLogId] = useState(null)
   const [openDays, setOpenDays] = useState([])
   const [previewPhoto, setPreviewPhoto] = useState(null)
-  const [selectedProgressMonth, setSelectedProgressMonth] = useState('all')
   const [selectedMonth, setSelectedMonth] = useState('all')
   const [visibleSavedCount, setVisibleSavedCount] = useState(20)
   const sortedLogs = sortByDateDesc(dailyLogs)
   const monthOptions = Array.from(new Map(sortedLogs.map((log) => [monthKey(log.date), monthLabel(log.date)])).entries())
-  const filteredProgressLogs = selectedProgressMonth === 'all'
-    ? sortedLogs
-    : sortedLogs.filter((log) => monthKey(log.date) === selectedProgressMonth)
-  const progressLogs = filteredProgressLogs.slice(0, selectedProgressMonth === 'all' ? 21 : 31)
   const filteredSavedLogs = selectedMonth === 'all'
     ? sortedLogs
     : sortedLogs.filter((log) => monthKey(log.date) === selectedMonth)
   const visibleSavedLogs = filteredSavedLogs.slice(0, visibleSavedCount)
-  const groupedSavedLogs = visibleSavedLogs.reduce((groups, log) => {
-    const key = monthKey(log.date)
-    const existing = groups.find((group) => group.key === key)
-    if (existing) {
-      existing.logs.push(log)
-      return groups
-    }
-    return [...groups, { key, label: monthLabel(log.date), logs: [log] }]
-  }, [])
 
   useEffect(() => {
     function handleEdit(event) {
@@ -419,16 +405,6 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
       window.removeEventListener('my-fit-log-new-daily', handleNewDaily)
     }
   }, [])
-
-  useEffect(() => {
-    if (!setSupplementOptions) return
-
-    const nextOptions = Array.from(new Set([...defaultSupplementOptions, ...(supplementOptions || [])]))
-
-    if (nextOptions.length !== (supplementOptions || []).length) {
-      setSupplementOptions(nextOptions)
-    }
-  }, [setSupplementOptions, supplementOptions])
 
   function update(field, value) {
     setForm((current) => ({ ...current, [field]: value }))
@@ -491,13 +467,6 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
     setOpenDays((days) => days.includes(log.id) ? days : [...days, log.id])
   }
 
-  function openLogDetail(log) {
-    if (editingLogId === log.id) {
-      cancelInlineEdit()
-    }
-    setOpenDays((days) => days.includes(log.id) ? days : [...days, log.id])
-  }
-
   function updateInline(field, value) {
     setInlineForm((current) => ({ ...current, [field]: value }))
   }
@@ -526,33 +495,6 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
 
   function toggleDay(id) {
     setOpenDays((days) => days.includes(id) ? days.filter((dayId) => dayId !== id) : [...days, id])
-  }
-
-  function mealCount(log) {
-    return mealCountFromLog(log)
-  }
-
-  function foodRating(log) {
-    const rating = dayRatingValue(log)
-    if (rating >= 4) return 'Ottima'
-    if (rating === 3) return 'Buona'
-    if (rating > 0) return 'Faticosa'
-
-    const meals = mealCount(log)
-    const hasNotes = Boolean(log.notes?.trim())
-    const hasFeeling = Boolean(log.feelingStatus || log.feeling?.trim())
-    const hasSupplements = Boolean(supplementsLabel(log).trim())
-    const score = meals + (hasNotes ? 1 : 0) + (hasFeeling ? 1 : 0) + (hasSupplements ? 1 : 0)
-    if (score >= 5) return 'Completa'
-    if (score >= 3) return 'Buona'
-    return 'Da completare'
-  }
-
-  function dayWentWell(log) {
-    const rating = dayRatingValue(log)
-    if (rating) return rating >= 4
-    if (foodRating(log) === 'Completa') return true
-    return foodRating(log) === 'Buona'
   }
 
   function moodLabel(log) {
@@ -615,74 +557,8 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
       </Card>
 
       <Card>
-        <SectionTitle title="Andamento giornate" eyebrow={`${progressLogs.length} ultimi record`}>
-          Una vista veloce per vedere sensazioni e valutazione giorno dopo giorno.
-        </SectionTitle>
-
-        <div className="mb-4 grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
-          <label className="grid gap-1.5 text-sm font-bold text-title">
-            <span>Filtra andamento</span>
-            <select
-              value={selectedProgressMonth}
-              onChange={(event) => setSelectedProgressMonth(event.target.value)}
-              className="min-h-11 rounded-xl border border-blush-border bg-white px-3 text-text outline-none focus:border-accent"
-            >
-              <option value="all">Tutti i mesi</option>
-              {monthOptions.map(([key, label]) => (
-                <option key={key} value={key}>{label}</option>
-              ))}
-            </select>
-          </label>
-          <p className="rounded-2xl bg-pink-bg px-3 py-2 text-sm font-bold text-title">
-            {filteredProgressLogs.length} giornate
-          </p>
-        </div>
-
-        {progressLogs.length === 0 ? (
-          <p className="text-sm">Appena salvi una giornata, comparira qui il tuo percorso.</p>
-        ) : (
-          <div className="flex w-full max-w-full snap-x gap-3 overflow-x-auto pb-3">
-            {progressLogs.map((log) => {
-              const wentWell = dayWentWell(log)
-              const date = compactDate(log.date)
-              return (
-                <button
-                  type="button"
-                  key={log.id}
-                  onClick={() => openLogDetail(log)}
-                  className="min-w-[235px] snap-start rounded-2xl border border-blush-border bg-white p-3 text-left shadow-soft transition hover:-translate-y-0.5 hover:border-accent sm:min-w-[260px]"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="text-xs font-bold uppercase text-accent">{date.weekday} {date.day} {date.month}</p>
-                      <p className="text-3xl font-black leading-none text-title">{date.day}</p>
-                      <p className="text-xs font-bold uppercase text-text">Giorno {dayNumber(log)}</p>
-                    </div>
-                    <span className={`grid size-10 shrink-0 place-items-center rounded-2xl ${wentWell ? 'bg-sage text-title' : 'bg-blush text-title'}`}>
-                      <Heart size={20} className={wentWell ? 'fill-current' : ''} aria-hidden="true" />
-                    </span>
-                  </div>
-                  <div className="mt-3 grid gap-2">
-                    <p className="break-anywhere line-clamp-2 text-sm font-bold text-title">{moodLabel(log)}</p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {dayRatingLabel(log) ? (
-                        <span className="rounded-full bg-sage px-2.5 py-1 text-xs font-bold text-title">Valutazione {dayRatingLabel(log)}</span>
-                      ) : null}
-                      {log.weight ? (
-                        <span className="rounded-full bg-pink-bg px-2.5 py-1 text-xs font-bold text-title">Peso {log.weight} kg</span>
-                      ) : null}
-                    </div>
-                  </div>
-                </button>
-              )
-            })}
-          </div>
-        )}
-      </Card>
-
-      <Card>
-        <SectionTitle title="Giornate salvate" eyebrow={`${sortedLogs.length} giorni`}>
-          Archivio compatto per consultare tante giornate senza perdere il filo.
+        <SectionTitle title="Tabella giornate" eyebrow={`${filteredSavedLogs.length} record`}>
+          Diario completo in formato tabella: scorri a destra per vedere pasti, foto, integratori e note.
         </SectionTitle>
 
         <div className="mb-4 grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
@@ -707,162 +583,93 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
           </p>
         </div>
 
-        <div className="grid min-w-0 gap-4 lg:hidden">
-          {filteredSavedLogs.length === 0 ? <p className="text-sm">Nessuna giornata salvata.</p> : null}
-          {groupedSavedLogs.map((group) => (
-            <div key={group.key} className="grid gap-2">
-              <p className="px-1 text-xs font-black uppercase text-accent">{group.label}</p>
-              {group.logs.map((log) => {
+        <div className="table-wrap">
+          <table className="clean-table min-w-[1680px]">
+            <thead>
+              <tr>
+                <th className="sticky left-0 z-10 min-w-44 bg-pink-bg">Giorno</th>
+                <th>Peso</th>
+                <th>Colazione</th>
+                <th>Foto col.</th>
+                <th>Pranzo</th>
+                <th>Foto pranzo</th>
+                <th>Merenda</th>
+                <th>Foto merenda</th>
+                <th>Cena</th>
+                <th>Foto cena</th>
+                <th>Integratori</th>
+                <th>Come ti senti</th>
+                <th>Tag</th>
+                <th>Note</th>
+                <th>Foto corpo</th>
+                <th>Azioni</th>
+              </tr>
+            </thead>
+            <tbody>
+              {visibleSavedLogs.map((log) => {
                 const isOpen = openDays.includes(log.id)
                 const isEditing = editingLogId === log.id
                 const date = compactDate(log.date)
+                const passed = dayRatingValue(log) > 3
+                const ratingClass = passed
+                  ? 'border-sage bg-sage text-title'
+                  : dayRatingValue(log)
+                    ? 'border-red-200 bg-red-50 text-red-600'
+                    : 'border-blush-border bg-pink-bg text-title'
+                const photoButton = (photo, label) => photo ? (
+                  <button type="button" className="rounded-full bg-pink-bg px-3 py-1 text-xs font-bold text-title" onClick={() => setPreviewPhoto({ src: photo, label })}>
+                    Apri foto
+                  </button>
+                ) : ''
+
                 return (
-                  <article key={log.id} className="min-w-0 rounded-2xl border border-blush-border bg-white p-3 shadow-soft">
-                    <div className="flex items-start gap-3">
-                      <button type="button" className="grid w-16 shrink-0 place-items-center rounded-2xl bg-pink-bg px-2 py-3 text-center" onClick={() => toggleDay(log.id)} disabled={isEditing}>
-                        <p className="text-xs font-bold uppercase text-accent">{date.weekday}</p>
-                        <p className="text-3xl font-black leading-none text-title">{date.day}</p>
-                        <p className="text-xs font-bold uppercase text-text">{date.month}</p>
-                        <p className="mt-1 text-[10px] font-black uppercase text-accent">Giorno {dayNumber(log)}</p>
-                      </button>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-start justify-between gap-2">
-                          <button type="button" className="min-w-0 text-left" onClick={() => toggleDay(log.id)} disabled={isEditing}>
-                            <p className="break-anywhere line-clamp-2 text-sm font-black text-title">{moodLabel(log)}</p>
-                            {log.notes ? <p className="break-anywhere mt-1 line-clamp-1 text-xs text-text">{log.notes}</p> : null}
-                          </button>
-                          {dayRatingLabel(log) ? (
-                            <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold ${dayWentWell(log) ? 'bg-sage text-title' : 'bg-blush text-title'}`}>
-                              {dayRatingLabel(log)}
-                            </span>
-                          ) : null}
-                        </div>
-                        <div className="mt-2 flex flex-wrap gap-2">
-                          {log.weight ? <span className="rounded-full bg-pink-bg px-3 py-1 text-xs font-bold text-title">Peso {log.weight} kg</span> : null}
-                          {photoCount(log) > 0 ? <span className="rounded-full bg-pink-bg px-3 py-1 text-xs font-bold text-title">{photoCount(log)} foto</span> : null}
-                          {supplementsLabel(log) ? <span className="rounded-full bg-pink-bg px-3 py-1 text-xs font-bold text-title">Integratori</span> : null}
-                        </div>
-                      </div>
-                    </div>
-
-                    {isEditing ? (
-                      <form onSubmit={saveInlineLog} className="mt-3 grid gap-4 rounded-xl bg-pink-bg p-3">
-                        <DiaryFields
-                          value={inlineForm}
-                          onUpdate={updateInline}
-                          onDateChange={(date) => updateInline('date', date)}
-                          supplementOptions={supplementOptions}
-                          onAddSupplementOption={addSupplementOption}
-                          onDeleteSupplementOption={deleteSupplementOption}
-                        />
-                        <div className="flex flex-wrap gap-2">
-                          <Button type="submit" disabled={!hasDailyContent(inlineForm)}><Save size={16} />Aggiorna giornata</Button>
-                          <Button type="button" variant="ghost" className="border border-blush-border" onClick={cancelInlineEdit}><X size={16} />Annulla</Button>
-                        </div>
-                      </form>
-                    ) : isOpen ? (
-                      <div className="mt-3 grid gap-3 rounded-2xl bg-pink-bg p-3 text-sm">
-                        {[
-                          ['Colazione', log.breakfast],
-                          ['Pranzo', log.lunch],
-                          ['Merenda', log.snack],
-                          ['Cena', log.dinner],
-                        ].some(([, value]) => value?.trim()) ? (
-                          <div className="grid gap-2">
-                            {[
-                              ['Colazione', log.breakfast],
-                              ['Pranzo', log.lunch],
-                              ['Merenda', log.snack],
-                              ['Cena', log.dinner],
-                            ].filter(([, value]) => value?.trim()).map(([label, value]) => (
-                              <div key={label} className="rounded-xl bg-white px-3 py-2">
-                                <p className="text-xs font-bold uppercase text-accent">{label}</p>
-                                <p className="break-anywhere mt-1 text-sm text-text">{value}</p>
-                              </div>
-                            ))}
-                          </div>
-                        ) : null}
-                        <p className="break-anywhere rounded-xl bg-white px-3 py-2"><strong>Come ti senti:</strong> {moodLabel(log)}</p>
-                        {dayRatingLabel(log) ? <p className="rounded-xl bg-white px-3 py-2"><strong>Valutazione giornata:</strong> {dayRatingLabel(log)}</p> : null}
-                        {selectedFeelingTags(log.feelingTags).length ? (
-                          <div className="flex flex-wrap gap-2">
-                            {selectedFeelingTags(log.feelingTags).map((tag) => (
-                              <span key={tag} className="rounded-full bg-sage px-3 py-1 text-xs font-bold text-title">{tag}</span>
-                            ))}
-                          </div>
-                        ) : null}
-                        {supplementsLabel(log) ? <p className="break-anywhere"><strong>Integratori / applicazioni:</strong> {supplementsLabel(log)}</p> : null}
-                        {log.notes ? <p className="break-anywhere"><strong>Note:</strong> {log.notes}</p> : null}
-                        {[log.breakfastPhoto, log.lunchPhoto, log.snackPhoto, log.dinnerPhoto, log.bodyPhoto].some(Boolean) ? (
-                          <div className="mt-2 grid grid-cols-2 gap-2">
-                            {[
-                              ['Colazione', log.breakfastPhoto],
-                              ['Pranzo', log.lunchPhoto],
-                              ['Merenda', log.snackPhoto],
-                              ['Cena', log.dinnerPhoto],
-                              ['Corpo', log.bodyPhoto],
-                            ].filter(([, photo]) => photo).map(([label, photo]) => (
-                              <figure key={label} className="rounded-xl border border-blush-border bg-white p-2">
-                                <button type="button" className="block w-full" onClick={() => setPreviewPhoto({ src: photo, label })}>
-                                  <img src={photo} alt="" className="h-28 w-full rounded-lg bg-pink-bg object-contain" onError={(event) => { event.currentTarget.style.display = 'none' }} />
-                                </button>
-                                <figcaption className="mt-1 text-xs font-bold text-title">{label}</figcaption>
-                              </figure>
-                            ))}
-                          </div>
-                        ) : null}
-                      </div>
-                    ) : null}
-
-                    <div className="mt-3 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
-                      <Button type="button" variant="secondary" onClick={() => toggleDay(log.id)} disabled={isEditing}>
-                        {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                        {isOpen ? 'Chiudi' : 'Apri'}
-                      </Button>
-                      <Button type="button" variant="ghost" className="border border-blush-border" onClick={() => editLog(log)} disabled={isEditing}><Pencil size={16} />Modifica</Button>
-                      <Button type="button" variant="danger" className="col-span-2 sm:col-span-1" onClick={() => deleteLog(log.id)}><Trash2 size={16} />Elimina</Button>
-                    </div>
-                  </article>
-                )
-              })}
-            </div>
-          ))}
-        </div>
-
-        <div className="hidden lg:block">
-          <div className="table-wrap">
-            <table className="clean-table">
-              <thead>
-                <tr>
-                  <th>Data</th>
-                  <th>Peso</th>
-                  <th>Come ti senti</th>
-                  <th>Valutazione giornata</th>
-                  <th>Integratori / applicazioni</th>
-                  <th>Note</th>
-                  <th>Azioni</th>
-                </tr>
-              </thead>
-              <tbody>
-                {visibleSavedLogs.map((log) => (
                   <Fragment key={log.id}>
                     <tr>
-                      <td>{log.date}</td>
+                      <td className="sticky left-0 z-10 bg-warm-white">
+                        <div className="flex items-center gap-3">
+                          <span className={`grid size-11 shrink-0 place-items-center rounded-2xl ${passed ? 'bg-sage text-title' : 'bg-blush text-title'}`}>
+                            <Heart size={20} className={passed ? 'fill-current' : ''} aria-hidden="true" />
+                          </span>
+                          <div>
+                            <p className="text-xs font-black uppercase text-accent">{date.weekday} {date.day} {date.month}</p>
+                            <p className="text-sm font-black text-title">{numericDate(log.date)}</p>
+                            <p className="text-xs font-bold uppercase text-text">Giorno {dayNumber(log)}</p>
+                            {dayRatingLabel(log) ? (
+                              <span className={`mt-2 inline-flex rounded-full border px-2.5 py-1 text-xs font-black ${ratingClass}`}>
+                                {dayRatingLabel(log)}
+                              </span>
+                            ) : null}
+                          </div>
+                        </div>
+                      </td>
                       <td>{log.weight ? `${log.weight} kg` : ''}</td>
-                      <td>{moodLabel(log)}</td>
-                      <td>{dayRatingLabel(log)}</td>
-                      <td>{supplementsLabel(log)}</td>
-                      <td>{log.notes || ''}</td>
+                      <td className="min-w-44 break-anywhere">{log.breakfast || ''}</td>
+                      <td>{photoButton(log.breakfastPhoto, 'Foto colazione')}</td>
+                      <td className="min-w-44 break-anywhere">{log.lunch || ''}</td>
+                      <td>{photoButton(log.lunchPhoto, 'Foto pranzo')}</td>
+                      <td className="min-w-44 break-anywhere">{log.snack || ''}</td>
+                      <td>{photoButton(log.snackPhoto, 'Foto merenda')}</td>
+                      <td className="min-w-44 break-anywhere">{log.dinner || ''}</td>
+                      <td>{photoButton(log.dinnerPhoto, 'Foto cena')}</td>
+                      <td className="min-w-40 break-anywhere">{supplementsLabel(log)}</td>
+                      <td className="min-w-48 break-anywhere">{moodLabel(log)}</td>
+                      <td className="min-w-40 break-anywhere">{selectedFeelingTags(log.feelingTags).join(', ')}</td>
+                      <td className="min-w-56 break-anywhere">{log.notes || ''}</td>
+                      <td>{photoButton(log.bodyPhoto, 'Foto corpo')}</td>
                       <td>
-                        <div className="flex gap-2">
-                          <Button type="button" variant="ghost" onClick={() => editLog(log)} disabled={editingLogId === log.id}><Pencil size={16} />Modifica</Button>
+                        <div className="flex min-w-60 flex-wrap gap-2">
+                          <Button type="button" variant="secondary" onClick={() => toggleDay(log.id)} disabled={isEditing}>
+                            {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                            {isOpen ? 'Chiudi' : 'Apri'}
+                          </Button>
+                          <Button type="button" variant="ghost" className="border border-blush-border" onClick={() => editLog(log)} disabled={isEditing}><Pencil size={16} />Modifica</Button>
                           <Button type="button" variant="danger" onClick={() => deleteLog(log.id)}><Trash2 size={16} />Elimina</Button>
                         </div>
                       </td>
                     </tr>
-                    {editingLogId === log.id ? (
+                    {isEditing ? (
                       <tr>
-                        <td colSpan="7">
+                        <td colSpan="16">
                           <form onSubmit={saveInlineLog} className="grid gap-4 rounded-xl bg-pink-bg p-3">
                             <DiaryFields
                               value={inlineForm}
@@ -879,14 +686,26 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
                           </form>
                         </td>
                       </tr>
+                    ) : isOpen ? (
+                      <tr>
+                        <td colSpan="16">
+                          <div className="grid gap-3 rounded-2xl bg-pink-bg p-3 text-sm">
+                            <p className="break-anywhere rounded-xl bg-white px-3 py-2"><strong>Come ti senti:</strong> {moodLabel(log)}</p>
+                            {dayRatingLabel(log) ? <p className="rounded-xl bg-white px-3 py-2"><strong>Valutazione giornata:</strong> {dayRatingLabel(log)}</p> : null}
+                            {supplementsLabel(log) ? <p className="break-anywhere"><strong>Integratori / applicazioni:</strong> {supplementsLabel(log)}</p> : null}
+                            {log.notes ? <p className="break-anywhere"><strong>Note:</strong> {log.notes}</p> : null}
+                          </div>
+                        </td>
+                      </tr>
                     ) : null}
                   </Fragment>
-                ))}
-                {filteredSavedLogs.length === 0 ? <tr><td colSpan="7">Nessuna giornata salvata.</td></tr> : null}
-              </tbody>
-            </table>
-          </div>
+                )
+              })}
+              {filteredSavedLogs.length === 0 ? <tr><td colSpan="16">Nessuna giornata salvata.</td></tr> : null}
+            </tbody>
+          </table>
         </div>
+
         {visibleSavedCount < filteredSavedLogs.length ? (
           <div className="mt-4 flex justify-center">
             <Button type="button" variant="secondary" onClick={() => setVisibleSavedCount((count) => count + 20)}>
