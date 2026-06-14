@@ -135,6 +135,17 @@ table {
   background: #FFFDFB;
 }
 
+.diary-table .diary-weight-col {
+  min-width: 6.75rem;
+  width: 6.75rem;
+  white-space: nowrap;
+}
+
+.diary-table .diary-supplements-col {
+  min-width: 12.5rem;
+  width: 13.5rem;
+}
+
 .diary-table tbody tr:nth-child(4n + 1) td {
   background: #fff9fb;
 }

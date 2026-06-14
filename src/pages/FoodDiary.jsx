@@ -533,12 +533,12 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
             <thead>
               <tr>
                 <th className="sticky left-0 z-10 min-w-44 bg-pink-bg">Giorno</th>
-                <th>Peso</th>
+                <th className="diary-weight-col">Peso</th>
                 <th>Colazione</th>
                 <th>Pranzo</th>
                 <th>Merenda</th>
                 <th>Cena</th>
-                <th>Integratori</th>
+                <th className="diary-supplements-col">Integratori</th>
                 <th>Sensazione</th>
                 <th>Tag</th>
                 <th>Note</th>
@@ -569,8 +569,8 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
                   </div>
                 )
                 const chipCell = (value, tone = 'bg-pink-bg') => value ? (
-                  <span className={`inline-flex max-w-52 rounded-full px-3 py-1 text-xs font-bold text-title ${tone}`}>
-                    <span className="break-anywhere line-clamp-2">{value}</span>
+                  <span className={`inline-flex max-w-52 rounded-2xl px-3 py-2 text-xs font-bold leading-4 text-title ${tone}`}>
+                    <span className="break-anywhere line-clamp-3">{value}</span>
                   </span>
                 ) : emptyCell
 
@@ -594,12 +594,12 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
                           </div>
                         </div>
                       </td>
-                      <td>{log.weight ? <span className="rounded-full bg-sage px-3 py-1 text-xs font-black text-title">{log.weight} kg</span> : emptyCell}</td>
+                      <td className="diary-weight-col">{log.weight ? <span className="inline-flex whitespace-nowrap rounded-full bg-sage px-3 py-1 text-xs font-black text-title">{log.weight} kg</span> : emptyCell}</td>
                       <td>{mealCell(log.breakfast, log.breakfastPhoto, 'Foto colazione')}</td>
                       <td>{mealCell(log.lunch, log.lunchPhoto, 'Foto pranzo')}</td>
                       <td>{mealCell(log.snack, log.snackPhoto, 'Foto merenda')}</td>
                       <td>{mealCell(log.dinner, log.dinnerPhoto, 'Foto cena')}</td>
-                      <td>{chipCell(supplementsLabel(log))}</td>
+                      <td className="diary-supplements-col">{chipCell(supplementsLabel(log))}</td>
                       <td>{chipCell(moodLabel(log), dayRatingValue(log) > 3 ? 'bg-sage' : 'bg-pink-bg')}</td>
                       <td>{chipCell(selectedFeelingTags(log.feelingTags).join(', '), 'bg-blush')}</td>
                       <td className="min-w-52 max-w-64">{log.notes ? <p className="line-clamp-4 break-anywhere text-sm leading-5">{log.notes}</p> : emptyCell}</td>
