@@ -65,7 +65,7 @@ function clamp(value, min, max) {
 
 export default function Home({ dailyLogs, goTo }) {
   const today = todayISO()
-  const challengeStart = '2026-06-15'
+  const challengeStart = '2026-06-17'
   const challengeLength = 50
   const challengeEnd = addDays(challengeStart, challengeLength - 1)
   const rawChallengeDay = diffDays(challengeStart, today) + 1
@@ -129,7 +129,7 @@ export default function Home({ dailyLogs, goTo }) {
 
       <Card className="border-2 border-accent bg-blush">
         <SectionTitle title="Nuova sfida 50 giorni" eyebrow="primo obiettivo">
-          Parte domani, 15 giugno 2026, e arriva fino al {formatDate(challengeEnd)}.
+          Parte domani, 17 giugno 2026, e arriva fino al {formatDate(challengeEnd)}.
         </SectionTitle>
         <div className="grid gap-3">
           <div className="grid gap-3 sm:grid-cols-3">
