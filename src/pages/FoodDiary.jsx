@@ -6,7 +6,7 @@ import SectionTitle from '../components/SectionTitle'
 import Textarea from '../components/Textarea'
 import { compressPhoto } from '../utils/photos'
 import { createId, sortByDateDesc, todayISO } from '../utils/storage'
-import { Fragment, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 
 const emptyLog = {
   date: todayISO(),
@@ -442,17 +442,6 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
     }
   }
 
-  function moodLabel(log) {
-    const parts = [
-      log.feelingStatus,
-      selectedFeelingTags(log.feelingTags).slice(0, 2).join(', '),
-      log.feeling,
-    ].filter(Boolean)
-    if (parts.length) return parts.join(' - ')
-    if (dayRatingLabel(log)) return `Valutazione ${dayRatingLabel(log)}`
-    return 'Giornata salvata'
-  }
-
   function dayNumber(log) {
     const chronological = [...dailyLogs].sort((a, b) => (a.date || '').localeCompare(b.date || ''))
     const index = chronological.findIndex((item) => item.id === log.id)
@@ -503,7 +492,7 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
 
       <Card>
         <SectionTitle title="Tabella giornate" eyebrow={`${filteredSavedLogs.length} record`}>
-          Diario completo in formato tabella: scorri a destra per vedere pasti, foto, integratori e note.
+          Vista compatta per leggere peso, pasti, integratori, valutazione e note senza perdere il filo.
         </SectionTitle>
 
         <div className="mb-4 grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
@@ -528,115 +517,116 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
           </p>
         </div>
 
-        <div className="table-wrap diary-table-wrap">
-          <table className="clean-table diary-table min-w-[1560px]">
-            <thead>
-              <tr>
-                <th className="sticky left-0 z-10 min-w-48 bg-pink-bg">Giorno</th>
-                <th className="diary-weight-col">Peso</th>
-                <th className="diary-meal-col">Colazione</th>
-                <th className="diary-meal-col">Pranzo</th>
-                <th className="diary-meal-col">Merenda</th>
-                <th className="diary-meal-col">Cena</th>
-                <th className="diary-supplements-col">Integratori</th>
-                <th className="diary-mood-col">Sensazione</th>
-                <th className="diary-tags-col">Tag</th>
-                <th className="diary-notes-col">Note</th>
-                <th className="diary-photo-col">Corpo</th>
-                <th className="diary-actions-col">Azioni</th>
-              </tr>
-            </thead>
-            <tbody>
-              {visibleSavedLogs.map((log) => {
-                const isEditing = editingLogId === log.id
-                const date = compactDate(log.date)
-                const passed = dayRatingValue(log) > 3
-                const ratingClass = passed
-                  ? 'border-sage bg-sage text-title'
-                  : dayRatingValue(log)
-                    ? 'border-red-200 bg-red-50 text-red-600'
-                    : 'border-blush-border bg-pink-bg text-title'
-                const emptyCell = <span className="text-xs font-semibold text-text/40">-</span>
-                const photoButton = (photo, label) => photo ? (
-                  <button type="button" className="mt-2 rounded-full bg-blush px-3 py-1 text-xs font-bold text-title transition hover:bg-sage" onClick={() => setPreviewPhoto({ src: photo, label })}>
-                    Foto
-                  </button>
-                ) : null
-                const mealCell = (value, photo, label) => (
-                  <div className="grid gap-1">
-                    {value ? <p className="diary-cell-text line-clamp-3 text-sm leading-5">{value}</p> : emptyCell}
-                    {photoButton(photo, label)}
-                  </div>
-                )
-                const chipCell = (value, tone = 'bg-pink-bg') => value ? (
-                  <span className={`inline-flex max-w-full rounded-2xl px-3 py-2 text-xs font-bold leading-4 text-title ${tone}`}>
-                    <span className="diary-cell-text line-clamp-3">{value}</span>
-                  </span>
-                ) : emptyCell
+        <div className="grid gap-3">
+          <div className="diary-row-header hidden lg:grid">
+            <span>Giorno</span>
+            <span>Valutazione</span>
+            <span>Peso</span>
+            <span>Pasti</span>
+            <span>Integratori</span>
+            <span>Note</span>
+            <span>Azioni</span>
+          </div>
 
-                return (
-                  <Fragment key={log.id}>
-                    <tr className="align-top">
-                      <td className="sticky left-0 z-10 bg-warm-white">
-                        <div className="flex items-center gap-3">
-                          <span className={`grid size-11 shrink-0 place-items-center rounded-2xl ${passed ? 'bg-sage text-title' : 'bg-blush text-title'}`}>
-                            <Heart size={20} className={passed ? 'fill-current' : ''} aria-hidden="true" />
-                          </span>
-                          <div>
-                            <p className="text-xs font-black uppercase text-accent">{date.weekday} {date.day} {date.month}</p>
-                            <p className="text-sm font-black text-title">{numericDate(log.date)}</p>
-                            <p className="text-xs font-bold uppercase text-text">Giorno {dayNumber(log)}</p>
-                            {dayRatingLabel(log) ? (
-                              <span className={`mt-2 inline-flex rounded-full border px-2.5 py-1 text-xs font-black ${ratingClass}`}>
-                                {dayRatingLabel(log)}
-                              </span>
-                            ) : null}
+          {visibleSavedLogs.length === 0 ? <p className="rounded-2xl bg-pink-bg px-3 py-3 text-sm font-semibold">Nessuna giornata salvata.</p> : null}
+
+          {visibleSavedLogs.map((log) => {
+            const isEditing = editingLogId === log.id
+            const date = compactDate(log.date)
+            const passed = dayRatingValue(log) > 3
+            const ratingClass = passed
+              ? 'bg-sage text-title'
+              : dayRatingValue(log)
+                ? 'bg-orange-100 text-title'
+                : 'bg-pink-bg text-title'
+            const photoButton = (photo, label) => photo ? (
+              <button type="button" className="rounded-full bg-blush px-3 py-1 text-xs font-bold text-title transition hover:bg-sage" onClick={() => setPreviewPhoto({ src: photo, label })}>
+                Foto
+              </button>
+            ) : null
+            const mealSummary = [
+              ['Colazione', log.breakfast, log.breakfastPhoto],
+              ['Pranzo', log.lunch, log.lunchPhoto],
+              ['Merenda', log.snack, log.snackPhoto],
+              ['Cena', log.dinner, log.dinnerPhoto],
+            ]
+
+            return (
+              <article key={log.id} className="rounded-2xl border border-blush-border bg-white shadow-soft">
+                <div className="diary-row-card">
+                  <div className="diary-row-day">
+                    <span className={`grid size-11 shrink-0 place-items-center rounded-2xl ${passed ? 'bg-sage text-title' : 'bg-blush text-title'}`}>
+                      <Heart size={20} className={passed ? 'fill-current' : ''} aria-hidden="true" />
+                    </span>
+                    <div>
+                      <p className="text-xs font-black uppercase text-accent">{date.weekday} {date.day} {date.month}</p>
+                      <p className="text-sm font-black text-title">{numericDate(log.date)}</p>
+                      <p className="text-xs font-bold uppercase text-text">Giorno {dayNumber(log)}</p>
+                    </div>
+                  </div>
+
+                  <div className="diary-row-cell">
+                    <span className="diary-mobile-label">Valutazione</span>
+                    {dayRatingLabel(log) ? <span className={`w-fit rounded-full px-3 py-1 text-xs font-black ${ratingClass}`}>{dayRatingLabel(log)}</span> : <span className="text-xs font-semibold text-text/40">-</span>}
+                  </div>
+
+                  <div className="diary-row-cell">
+                    <span className="diary-mobile-label">Peso</span>
+                    {log.weight ? <span className="w-fit whitespace-nowrap rounded-full bg-sage px-3 py-1 text-xs font-black text-title">{log.weight} kg</span> : <span className="text-xs font-semibold text-text/40">-</span>}
+                  </div>
+
+                  <div className="diary-row-cell diary-meals-cell">
+                    <span className="diary-mobile-label">Pasti</span>
+                    <div className="grid gap-2">
+                      {mealSummary.map(([label, value, photo]) => (
+                        value || photo ? (
+                          <div key={label} className="rounded-xl bg-pink-bg px-3 py-2">
+                            <p className="text-[11px] font-black uppercase text-accent">{label}</p>
+                            {value ? <p className="diary-cell-text line-clamp-2 text-sm leading-5">{value}</p> : null}
+                            {photoButton(photo, `Foto ${label.toLowerCase()}`)}
                           </div>
-                        </div>
-                      </td>
-                      <td className="diary-weight-col">{log.weight ? <span className="inline-flex whitespace-nowrap rounded-full bg-sage px-3 py-1 text-xs font-black text-title">{log.weight} kg</span> : emptyCell}</td>
-                      <td className="diary-meal-col">{mealCell(log.breakfast, log.breakfastPhoto, 'Foto colazione')}</td>
-                      <td className="diary-meal-col">{mealCell(log.lunch, log.lunchPhoto, 'Foto pranzo')}</td>
-                      <td className="diary-meal-col">{mealCell(log.snack, log.snackPhoto, 'Foto merenda')}</td>
-                      <td className="diary-meal-col">{mealCell(log.dinner, log.dinnerPhoto, 'Foto cena')}</td>
-                      <td className="diary-supplements-col">{chipCell(supplementsLabel(log))}</td>
-                      <td className="diary-mood-col">{chipCell(moodLabel(log), dayRatingValue(log) > 3 ? 'bg-sage' : 'bg-pink-bg')}</td>
-                      <td className="diary-tags-col">{chipCell(selectedFeelingTags(log.feelingTags).join(', '), 'bg-blush')}</td>
-                      <td className="diary-notes-col">{log.notes ? <p className="diary-cell-text line-clamp-4 text-sm leading-5">{log.notes}</p> : emptyCell}</td>
-                      <td className="diary-photo-col">{photoButton(log.bodyPhoto, 'Foto corpo') || emptyCell}</td>
-                      <td className="diary-actions-col">
-                        <div className="flex flex-wrap gap-2">
-                          <Button type="button" variant="ghost" className="border border-blush-border" onClick={() => editLog(log)} disabled={isEditing}><Pencil size={16} />Modifica</Button>
-                          <Button type="button" variant="danger" onClick={() => deleteLog(log.id)}><Trash2 size={16} />Elimina</Button>
-                        </div>
-                      </td>
-                    </tr>
-                    {isEditing ? (
-                      <tr>
-                        <td colSpan="12">
-                          <form onSubmit={saveInlineLog} className="grid gap-4 rounded-xl bg-pink-bg p-3">
-                            <DiaryFields
-                              value={inlineForm}
-                              onUpdate={updateInline}
-                              onDateChange={(date) => updateInline('date', date)}
-                              supplementOptions={supplementOptions}
-                              onAddSupplementOption={addSupplementOption}
-                              onDeleteSupplementOption={deleteSupplementOption}
-                            />
-                            <div className="flex flex-wrap gap-2">
-                              <Button type="submit" disabled={!hasDailyContent(inlineForm)}><Save size={16} />Aggiorna giornata</Button>
-                              <Button type="button" variant="ghost" className="border border-blush-border" onClick={cancelInlineEdit}><X size={16} />Annulla</Button>
-                            </div>
-                          </form>
-                        </td>
-                      </tr>
-                    ) : null}
-                  </Fragment>
-                )
-              })}
-              {filteredSavedLogs.length === 0 ? <tr><td colSpan="12">Nessuna giornata salvata.</td></tr> : null}
-            </tbody>
-          </table>
+                        ) : null
+                      ))}
+                      {!mealSummary.some(([, value, photo]) => value || photo) ? <span className="text-xs font-semibold text-text/40">-</span> : null}
+                    </div>
+                  </div>
+
+                  <div className="diary-row-cell">
+                    <span className="diary-mobile-label">Integratori</span>
+                    {supplementsLabel(log) ? <p className="diary-cell-text text-sm font-semibold leading-5">{supplementsLabel(log)}</p> : <span className="text-xs font-semibold text-text/40">-</span>}
+                  </div>
+
+                  <div className="diary-row-cell">
+                    <span className="diary-mobile-label">Note</span>
+                    {log.notes ? <p className="diary-cell-text line-clamp-4 text-sm leading-5">{log.notes}</p> : <span className="text-xs font-semibold text-text/40">-</span>}
+                    {photoButton(log.bodyPhoto, 'Foto corpo')}
+                  </div>
+
+                  <div className="diary-row-actions">
+                    <Button type="button" variant="ghost" className="border border-blush-border" onClick={() => editLog(log)} disabled={isEditing}><Pencil size={16} />Modifica</Button>
+                    <Button type="button" variant="danger" onClick={() => deleteLog(log.id)}><Trash2 size={16} />Elimina</Button>
+                  </div>
+                </div>
+
+                {isEditing ? (
+                  <form onSubmit={saveInlineLog} className="m-3 grid gap-4 rounded-xl bg-pink-bg p-3">
+                    <DiaryFields
+                      value={inlineForm}
+                      onUpdate={updateInline}
+                      onDateChange={(date) => updateInline('date', date)}
+                      supplementOptions={supplementOptions}
+                      onAddSupplementOption={addSupplementOption}
+                      onDeleteSupplementOption={deleteSupplementOption}
+                    />
+                    <div className="flex flex-wrap gap-2">
+                      <Button type="submit" disabled={!hasDailyContent(inlineForm)}><Save size={16} />Aggiorna giornata</Button>
+                      <Button type="button" variant="ghost" className="border border-blush-border" onClick={cancelInlineEdit}><X size={16} />Annulla</Button>
+                    </div>
+                  </form>
+                ) : null}
+              </article>
+            )
+          })}
         </div>
 
         {visibleSavedCount < filteredSavedLogs.length ? (

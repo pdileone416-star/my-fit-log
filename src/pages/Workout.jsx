@@ -122,6 +122,30 @@ function upsertPlanExercise(days, workoutDay, exercise, editingExerciseId) {
   })
 }
 
+function ExerciseEditor({ exerciseForm, setExerciseForm, editingExerciseId, onSubmit, onCancel }) {
+  return (
+    <form onSubmit={onSubmit} className="grid gap-3 rounded-2xl border border-blush-border bg-pink-bg p-3">
+      <Input label="Nome esercizio" value={exerciseForm.exercise} onChange={(event) => setExerciseForm((form) => ({ ...form, exercise: event.target.value }))} required />
+      <div className="grid gap-3 md:grid-cols-2">
+        <Input label="Serie x rip previste" value={exerciseForm.plannedSetsReps} onChange={(event) => setExerciseForm((form) => ({ ...form, plannedSetsReps: event.target.value }))} />
+        <Input label="Serie x rip effettuate" value={exerciseForm.completedSetsReps} onChange={(event) => setExerciseForm((form) => ({ ...form, completedSetsReps: event.target.value }))} />
+        <Input label="Peso/carico kg" type="number" step="0.5" value={exerciseForm.weightKg} onChange={(event) => setExerciseForm((form) => ({ ...form, weightKg: event.target.value }))} />
+        <Input label="Fatica 1-10" type="number" min="1" max="10" value={exerciseForm.fatigue} onChange={(event) => setExerciseForm((form) => ({ ...form, fatigue: event.target.value }))} />
+      </div>
+      <label className="flex items-center gap-3 rounded-xl border border-blush-border bg-white p-3 font-semibold text-title">
+        <input type="checkbox" checked={exerciseForm.completed} onChange={(event) => setExerciseForm((form) => ({ ...form, completed: event.target.checked }))} />
+        Completato
+      </label>
+      <ImageField label="Immagine esercizio" value={exerciseForm.imageData} onChange={(imageData) => setExerciseForm((form) => ({ ...form, imageData }))} />
+      <Textarea label="Note" value={exerciseForm.notes} onChange={(event) => setExerciseForm((form) => ({ ...form, notes: event.target.value }))} />
+      <div className="flex flex-wrap gap-2">
+        <Button type="submit"><Save size={16} />{editingExerciseId ? 'Aggiorna esercizio' : 'Salva esercizio'}</Button>
+        <Button type="button" variant="ghost" onClick={onCancel}><X size={16} />Annulla</Button>
+      </div>
+    </form>
+  )
+}
+
 export default function Workout({ workoutSessions, setWorkoutSessions, workoutPlans, setWorkoutPlans }) {
   const [mode, setMode] = useState('sessions')
   const [showSessionForm, setShowSessionForm] = useState(false)
@@ -469,26 +493,14 @@ export default function Workout({ workoutSessions, setWorkoutSessions, workoutPl
                   <Button type="button" variant="danger" onClick={() => deleteSession(session.id)}><Trash2 size={16} />Elimina sessione</Button>
                 </div>
 
-                {activeExerciseSessionId === session.id ? (
-                  <form onSubmit={saveExercise} className="grid gap-3 rounded-2xl border border-blush-border bg-pink-bg p-3">
-                    <Input label="Nome esercizio" value={exerciseForm.exercise} onChange={(event) => setExerciseForm((form) => ({ ...form, exercise: event.target.value }))} required />
-                    <div className="grid gap-3 md:grid-cols-2">
-                      <Input label="Serie x rip previste" value={exerciseForm.plannedSetsReps} onChange={(event) => setExerciseForm((form) => ({ ...form, plannedSetsReps: event.target.value }))} />
-                      <Input label="Serie x rip effettuate" value={exerciseForm.completedSetsReps} onChange={(event) => setExerciseForm((form) => ({ ...form, completedSetsReps: event.target.value }))} />
-                      <Input label="Peso/carico kg" type="number" step="0.5" value={exerciseForm.weightKg} onChange={(event) => setExerciseForm((form) => ({ ...form, weightKg: event.target.value }))} />
-                      <Input label="Fatica 1-10" type="number" min="1" max="10" value={exerciseForm.fatigue} onChange={(event) => setExerciseForm((form) => ({ ...form, fatigue: event.target.value }))} />
-                    </div>
-                    <label className="flex items-center gap-3 rounded-xl border border-blush-border bg-white p-3 font-semibold text-title">
-                      <input type="checkbox" checked={exerciseForm.completed} onChange={(event) => setExerciseForm((form) => ({ ...form, completed: event.target.checked }))} />
-                      Completato
-                    </label>
-                    <ImageField label="Immagine esercizio" value={exerciseForm.imageData} onChange={(imageData) => setExerciseForm((form) => ({ ...form, imageData }))} />
-                    <Textarea label="Note" value={exerciseForm.notes} onChange={(event) => setExerciseForm((form) => ({ ...form, notes: event.target.value }))} />
-                    <div className="flex flex-wrap gap-2">
-                      <Button type="submit"><Save size={16} />{editingExerciseId ? 'Aggiorna esercizio' : 'Salva esercizio'}</Button>
-                      <Button type="button" variant="ghost" onClick={resetExerciseForm}><X size={16} />Annulla</Button>
-                    </div>
-                  </form>
+                {activeExerciseSessionId === session.id && !editingExerciseId ? (
+                  <ExerciseEditor
+                    exerciseForm={exerciseForm}
+                    setExerciseForm={setExerciseForm}
+                    editingExerciseId={editingExerciseId}
+                    onSubmit={saveExercise}
+                    onCancel={resetExerciseForm}
+                  />
                 ) : null}
 
                 {isOpen ? (
@@ -521,6 +533,17 @@ export default function Workout({ workoutSessions, setWorkoutSessions, workoutPl
                           <Button type="button" variant="ghost" onClick={() => openExerciseForm(session.id, exercise)}><Pencil size={16} />Modifica</Button>
                           <Button type="button" variant="danger" onClick={() => deleteExercise(session.id, exercise.id)}><Trash2 size={16} />Elimina</Button>
                         </div>
+                        {activeExerciseSessionId === session.id && editingExerciseId === exercise.id ? (
+                          <div className="mt-3">
+                            <ExerciseEditor
+                              exerciseForm={exerciseForm}
+                              setExerciseForm={setExerciseForm}
+                              editingExerciseId={editingExerciseId}
+                              onSubmit={saveExercise}
+                              onCancel={resetExerciseForm}
+                            />
+                          </div>
+                        ) : null}
                       </article>
                     ))}
                   </div>
