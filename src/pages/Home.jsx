@@ -63,9 +63,18 @@ function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value))
 }
 
+const weightGoal = [
+  ['1', '52,0 kg'],
+  ['10', '50,8 kg'],
+  ['20', '49,8 kg'],
+  ['30', '48,7 kg'],
+  ['40', '47,6 kg'],
+  ['50', '46,5-47,0 kg'],
+]
+
 export default function Home({ dailyLogs, goTo }) {
   const today = todayISO()
-  const challengeStart = '2026-06-22'
+  const challengeStart = '2026-06-23'
   const challengeLength = 50
   const challengeEnd = addDays(challengeStart, challengeLength - 1)
   const rawChallengeDay = diffDays(challengeStart, today) + 1
@@ -129,7 +138,7 @@ export default function Home({ dailyLogs, goTo }) {
 
       <Card className="border-2 border-accent bg-blush">
         <SectionTitle title="Nuova sfida 50 giorni" eyebrow="primo obiettivo">
-          Parte oggi, 22 giugno 2026, e arriva fino al {formatDate(challengeEnd)}.
+          Parte domani, 23 giugno 2026, e arriva fino al {formatDate(challengeEnd)}.
         </SectionTitle>
         <div className="grid gap-3">
           <div className="grid gap-3 sm:grid-cols-3">
@@ -157,6 +166,30 @@ export default function Home({ dailyLogs, goTo }) {
               {challengeProgress}% completato - traguardo: {formatDate(challengeEnd)}.
             </p>
           </div>
+        </div>
+      </Card>
+
+      <Card>
+        <SectionTitle title="Progressione peso" eyebrow="riferimento sfida 50 giorni">
+          Un riferimento semplice per seguire il percorso con calma, senza giudicare una singola giornata.
+        </SectionTitle>
+        <div className="table-wrap">
+          <table className="clean-table min-w-[360px]">
+            <thead>
+              <tr>
+                <th>Giorno</th>
+                <th>Peso di riferimento</th>
+              </tr>
+            </thead>
+            <tbody>
+              {weightGoal.map(([day, weight]) => (
+                <tr key={day}>
+                  <td className="font-black text-title">Giorno {day}</td>
+                  <td>{weight}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </Card>
 
