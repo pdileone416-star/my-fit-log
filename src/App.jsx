@@ -81,19 +81,21 @@ function AppContent({ user, onLogout }) {
   return (
     <div className="min-h-screen max-w-full overflow-x-hidden px-3 py-4 sm:px-4 sm:py-5 md:px-6">
       <div className="mx-auto min-w-0 max-w-5xl">
-        <header className="mb-5 rounded-3xl border border-blush-border bg-warm-white p-4 shadow-soft sm:p-5">
+
+        {/* ── Header ── */}
+        <header className="glass-strong mb-5 rounded-3xl p-4 sm:p-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
-              <span className="grid size-12 place-items-center overflow-hidden rounded-2xl bg-blush text-title">
+              <span className="grid size-12 shrink-0 place-items-center overflow-hidden rounded-2xl bg-gradient-to-br from-accent-light to-accent shadow-[0_4px_14px_rgba(232,98,42,0.35)]">
                 <img src="/favicon.svg" alt="" className="size-10" />
               </span>
               <div>
-                <p className="text-xs font-bold uppercase tracking-wide text-accent sm:text-sm">diario personale</p>
-                <h1 className="text-3xl font-black text-title md:text-4xl">My Fit Log</h1>
-                <p className="text-sm text-text">Ciao {user.name || user.email}</p>
+                <p className="text-xs font-bold uppercase tracking-widest text-accent">diario personale</p>
+                <h1 className="text-3xl font-black leading-none text-title md:text-4xl">My Fit Log</h1>
+                <p className="mt-0.5 text-sm text-text/70">Ciao, {user.name || user.email}</p>
               </div>
             </div>
-            <Button type="button" variant="ghost" onClick={onLogout} className="w-full border border-blush-border sm:w-auto">
+            <Button type="button" variant="ghost" onClick={onLogout} className="w-full sm:w-auto">
               <LogOut size={17} aria-hidden="true" />
               Esci
             </Button>
@@ -103,9 +105,9 @@ function AppContent({ user, onLogout }) {
         <Tabs tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
 
         <main className="min-w-0">
-          {activeTab === 'home' && <Home {...sharedProps} />}
-          {activeTab === 'diary' && <FoodDiary {...sharedProps} />}
-          {activeTab === 'workout' && <Workout {...sharedProps} />}
+          {activeTab === 'home'     && <Home     {...sharedProps} />}
+          {activeTab === 'diary'    && <FoodDiary {...sharedProps} />}
+          {activeTab === 'workout'  && <Workout  {...sharedProps} />}
           {activeTab === 'progress' && <Progress {...sharedProps} />}
         </main>
       </div>

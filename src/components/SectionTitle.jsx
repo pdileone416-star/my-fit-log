@@ -1,9 +1,13 @@
-export default function SectionTitle({ eyebrow, title, children }) {
+export default function SectionTitle({ title, eyebrow, children }) {
   return (
-    <header className="mb-4 min-w-0">
-      {eyebrow ? <p className="text-xs font-bold uppercase tracking-wide text-accent">{eyebrow}</p> : null}
-      <h2 className="break-words text-2xl font-bold text-title">{title}</h2>
-      {children ? <p className="mt-1 max-w-full break-words text-sm text-text">{children}</p> : null}
-    </header>
+    <div className="mb-4">
+      {eyebrow && (
+        <p className="mb-1 text-xs font-bold uppercase tracking-widest text-accent">{eyebrow}</p>
+      )}
+      <h2 className="text-xl font-black text-title">{title}</h2>
+      {children && (
+        <p className="mt-1 text-sm leading-relaxed text-text/65">{children}</p>
+      )}
+    </div>
   )
 }

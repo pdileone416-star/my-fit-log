@@ -1,6 +1,6 @@
-export default function Card({ children, className = '' }) {
+export default function Card({ children, className = '', ...props }) {
   return (
-    <section className={`min-w-0 max-w-full overflow-hidden rounded-2xl border border-blush-border bg-warm-white p-4 shadow-soft ${className}`}>
+    <section className={`glass min-w-0 max-w-full overflow-hidden rounded-3xl p-4 ${className}`} {...props}>
       {children}
     </section>
   )

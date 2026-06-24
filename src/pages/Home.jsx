@@ -4,16 +4,16 @@ import Card from '../components/Card'
 import SectionTitle from '../components/SectionTitle'
 import { formatDate, todayISO } from '../utils/storage'
 
-function Stat({ icon: Icon, title, value, tone = 'bg-blush' }) {
+function Stat({ icon: Icon, title, value, gradient = 'from-blush to-sage' }) {
   return (
     <Card>
-      <div className="flex items-start gap-3">
-        <span className={`grid size-11 shrink-0 place-items-center rounded-2xl ${tone} text-title`}>
-          <Icon size={21} aria-hidden="true" />
+      <div className="flex items-center gap-3">
+        <span className={`grid size-12 shrink-0 place-items-center rounded-2xl bg-gradient-to-br ${gradient} shadow-[0_4px_12px_rgba(232,98,42,0.15)]`}>
+          <Icon size={21} aria-hidden="true" className="text-title" />
         </span>
         <div>
-          <p className="text-sm font-bold text-title">{title}</p>
-          <p className="mt-1 text-2xl font-black text-text">{value}</p>
+          <p className="text-xs font-bold uppercase tracking-wide text-accent">{title}</p>
+          <p className="mt-0.5 text-2xl font-black text-title">{value}</p>
         </div>
       </div>
     </Card>
@@ -69,7 +69,7 @@ const weightGoal = [
   ['20', '49,8 kg'],
   ['30', '48,7 kg'],
   ['40', '47,6 kg'],
-  ['50', '46,5-47,0 kg'],
+  ['50', '46,5–47,0 kg'],
 ]
 
 export default function Home({ dailyLogs, goTo }) {
@@ -118,63 +118,81 @@ export default function Home({ dailyLogs, goTo }) {
 
   return (
     <div className="grid gap-5">
-      <section className="rounded-3xl border border-blush-border bg-warm-white p-5 shadow-soft">
-        <p className="text-sm font-bold text-accent">{formatDate(today)}</p>
-        <div className="mt-2 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-          <div>
-            <h2 className="text-3xl font-black text-title">Ciao, oggi si registra con calma.</h2>
-            <p className="mt-1 text-sm text-text">Peso, workout e benessere in un diario semplice da telefono.</p>
-          </div>
-          <div className="grid gap-2 sm:grid-cols-2 md:flex md:flex-wrap">
-            <Button onClick={() => {
-              goTo('diary')
-              setTimeout(() => window.dispatchEvent(new Event('my-fit-log-new-daily')), 0)
-            }}><Plus size={17} />Nuova giornata</Button>
-            <Button type="button" variant="secondary" onClick={() => goTo('progress')}><LineChart size={17} />Progressi</Button>
-            <Button type="button" variant="ghost" className="border border-blush-border" onClick={() => goTo('workout')}><Dumbbell size={17} />Workout</Button>
+
+      {/* ── Hero banner ── */}
+      <section
+        className="relative overflow-hidden rounded-3xl p-5"
+        style={{
+          background: 'linear-gradient(135deg, rgba(255,122,66,0.12) 0%, rgba(244,185,138,0.10) 100%)',
+          border: '1px solid rgba(255,255,255,0.65)',
+          backdropFilter: 'blur(18px)',
+          boxShadow: '0 8px 32px rgba(120,46,8,0.08), inset 0 1px 0 rgba(255,255,255,0.8)',
+        }}
+      >
+        <div className="relative">
+          <p className="text-sm font-bold text-accent">{formatDate(today)}</p>
+          <div className="mt-2 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+            <div>
+              <h2 className="text-3xl font-black leading-tight text-title">Ciao, oggi si registra con calma.</h2>
+              <p className="mt-1 text-sm text-text/70">Peso, workout e benessere in un diario semplice da telefono.</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button onClick={() => {
+                goTo('diary')
+                setTimeout(() => window.dispatchEvent(new Event('my-fit-log-new-daily')), 0)
+              }}>
+                <Plus size={17} />Nuova giornata
+              </Button>
+              <Button type="button" variant="secondary" onClick={() => goTo('progress')}>
+                <LineChart size={17} />Progressi
+              </Button>
+              <Button type="button" variant="ghost" onClick={() => goTo('workout')}>
+                <Dumbbell size={17} />Workout
+              </Button>
+            </div>
           </div>
         </div>
       </section>
 
-      <Card className="border-2 border-accent bg-blush">
-        <SectionTitle title="Nuova sfida 50 giorni" eyebrow="primo obiettivo">
-          Parte domani, 23 giugno 2026, e arriva fino al {formatDate(challengeEnd)}.
+      {/* ── Challenge card ── */}
+      <Card className="border-2 border-accent/30"
+        style={{
+          background: 'linear-gradient(135deg, rgba(232,98,42,0.10) 0%, rgba(255,122,66,0.07) 100%)',
+        }}
+      >
+        <SectionTitle title="Sfida 50 giorni" eyebrow="primo obiettivo">
+          Dal 23 giugno al {formatDate(challengeEnd)}.
         </SectionTitle>
         <div className="grid gap-3">
           <div className="grid gap-3 sm:grid-cols-3">
-            <div className="rounded-2xl bg-warm-white p-3">
-              <p className="text-xs font-bold uppercase text-accent">{challengeDay ? 'Oggi sei al' : 'Partenza'}</p>
-              <p className="text-3xl font-black text-title">{challengeDay ? `Giorno ${challengeDay}` : 'Domani'}</p>
-              <p className="text-sm font-bold text-text">su {challengeLength}</p>
-            </div>
-            <div className="rounded-2xl bg-warm-white p-3">
-              <p className="text-xs font-bold uppercase text-accent">Mancano</p>
-              <p className="text-3xl font-black text-title">{challengeRemaining}</p>
-              <p className="text-sm font-bold text-text">giorni al primo obiettivo</p>
-            </div>
-            <div className="rounded-2xl bg-warm-white p-3">
-              <p className="text-xs font-bold uppercase text-accent">Giornate registrate</p>
-              <p className="text-3xl font-black text-title">{challengeLogs}</p>
-              <p className="text-sm font-bold text-text">dentro la sfida</p>
-            </div>
+            {[
+              { label: challengeDay ? 'Oggi sei al' : 'Partenza', value: challengeDay ? `Giorno ${challengeDay}` : 'Domani', sub: `su ${challengeLength}` },
+              { label: 'Mancano', value: challengeRemaining, sub: 'giorni al traguardo' },
+              { label: 'Giornate registrate', value: challengeLogs, sub: 'dentro la sfida' },
+            ].map(({ label, value, sub }) => (
+              <div key={label} className="rounded-2xl bg-white/60 p-3 backdrop-blur-sm">
+                <p className="text-xs font-bold uppercase tracking-wide text-accent">{label}</p>
+                <p className="text-3xl font-black text-title">{value}</p>
+                <p className="text-sm font-semibold text-text/70">{sub}</p>
+              </div>
+            ))}
           </div>
           <div>
-            <div className="h-4 overflow-hidden rounded-full bg-warm-white">
-              <div className="h-full rounded-full bg-accent transition-all" style={{ width: `${challengeProgress}%` }} />
+            <div className="h-3.5 overflow-hidden rounded-full bg-white/60">
+              <div className="progress-bar h-full rounded-full transition-all duration-700" style={{ width: `${challengeProgress}%` }} />
             </div>
-            <p className="mt-2 text-sm font-bold text-title">
-              {challengeProgress}% completato - traguardo: {formatDate(challengeEnd)}.
-            </p>
+            <p className="mt-2 text-sm font-bold text-title">{challengeProgress}% completato - traguardo: {formatDate(challengeEnd)}.</p>
           </div>
         </div>
       </Card>
 
+      {/* ── Progressione peso reference ── */}
       <Card>
-        <SectionTitle title="Progressione peso" eyebrow="riferimento sfida 50 giorni">
-          Un riferimento semplice per seguire il percorso con calma, senza giudicare una singola giornata.
+        <SectionTitle title="Progressione peso di riferimento" eyebrow="sfida 50 giorni">
+          Un faro semplice per seguire il percorso con calma, senza giudicare una singola giornata.
         </SectionTitle>
         <div className="table-wrap">
-          <table className="clean-table min-w-[360px]">
+          <table className="clean-table min-w-[300px]">
             <thead>
               <tr>
                 <th>Giorno</th>
@@ -185,7 +203,7 @@ export default function Home({ dailyLogs, goTo }) {
               {weightGoal.map(([day, weight]) => (
                 <tr key={day}>
                   <td className="font-black text-title">Giorno {day}</td>
-                  <td>{weight}</td>
+                  <td className="font-semibold">{weight}</td>
                 </tr>
               ))}
             </tbody>
@@ -193,77 +211,101 @@ export default function Home({ dailyLogs, goTo }) {
         </div>
       </Card>
 
+      {/* ── Stats ── */}
       <div className="grid gap-4 md:grid-cols-2">
-        <Stat icon={Scale} title="Variazione peso" value={weightDelta ? `${weightDelta} kg` : '-'} tone="bg-sage" />
-        <Stat icon={HeartPulse} title="Giornate da 4 in su" value={`${goodRatedLogs.length}/${ratedLogs.length || 0}`} />
+        <Stat icon={Scale} title="Variazione peso" value={weightDelta ? `${weightDelta} kg` : '-'} gradient="from-sage to-blush" />
+        <Stat icon={HeartPulse} title="Giornate da 4 in su" value={`${goodRatedLogs.length}/${ratedLogs.length || 0}`} gradient="from-blush to-sage" />
       </div>
 
+      {/* ── 7 giorni ── */}
       <Card>
         <SectionTitle title="Costanza ultimi 7 giorni" eyebrow="monitoraggio">
           Solo il conteggio dei giorni in cui hai registrato qualcosa.
         </SectionTitle>
-        <div className="rounded-2xl bg-pink-bg p-3">
-          <p className="text-xs font-bold uppercase text-accent">Giorni compilati</p>
-          <p className="text-2xl font-black text-title">{last7Logs.length}/7</p>
+        <div className="flex items-center gap-3 rounded-2xl bg-pink-bg/60 p-4">
+          <div className="flex gap-1.5">
+            {last7Dates.map((date) => {
+              const hasLog = Boolean(dailyLogs.find((log) => log.date === date))
+              return (
+                <div
+                  key={date}
+                  className={`size-8 rounded-xl transition-all ${hasLog ? 'bg-gradient-to-br from-accent-light to-accent shadow-[0_2px_8px_rgba(232,98,42,0.35)]' : 'bg-blush/70'}`}
+                  title={date}
+                />
+              )
+            })}
+          </div>
+          <div>
+            <p className="text-2xl font-black text-title">{last7Logs.length}<span className="text-base font-bold text-text/50">/7</span></p>
+            <p className="text-xs font-semibold text-text/60">giorni compilati</p>
+          </div>
         </div>
       </Card>
 
+      {/* ── Completamento oggi ── */}
       <Card>
-        <SectionTitle title="Completamento giornata" eyebrow="oggi">
-          {reminderItems.length ? 'Piccoli promemoria per chiudere meglio la giornata.' : 'Giornata compilata bene.'}
+        <SectionTitle title="Completamento di oggi" eyebrow="oggi">
+          {reminderItems.length ? 'Piccoli promemoria per chiudere meglio la giornata.' : 'Giornata compilata alla grande.'}
         </SectionTitle>
-        <div className="h-4 overflow-hidden rounded-full bg-blush">
-          <div className="h-full rounded-full bg-accent transition-all" style={{ width: `${completed}%` }} />
+        <div className="mb-3 h-3.5 overflow-hidden rounded-full bg-blush/60">
+          <div className="progress-bar h-full rounded-full transition-all duration-700" style={{ width: `${completed}%` }} />
         </div>
-        <p className="mt-3 flex items-center gap-2 text-sm font-semibold text-title">
-          <CheckCircle2 size={18} aria-hidden="true" />
+        <p className="flex items-center gap-2 text-sm font-semibold text-title">
+          <CheckCircle2 size={18} aria-hidden="true" className="text-accent" />
           {completed}% completato
         </p>
         {reminderItems.length ? (
-          <div className="mt-4 rounded-3xl border-2 border-accent bg-blush p-4 shadow-soft">
-            <div className="mb-3 flex items-center gap-2 text-title">
-              <span className="grid size-10 shrink-0 place-items-center rounded-2xl bg-accent text-white">
-                <AlertCircle size={21} aria-hidden="true" />
+          <div className="mt-4 rounded-2xl border border-accent/25 bg-gradient-to-br from-accent/8 to-transparent p-4">
+            <div className="mb-3 flex items-center gap-2">
+              <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-accent-light to-accent shadow-[0_4px_12px_rgba(232,98,42,0.3)]">
+                <AlertCircle size={18} aria-hidden="true" className="text-white" />
               </span>
-              <p className="font-black">Reminder di oggi</p>
+              <p className="font-black text-title">Reminder di oggi</p>
             </div>
             <div className="grid gap-2">
               {reminderItems.map((item) => (
-                <p key={item} className="rounded-2xl bg-warm-white px-3 py-2 text-sm font-bold text-title">{item}</p>
+                <p key={item} className="rounded-xl bg-white/60 px-3 py-2 text-sm font-semibold text-title backdrop-blur-sm">{item}</p>
               ))}
             </div>
           </div>
         ) : null}
       </Card>
 
+      {/* ── Rating chart ── */}
       <Card>
         <SectionTitle title="Andamento valutazione" eyebrow="ultime giornate">
-          Valutazione da 1 a 5: cuore verde quando la giornata e da 4 in su.
+          Da 1 a 5: arancione pieno quando la giornata è da 4 in su.
         </SectionTitle>
         {chartLogs.length ? (
-          <div className="grid gap-3">
-            <div className="flex h-44 items-end gap-2 rounded-2xl bg-pink-bg p-3">
-              {chartLogs.map((log, index) => {
-                const rating = dayRatingValue(log)
-                return (
-                  <button
-                    key={log.id || `${log.date}-${index}`}
-                    type="button"
-                    className="flex min-w-0 flex-1 flex-col items-center gap-2"
-                    onClick={() => goTo('diary')}
-                  >
-                    <span className={`grid size-8 place-items-center rounded-full text-xs font-black ${rating >= 4 ? 'bg-sage text-title' : 'bg-blush text-title'}`}>
-                      {rating}
-                    </span>
-                    <span className="w-full rounded-t-xl bg-accent" style={{ height: `${Math.max(12, rating * 24)}px` }} />
-                    <span className="text-[11px] font-bold text-title">{miniDate(log.date)}</span>
-                  </button>
-                )
-              })}
-            </div>
+          <div className="flex h-48 items-end gap-2 rounded-2xl bg-pink-bg/50 p-3">
+            {chartLogs.map((log, index) => {
+              const rating = dayRatingValue(log)
+              const isGood = rating >= 4
+              return (
+                <button
+                  key={log.id || `${log.date}-${index}`}
+                  type="button"
+                  className="flex min-w-0 flex-1 flex-col items-center gap-2 group"
+                  onClick={() => goTo('diary')}
+                >
+                  <span className={`grid size-8 place-items-center rounded-full text-xs font-black transition-transform group-hover:scale-110 ${
+                    isGood
+                      ? 'bg-gradient-to-br from-accent-light to-accent text-white shadow-[0_2px_8px_rgba(232,98,42,0.4)]'
+                      : 'bg-blush/80 text-title'
+                  }`}>
+                    {rating}
+                  </span>
+                  <span
+                    className={`w-full rounded-t-2xl transition-all ${isGood ? 'bg-gradient-to-t from-accent to-accent-light' : 'bg-blush'}`}
+                    style={{ height: `${Math.max(16, rating * 26)}px` }}
+                  />
+                  <span className="text-[11px] font-bold text-title/70">{miniDate(log.date)}</span>
+                </button>
+              )
+            })}
           </div>
         ) : (
-          <p className="text-sm">Aggiungi una valutazione giornata per vedere il grafico.</p>
+          <p className="rounded-2xl bg-pink-bg/50 p-4 text-sm text-text/60">Aggiungi una valutazione giornata per vedere il grafico.</p>
         )}
       </Card>
     </div>
