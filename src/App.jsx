@@ -79,25 +79,25 @@ function AppContent({ user, onLogout }) {
   }
 
   return (
-    <div className="min-h-screen max-w-full overflow-x-hidden px-3 py-4 sm:px-4 sm:py-5 md:px-6">
-      <div className="mx-auto min-w-0 max-w-5xl">
+    <div className="min-h-screen max-w-full overflow-x-hidden px-3 pt-4 pb-28 sm:px-4 sm:pt-5">
+      <div className="mx-auto min-w-0 max-w-[680px]">
 
         {/* ── Header ── */}
-        <header className="glass-strong mb-5 rounded-3xl p-4 sm:p-5">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <header className="glass-strong mb-4 rounded-3xl p-4">
+          <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <span className="grid size-12 shrink-0 place-items-center overflow-hidden rounded-2xl bg-gradient-to-br from-accent-light to-accent shadow-[0_4px_14px_rgba(232,98,42,0.35)]">
-                <img src="/favicon.svg" alt="" className="size-10" />
+              <span className="grid size-11 shrink-0 place-items-center overflow-hidden rounded-2xl bg-gradient-to-br from-accent-light to-accent shadow-[0_4px_14px_rgba(232,98,42,0.35)]">
+                <img src="/favicon.svg" alt="" className="size-9" />
               </span>
               <div>
                 <p className="text-xs font-bold uppercase tracking-widest text-accent">diario personale</p>
-                <h1 className="text-3xl font-black leading-none text-title md:text-4xl">My Fit Log</h1>
+                <h1 className="text-2xl font-black leading-none text-title">My Fit Log</h1>
                 <p className="mt-0.5 text-sm text-text/70">Ciao, {user.name || user.email}</p>
               </div>
             </div>
-            <Button type="button" variant="ghost" onClick={onLogout} className="w-full sm:w-auto">
+            <Button type="button" variant="ghost" onClick={onLogout} className="min-h-10 shrink-0 px-3">
               <LogOut size={17} aria-hidden="true" />
-              Esci
+              <span className="hidden sm:inline">Esci</span>
             </Button>
           </div>
         </header>
