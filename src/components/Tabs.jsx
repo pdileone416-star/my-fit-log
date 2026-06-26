@@ -28,7 +28,7 @@ export default function Tabs({ tabs, activeTab, onChange, variant = 'bottom' }) 
   return (
     <nav
       className="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-[460px] px-2 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-2.5 backdrop-blur-[18px]"
-      style={{ background: 'rgba(17,17,19,0.93)', borderTop: '1px solid var(--b)' }}
+      style={{ background: 'rgba(255,253,242,0.94)', borderTop: '1px solid var(--b)' }}
     >
       <div
         className="grid grid-cols-4 gap-0"

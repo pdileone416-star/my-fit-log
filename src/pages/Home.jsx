@@ -180,7 +180,7 @@ export default function Home({ dailyLogs, goTo }) {
             ))}
           </div>
           <div>
-            <div className="mt-3 h-[5px] overflow-hidden rounded-full bg-[#342e1e]">
+            <div className="mt-3 h-[5px] overflow-hidden rounded-full bg-[#f6e3a3]">
               <div className="progress-bar h-full rounded-full transition-all duration-700" style={{ width: `${challengeProgress}%` }} />
             </div>
             <p className="mt-1 text-[11px] font-bold text-text/35">{challengeProgress}% completato - traguardo: {formatDate(challengeEnd)}.</p>
