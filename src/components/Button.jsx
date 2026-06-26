@@ -3,11 +3,11 @@ export default function Button({ children, variant = 'primary', className = '', 
     primary:
       'bg-gradient-to-br from-accent-light to-accent text-white shadow-[0_4px_14px_rgba(232,98,42,0.35)] hover:shadow-[0_4px_20px_rgba(232,98,42,0.50)] hover:scale-[1.02] active:scale-[0.98]',
     secondary:
-      'bg-blush/90 backdrop-blur-sm text-title border border-white/10 hover:border-accent/40 hover:bg-[#2e2e32] hover:scale-[1.02] active:scale-[0.98]',
+      'bg-blush/80 backdrop-blur-sm text-title border border-blush-border hover:bg-blush hover:scale-[1.02] active:scale-[0.98]',
     ghost:
-      'bg-white/5 backdrop-blur-sm text-title border border-white/10 hover:bg-white/10 hover:scale-[1.02] active:scale-[0.98]',
+      'bg-white/40 backdrop-blur-sm text-title border border-white/60 hover:bg-white/70 hover:scale-[1.02] active:scale-[0.98]',
     danger:
-      'bg-red-500/10 backdrop-blur-sm text-red-300 border border-red-400/25 hover:bg-red-500/15 hover:scale-[1.02] active:scale-[0.98]',
+      'bg-white/60 backdrop-blur-sm text-red-600 border border-red-200/70 hover:bg-red-50/80 hover:scale-[1.02] active:scale-[0.98]',
   }
 
   return (
