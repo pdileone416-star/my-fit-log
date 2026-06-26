@@ -4,7 +4,6 @@ import Button from '../components/Button'
 import Card from '../components/Card'
 import Input from '../components/Input'
 import SectionTitle from '../components/SectionTitle'
-import Tabs from '../components/Tabs'
 import Textarea from '../components/Textarea'
 import { compressPhoto } from '../utils/photos'
 import { createId, normalizeWorkoutDay, todayISO } from '../utils/storage'
@@ -89,6 +88,40 @@ function sessionCompletion(session) {
   return Math.round((session.exercises.filter((exercise) => exercise.completed).length / session.exercises.length) * 100)
 }
 
+function WorkoutModeTabs({ tabs, activeTab, onChange }) {
+  return (
+    <div style={{ display: 'flex', gap: 6, margin: '0 14px 10px', overflowX: 'auto' }}>
+      {tabs.map(({ id, label, icon: Icon }) => {
+        const active = activeTab === id
+        return (
+          <button
+            key={id}
+            type="button"
+            onClick={() => onChange(id)}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 7,
+              minHeight: 40,
+              padding: '8px 13px',
+              borderRadius: 11,
+              border: active ? '1px solid #f06030' : '1px solid rgba(255,255,255,0.12)',
+              background: active ? 'rgba(240,96,48,0.15)' : '#232326',
+              color: active ? '#f06030' : 'rgba(240,237,232,0.6)',
+              fontSize: 12,
+              fontWeight: 800,
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {Icon ? <Icon size={16} aria-hidden="true" /> : null}
+            {label}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
 function getPlanDays(plan) {
   if (plan.days?.length) return plan.days
   return [{
@@ -166,6 +199,25 @@ export default function Workout({ workoutSessions, setWorkoutSessions, workoutPl
   const [inlinePlanEdit, setInlinePlanEdit] = useState(null)
 
   const sortedSessions = [...workoutSessions].sort((a, b) => (b.date || '').localeCompare(a.date || ''))
+
+  function buildProgressions() {
+    const map = new Map()
+    const sessAsc = [...workoutSessions].sort((a, b) => (a.date || '').localeCompare(b.date || ''))
+    sessAsc.forEach((session) => {
+      ;(session.exercises || []).forEach((exercise) => {
+        if (!exercise.exercise) return
+        const key = exercise.exercise.toLowerCase().trim()
+        if (!map.has(key)) map.set(key, { name: exercise.exercise, entries: [] })
+        map.get(key).entries.push({
+          date: session.date,
+          weightKg: exercise.weightKg,
+          completedSetsReps: exercise.completedSetsReps,
+          fatigue: exercise.fatigue,
+        })
+      })
+    })
+    return Array.from(map.values()).filter((progression) => progression.entries.length >= 1)
+  }
 
   function saveSession(event) {
     event.preventDefault()
@@ -415,10 +467,11 @@ export default function Workout({ workoutSessions, setWorkoutSessions, workoutPl
 
   return (
     <div className="grid gap-5">
-      <Tabs
+      <WorkoutModeTabs
         tabs={[
           { id: 'sessions', label: 'Workout', icon: Dumbbell },
           { id: 'plans', label: 'Schede', icon: CopyPlus },
+          { id: 'progressions', label: 'Progressioni', icon: Check },
         ]}
         activeTab={mode}
         onChange={setMode}
@@ -552,7 +605,7 @@ export default function Workout({ workoutSessions, setWorkoutSessions, workoutPl
             )
           })}
         </div>
-      ) : (
+      ) : mode === 'plans' ? (
         <div className="grid gap-5">
           <Card>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -720,6 +773,81 @@ export default function Workout({ workoutSessions, setWorkoutSessions, workoutPl
               })}
             </div>
           </Card>
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gap: 10 }}>
+          {buildProgressions().map((progression) => {
+            const last = progression.entries[progression.entries.length - 1]
+            const prev = progression.entries[progression.entries.length - 2]
+            const wLast = Number(last?.weightKg) || 0
+            const wPrev = Number(prev?.weightKg) || 0
+            const delta = wLast && wPrev ? wLast - wPrev : null
+            return (
+              <Card key={progression.name}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                  <span style={{ fontSize: 15, fontWeight: 800 }}>{progression.name}</span>
+                  {delta !== null && (
+                    <span style={{
+                      fontSize: 12,
+                      fontWeight: 800,
+                      color: delta > 0 ? '#4caf7d' : delta < 0 ? '#e05555' : 'rgba(240,237,232,0.35)',
+                    }}>
+                      {delta > 0 ? '↑' : delta < 0 ? '↓' : '='} {Math.abs(delta).toFixed(1)}kg
+                    </span>
+                  )}
+                </div>
+                <div style={{ overflowX: 'auto', borderRadius: 12 }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 300 }}>
+                    <thead>
+                      <tr>
+                        {['Data', 'Peso', 'Serie eff.', 'RPE'].map((heading) => (
+                          <th key={heading} style={{
+                            fontSize: 10,
+                            fontWeight: 800,
+                            letterSpacing: '0.07em',
+                            textTransform: 'uppercase',
+                            color: 'rgba(240,237,232,0.35)',
+                            padding: '7px 10px',
+                            textAlign: 'left',
+                            borderBottom: '1px solid rgba(255,255,255,0.07)',
+                          }}>{heading}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {[...progression.entries].reverse().slice(0, 8).map((entry, index) => (
+                        <tr key={`${entry.date}-${index}`}>
+                          <td style={{ padding: '9px 10px', fontSize: 12, borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+                            {new Intl.DateTimeFormat('it-IT', { day: '2-digit', month: 'short' }).format(new Date(`${entry.date}T12:00:00`))}
+                          </td>
+                          <td style={{
+                            padding: '9px 10px',
+                            fontSize: 12,
+                            fontWeight: 700,
+                            color: entry.weightKg ? '#f06030' : 'rgba(240,237,232,0.35)',
+                            borderBottom: '1px solid rgba(255,255,255,0.07)',
+                          }}>
+                            {entry.weightKg ? `${entry.weightKg} kg` : '—'}
+                          </td>
+                          <td style={{ padding: '9px 10px', fontSize: 12, borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+                            {entry.completedSetsReps || '—'}
+                          </td>
+                          <td style={{ padding: '9px 10px', fontSize: 12, borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+                            {entry.fatigue || '—'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </Card>
+            )
+          })}
+          {buildProgressions().length === 0 && (
+            <div style={{ textAlign: 'center', padding: '32px 16px', color: 'rgba(240,237,232,0.35)', fontSize: 13 }}>
+              Registra sessioni con pesi per vedere le progressioni.
+            </div>
+          )}
         </div>
       )}
     </div>

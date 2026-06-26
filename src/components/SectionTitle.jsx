@@ -1,12 +1,25 @@
 export default function SectionTitle({ title, eyebrow, children }) {
   return (
-    <div className="mb-4">
+    <div style={{ marginBottom: 14 }}>
       {eyebrow && (
-        <p className="mb-1 text-xs font-bold uppercase tracking-widest text-accent">{eyebrow}</p>
+        <p style={{
+          fontSize: 10,
+          fontWeight: 800,
+          letterSpacing: '0.1em',
+          textTransform: 'uppercase',
+          color: '#f06030',
+          marginBottom: 4,
+        }}>
+          {eyebrow}
+        </p>
       )}
-      <h2 className="text-xl font-black text-title">{title}</h2>
+      <h2 style={{ fontSize: 19, fontWeight: 800, letterSpacing: '-0.3px', color: '#f0ede8', marginBottom: 3 }}>
+        {title}
+      </h2>
       {children && (
-        <p className="mt-1 text-sm leading-relaxed text-text/65">{children}</p>
+        <p style={{ fontSize: 12, color: 'rgba(240,237,232,0.55)', lineHeight: 1.5 }}>
+          {children}
+        </p>
       )}
     </div>
   )

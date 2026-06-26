@@ -1,27 +1,58 @@
 export default function Tabs({ tabs, activeTab, onChange }) {
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-[680px] border-t border-white/70 bg-warm-white/90 px-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-2 shadow-[0_-10px_30px_rgba(120,46,8,0.10)] backdrop-blur-2xl">
-      <div
-        className="grid grid-cols-4 gap-1.5"
-        style={{ WebkitOverflowScrolling: 'touch' }}
-      >
-        {tabs.map(({ id, label, icon: Icon }) => (
+    <nav style={{
+      position: 'fixed',
+      bottom: 0,
+      left: '50%',
+      transform: 'translateX(-50%)',
+      width: '100%',
+      maxWidth: 680,
+      zIndex: 100,
+      background: 'rgba(15,15,16,0.93)',
+      backdropFilter: 'blur(18px)',
+      borderTop: '1px solid rgba(255,255,255,0.07)',
+      display: 'flex',
+      justifyContent: 'space-around',
+      padding: '10px 8px 16px',
+    }}>
+      {tabs.map(({ id, label, icon: Icon }) => {
+        const active = activeTab === id
+        return (
           <button
             key={id}
             type="button"
             onClick={() => onChange(id)}
-            className={`relative flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl px-2 py-2 text-[0.68rem] font-black uppercase tracking-wide transition-all duration-200 ${
-              activeTab === id
-                ? 'bg-gradient-to-br from-accent-light to-accent text-white shadow-[0_4px_14px_rgba(232,98,42,0.35)]'
-                : 'text-title/60 hover:bg-blush/60 hover:text-title'
-            }`}
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: 3,
+              cursor: 'pointer',
+              padding: '6px 10px',
+              borderRadius: 11,
+              background: 'none',
+              border: 'none',
+              color: active ? '#f06030' : 'rgba(240,237,232,0.28)',
+              fontFamily: 'inherit',
+              flex: 1,
+              transition: 'all 0.15s',
+            }}
           >
             {Icon ? <Icon size={20} aria-hidden="true" /> : null}
-            <span>{label}</span>
-            <span className={`absolute bottom-1.5 size-1 rounded-full bg-current transition-opacity ${activeTab === id ? 'opacity-100' : 'opacity-0'}`} />
+            <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+              {label}
+            </span>
+            <span style={{
+              width: 3,
+              height: 3,
+              borderRadius: '50%',
+              background: '#f06030',
+              opacity: active ? 1 : 0,
+              transition: 'opacity 0.15s',
+            }} />
           </button>
-        ))}
-      </div>
+        )
+      })}
     </nav>
   )
 }
