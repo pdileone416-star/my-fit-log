@@ -131,22 +131,22 @@ export default function Home({ dailyLogs, goTo }) {
       >
         <div className="relative">
           <p className="text-sm font-bold text-accent">{formatDate(today)}</p>
-          <div className="mt-2 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-            <div>
-              <h2 className="text-3xl font-black leading-tight text-title">Ciao, oggi si registra con calma.</h2>
+          <div className="mt-2 flex min-w-0 flex-col gap-4">
+            <div className="min-w-0">
+              <h2 className="text-[2rem] font-black leading-tight text-title sm:text-3xl">Ciao, oggi si registra con calma.</h2>
               <p className="mt-1 text-sm text-text/70">Peso, workout e benessere in un diario semplice da telefono.</p>
             </div>
-            <div className="flex flex-wrap gap-2">
-              <Button onClick={() => {
+            <div className="grid grid-cols-1 gap-2 min-[390px]:grid-cols-2">
+              <Button className="w-full" onClick={() => {
                 goTo('diary')
                 setTimeout(() => window.dispatchEvent(new Event('my-fit-log-new-daily')), 0)
               }}>
                 <Plus size={17} />Nuova giornata
               </Button>
-              <Button type="button" variant="secondary" onClick={() => goTo('progress')}>
+              <Button type="button" variant="secondary" className="w-full" onClick={() => goTo('progress')}>
                 <LineChart size={17} />Progressi
               </Button>
-              <Button type="button" variant="ghost" onClick={() => goTo('workout')}>
+              <Button type="button" variant="ghost" className="w-full min-[390px]:col-span-2" onClick={() => goTo('workout')}>
                 <Dumbbell size={17} />Workout
               </Button>
             </div>
@@ -170,7 +170,7 @@ export default function Home({ dailyLogs, goTo }) {
               { label: 'Mancano', value: challengeRemaining, sub: 'giorni al traguardo' },
               { label: 'Giornate registrate', value: challengeLogs, sub: 'dentro la sfida' },
             ].map(({ label, value, sub }) => (
-              <div key={label} className="rounded-2xl bg-white/60 p-3 backdrop-blur-sm">
+              <div key={label} className="rounded-2xl border border-white/10 bg-blush/80 p-3 backdrop-blur-sm">
                 <p className="text-xs font-bold uppercase tracking-wide text-accent">{label}</p>
                 <p className="text-3xl font-black text-title">{value}</p>
                 <p className="text-sm font-semibold text-text/70">{sub}</p>
@@ -178,7 +178,7 @@ export default function Home({ dailyLogs, goTo }) {
             ))}
           </div>
           <div>
-            <div className="h-3.5 overflow-hidden rounded-full bg-white/60">
+            <div className="h-3.5 overflow-hidden rounded-full bg-blush/80">
               <div className="progress-bar h-full rounded-full transition-all duration-700" style={{ width: `${challengeProgress}%` }} />
             </div>
             <p className="mt-2 text-sm font-bold text-title">{challengeProgress}% completato - traguardo: {formatDate(challengeEnd)}.</p>
@@ -264,7 +264,7 @@ export default function Home({ dailyLogs, goTo }) {
             </div>
             <div className="grid gap-2">
               {reminderItems.map((item) => (
-                <p key={item} className="rounded-xl bg-white/60 px-3 py-2 text-sm font-semibold text-title backdrop-blur-sm">{item}</p>
+                <p key={item} className="rounded-xl border border-white/10 bg-blush/80 px-3 py-2 text-sm font-semibold text-title backdrop-blur-sm">{item}</p>
               ))}
             </div>
           </div>
