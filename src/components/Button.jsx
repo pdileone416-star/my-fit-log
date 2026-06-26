@@ -1,47 +1,18 @@
-const variants = {
-  primary: {
-    background: 'linear-gradient(135deg, #ff7a42, #f06030)',
-    color: '#fff',
-    border: 'none',
-    boxShadow: '0 4px 14px rgba(240,96,48,0.25)',
-  },
-  secondary: {
-    background: '#232326',
-    color: '#f0ede8',
-    border: '1px solid rgba(255,255,255,0.12)',
-  },
-  ghost: {
-    background: 'transparent',
-    color: 'rgba(240,237,232,0.55)',
-    border: 'none',
-  },
-  danger: {
-    background: 'rgba(224,85,85,0.14)',
-    color: '#e05555',
-    border: '1px solid rgba(224,85,85,0.2)',
-  },
-}
+export default function Button({ children, variant = 'primary', className = '', ...props }) {
+  const variants = {
+    primary:
+      'bg-gradient-to-br from-accent-light to-accent text-white shadow-[0_4px_14px_rgba(232,98,42,0.35)] hover:shadow-[0_4px_20px_rgba(232,98,42,0.50)] hover:scale-[1.02] active:scale-[0.98]',
+    secondary:
+      'bg-blush/80 backdrop-blur-sm text-title border border-blush-border hover:bg-blush hover:scale-[1.02] active:scale-[0.98]',
+    ghost:
+      'bg-white/40 backdrop-blur-sm text-title border border-white/60 hover:bg-white/70 hover:scale-[1.02] active:scale-[0.98]',
+    danger:
+      'bg-white/60 backdrop-blur-sm text-red-600 border border-red-200/70 hover:bg-red-50/80 hover:scale-[1.02] active:scale-[0.98]',
+  }
 
-export default function Button({ children, variant = 'primary', className = '', style = {}, ...props }) {
   return (
     <button
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 7,
-        padding: '10px 16px',
-        borderRadius: 11,
-        fontFamily: 'inherit',
-        fontSize: 13,
-        fontWeight: 700,
-        cursor: 'pointer',
-        transition: 'all 0.15s',
-        whiteSpace: 'nowrap',
-        ...(variants[variant] || variants.primary),
-        ...style,
-      }}
-      className={className}
+      className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl px-4 py-2 text-sm font-semibold transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-60 ${variants[variant]} ${className}`}
       {...props}
     >
       {children}

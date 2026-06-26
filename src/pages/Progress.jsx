@@ -58,14 +58,6 @@ function feelingLabel(log) {
   return [log.feelingStatus, log.feeling].filter(Boolean).join(' - ')
 }
 
-function shortDate(date) {
-  if (!date) return ''
-  return new Intl.DateTimeFormat('it-IT', {
-    day: '2-digit',
-    month: 'short',
-  }).format(new Date(`${date}T12:00:00`))
-}
-
 export default function Progress({ dailyLogs, workoutSessions }) {
   const [previewPhoto, setPreviewPhoto] = useState(null)
   const sortedLogs = sortByDateDesc(dailyLogs)
@@ -95,42 +87,6 @@ export default function Progress({ dailyLogs, workoutSessions }) {
         <SectionTitle title="Trend peso" eyebrow="ultimi record">
           Foto corpo, peso, sensazione e valutazione giornata nello stesso punto.
         </SectionTitle>
-        {weights.length ? (
-          <div style={{ display: 'grid', gap: 8, marginBottom: 16 }}>
-            {weights.slice(0, 20).map((log, index) => {
-              const current = Number(log.weight)
-              const previous = Number(weights[index + 1]?.weight) || 0
-              const weightDelta = previous ? current - previous : null
-              return (
-                <div key={`weight-${log.id}`} style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: 12,
-                  padding: '10px 0',
-                  borderBottom: '1px solid rgba(255,255,255,0.07)',
-                }}>
-                  <div>
-                    <p style={{ fontSize: 13, fontWeight: 800 }}>{shortDate(log.date)}</p>
-                    <p style={{ fontSize: 11, color: 'rgba(240,237,232,0.35)' }}>{compactDate(log.date)}</p>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    {weightDelta !== null ? (
-                      <span style={{
-                        fontSize: 11,
-                        fontWeight: 800,
-                        color: weightDelta < 0 ? '#4caf7d' : weightDelta > 0 ? '#e05555' : 'rgba(240,237,232,0.35)',
-                      }}>
-                        {weightDelta > 0 ? '+' : ''}{weightDelta.toFixed(1)}
-                      </span>
-                    ) : null}
-                    <span style={{ fontSize: 15, fontWeight: 900, color: '#f06030' }}>{log.weight} kg</span>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        ) : null}
         <div className="mb-4 grid gap-3 md:grid-cols-2 lg:hidden">
           {sortedLogs.slice(0, 12).map((log) => (
             <article key={log.id} className="rounded-2xl border border-blush-border bg-white p-3">
@@ -193,51 +149,6 @@ export default function Progress({ dailyLogs, workoutSessions }) {
               ) : null}
             </tbody>
           </table>
-        </div>
-      </Card>
-      <Card>
-        <SectionTitle title="Ultime note stato" eyebrow="benessere" />
-        <div style={{ display: 'grid', gap: 8 }}>
-          {sortedLogs
-            .filter((log) => log.feeling || log.feelingStatus)
-            .slice(0, 10)
-            .map((log) => (
-              <div key={`feeling-${log.id}`} style={{ padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 }}>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(240,237,232,0.35)' }}>
-                    {shortDate(log.date)}
-                  </span>
-                  {log.feelingStatus && (
-                    <span style={{
-                      fontSize: 11,
-                      fontWeight: 700,
-                      color: '#f06030',
-                      background: 'rgba(240,96,48,0.14)',
-                      padding: '2px 8px',
-                      borderRadius: 99,
-                    }}>
-                      {log.feelingStatus}
-                    </span>
-                  )}
-                </div>
-                {log.feeling && (
-                  <div style={{
-                    fontSize: 12,
-                    color: 'rgba(240,237,232,0.6)',
-                    borderLeft: '3px solid #f06030',
-                    paddingLeft: 9,
-                    lineHeight: 1.5,
-                  }}>
-                    {log.feeling}
-                  </div>
-                )}
-              </div>
-            ))}
-          {sortedLogs.filter((log) => log.feeling || log.feelingStatus).length === 0 && (
-            <p style={{ fontSize: 13, color: 'rgba(240,237,232,0.35)', textAlign: 'center', padding: '16px 0' }}>
-              Nessuna nota ancora.
-            </p>
-          )}
         </div>
       </Card>
       {previewPhoto ? <PhotoModal photo={previewPhoto} onClose={() => setPreviewPhoto(null)} /> : null}

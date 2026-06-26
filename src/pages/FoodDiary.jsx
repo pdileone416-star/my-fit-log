@@ -30,6 +30,7 @@ const emptyLog = {
 }
 
 const feelingStatuses = ['Molto bene', 'Bene', 'Normale', 'Male', 'Molto male']
+const feelingTags = ['Gonfia', 'Ciclo', 'Fame', 'Stress', 'Energia alta', 'Stanchezza', 'Mal di testa', 'Pancia', 'Sonno', 'Digestione', 'Altro']
 const compactWeekdays = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab']
 const compactMonths = ['gen', 'feb', 'mar', 'apr', 'mag', 'giu', 'lug', 'ago', 'set', 'ott', 'nov', 'dic']
 
@@ -119,6 +120,10 @@ function hasDailyContent(log) {
     'notes',
     'bodyPhoto',
   ].some((key) => Array.isArray(log[key]) ? log[key].length > 0 : String(log[key] || '').trim())
+}
+
+function selectedFeelingTags(value) {
+  return Array.isArray(value) ? value : []
 }
 
 function selectedSupplements(value) {
@@ -232,6 +237,11 @@ function SupplementPicker({ value, options, onUpdate, onAddOption, onDeleteOptio
 }
 
 function DiaryFields({ value, onUpdate, onDateChange, supplementOptions, onAddSupplementOption, onDeleteSupplementOption }) {
+  function toggleTag(tag) {
+    const current = selectedFeelingTags(value.feelingTags)
+    onUpdate('feelingTags', current.includes(tag) ? current.filter((item) => item !== tag) : [...current, tag])
+  }
+
   return (
     <>
       <div className="grid gap-4 md:grid-cols-2">
@@ -256,31 +266,33 @@ function DiaryFields({ value, onUpdate, onDateChange, supplementOptions, onAddSu
       <div className="grid gap-3 rounded-2xl border border-blush-border bg-white p-3">
         <p className="font-bold text-title">Come ti senti</p>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
-          {feelingStatuses.map((status) => {
-            const active = value.feelingStatus === status
+          {feelingStatuses.map((status) => (
+            <button
+              key={status}
+              type="button"
+              className={`min-h-11 rounded-xl px-3 py-2 text-sm font-bold transition ${value.feelingStatus === status ? 'bg-accent text-white' : 'bg-pink-bg text-title hover:bg-blush'}`}
+              onClick={() => onUpdate('feelingStatus', value.feelingStatus === status ? '' : status)}
+            >
+              {status}
+            </button>
+          ))}
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {feelingTags.map((tag) => {
+            const active = selectedFeelingTags(value.feelingTags).includes(tag)
             return (
               <button
-                key={status}
+                key={tag}
                 type="button"
-                className="min-h-11 rounded-xl px-3 py-2 text-sm font-bold transition"
-                style={{
-                  background: active ? '#f06030' : '#2e2e32',
-                  color: active ? '#fff' : 'rgba(240,237,232,0.6)',
-                }}
-                onClick={() => onUpdate('feelingStatus', active ? '' : status)}
+                className={`rounded-full px-3 py-2 text-xs font-bold transition ${active ? 'bg-sage text-title' : 'bg-blush text-title hover:bg-sage'}`}
+                onClick={() => toggleTag(tag)}
               >
-                {status}
+                {tag}
               </button>
             )
           })}
         </div>
-        <Textarea
-          label="Nota libera"
-          placeholder="Come ti senti? Energia, umore, sensazioni fisiche..."
-          style={{ borderLeft: '3px solid #f06030', borderRadius: '0 10px 10px 0' }}
-          value={value.feeling || ''}
-          onChange={(event) => onUpdate('feeling', event.target.value)}
-        />
+        <Textarea label="Nota libera" placeholder="Es. leggera, stanca, gonfia, energica..." value={value.feeling || ''} onChange={(event) => onUpdate('feeling', event.target.value)} />
       </div>
       <div className="grid gap-3 rounded-2xl border border-blush-border bg-white p-3">
         <div>
@@ -586,21 +598,7 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
 
                   <div className="diary-row-cell">
                     <span className="diary-mobile-label">Note</span>
-                    {log.feeling ? (
-                      <div style={{
-                        background: '#232326',
-                        borderLeft: '3px solid #f06030',
-                        borderRadius: '0 10px 10px 0',
-                        padding: '8px 12px',
-                        fontSize: 13,
-                        color: 'rgba(240,237,232,0.7)',
-                        lineHeight: 1.5,
-                        marginBottom: 8,
-                      }}>
-                        {log.feeling}
-                      </div>
-                    ) : null}
-                    {log.notes ? <p className="diary-cell-text line-clamp-4 text-sm leading-5">{log.notes}</p> : (!log.feeling ? <span className="text-xs font-semibold text-text/40">-</span> : null)}
+                    {log.notes ? <p className="diary-cell-text line-clamp-4 text-sm leading-5">{log.notes}</p> : <span className="text-xs font-semibold text-text/40">-</span>}
                     {photoButton(log.bodyPhoto, 'Foto corpo')}
                   </div>
 

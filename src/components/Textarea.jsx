@@ -1,30 +1,11 @@
-export default function Textarea({ label, className = '', style = {}, ...props }) {
+export default function Textarea({ label, className = '', ...props }) {
   return (
-    <div style={{ display: 'grid', gap: 5 }}>
-      {label && (
-        <label style={{ fontSize: 11, fontWeight: 700, color: 'rgba(240,237,232,0.55)', letterSpacing: '0.03em' }}>
-          {label}
-        </label>
-      )}
+    <label className={`grid gap-1.5 text-sm font-semibold text-title ${className}`}>
+      {label ? <span>{label}</span> : null}
       <textarea
-        style={{
-          background: '#2e2e32',
-          border: '1px solid rgba(255,255,255,0.12)',
-          color: '#f0ede8',
-          borderRadius: 10,
-          padding: '10px 12px',
-          fontFamily: 'inherit',
-          fontSize: 13,
-          fontWeight: 500,
-          outline: 'none',
-          width: '100%',
-          resize: 'vertical',
-          minHeight: 75,
-          ...style,
-        }}
-        className={className}
+        className="min-h-[5rem] rounded-2xl border border-white/60 bg-white/55 px-3 py-2 text-base font-normal text-text outline-none backdrop-blur-sm transition-all duration-200 placeholder:text-text/40 focus:border-accent/60 focus:bg-white/80 focus:ring-4 focus:ring-accent/15"
         {...props}
       />
-    </div>
+    </label>
   )
 }
