@@ -1,9 +1,9 @@
 export default function Button({ children, variant = 'primary', className = '', ...props }) {
   const variants = {
     primary:
-      'border-0 bg-gradient-to-br from-accent-light to-accent text-white hover:-translate-y-px active:scale-[0.98]',
+      'border-0 bg-gradient-to-br from-accent-light to-accent text-[#2b2410] shadow-[0_6px_18px_rgba(229,184,61,0.22)] hover:-translate-y-px active:scale-[0.98]',
     secondary:
-      'border border-blush-border bg-blush text-title hover:bg-[#2e2e33] active:scale-[0.98]',
+      'border border-blush-border bg-blush text-title hover:bg-[#342e1e] active:scale-[0.98]',
     ghost:
       'border-0 bg-transparent text-text/55 hover:bg-blush hover:text-title active:scale-[0.98]',
     danger:

@@ -44,27 +44,27 @@ export default function Login({ onLogin }) {
     <div className="min-h-screen px-4 py-6 sm:px-6">
       <main className="mx-auto grid min-h-[calc(100vh-3rem)] max-w-5xl items-center gap-5 lg:grid-cols-[1fr_1fr]">
 
-        {/* ── Left: brand panel ── */}
+        {/* Left: brand panel */}
         <section className="relative overflow-hidden rounded-3xl p-6 sm:p-8"
           style={{
-            background: 'linear-gradient(135deg, #E8622A 0%, #FF7A42 50%, #F4B98A 100%)',
-            boxShadow: '0 20px 60px rgba(232,98,42,0.35)',
+            background: 'linear-gradient(135deg, #ffe79a 0%, #e5b83d 54%, #b88918 100%)',
+            boxShadow: '0 20px 60px rgba(229,184,61,0.28)',
           }}
         >
           <div className="relative z-10">
             <span className="mb-5 grid size-16 place-items-center overflow-hidden rounded-2xl bg-white/25 shadow-[inset_0_1px_0_rgba(255,255,255,0.5)]">
               <img src="/favicon.svg" alt="" className="size-12" />
             </span>
-            <p className="text-sm font-bold uppercase tracking-widest text-white/80">My Fit Log</p>
-            <h1 className="mt-2 text-3xl font-black leading-tight text-white sm:text-4xl">
+            <p className="text-sm font-bold uppercase tracking-widest text-[#3a2d0d]/70">My Fit Log</p>
+            <h1 className="mt-2 text-3xl font-black leading-tight text-[#2b2410] sm:text-4xl">
               Il tuo diario fit, protetto e sempre con te.
             </h1>
-            <p className="mt-4 text-base leading-relaxed text-white/85">
+            <p className="mt-4 text-base leading-relaxed text-[#3a2d0d]/80">
               Peso, pasti, workout e progressi in un unico posto. Semplice da usare ogni giorno, direttamente dal telefono.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               {['Diario alimentare', 'Schede workout', 'Progressi peso', 'Solo tuo'].map((tag) => (
-                <span key={tag} className="rounded-full bg-white/20 px-3 py-1 text-sm font-semibold text-white backdrop-blur-sm">
+                <span key={tag} className="rounded-full bg-white/35 px-3 py-1 text-sm font-semibold text-[#2b2410] backdrop-blur-sm">
                   {tag}
                 </span>
               ))}
@@ -72,7 +72,7 @@ export default function Login({ onLogin }) {
           </div>
         </section>
 
-        {/* ── Right: form ── */}
+        {/* Right: form */}
         <div className="glass-strong rounded-3xl p-6 sm:p-8">
           {/* mode switcher */}
           <div className="mb-6 flex gap-1 rounded-2xl bg-blush/50 p-1">
@@ -81,7 +81,7 @@ export default function Login({ onLogin }) {
               onClick={() => setMode('login')}
               className={`flex-1 rounded-xl px-3 py-2.5 text-sm font-bold transition-all duration-200 ${
                 mode === 'login'
-                  ? 'bg-gradient-to-br from-accent-light to-accent text-white shadow-[0_4px_12px_rgba(232,98,42,0.3)]'
+                  ? 'bg-gradient-to-br from-accent-light to-accent text-[#2b2410] shadow-[0_4px_12px_rgba(229,184,61,0.3)]'
                   : 'text-title hover:bg-white/40'
               }`}
             >
@@ -92,7 +92,7 @@ export default function Login({ onLogin }) {
               onClick={() => setMode('register')}
               className={`flex-1 rounded-xl px-3 py-2.5 text-sm font-bold transition-all duration-200 ${
                 mode === 'register'
-                  ? 'bg-gradient-to-br from-accent-light to-accent text-white shadow-[0_4px_12px_rgba(232,98,42,0.3)]'
+                  ? 'bg-gradient-to-br from-accent-light to-accent text-[#2b2410] shadow-[0_4px_12px_rgba(229,184,61,0.3)]'
                   : 'text-title hover:bg-white/40'
               }`}
             >
@@ -134,7 +134,7 @@ export default function Login({ onLogin }) {
 
           <p className="mt-5 flex items-start gap-2 text-xs leading-5 text-text/60">
             <LockKeyhole size={15} className="mt-0.5 shrink-0 text-accent" aria-hidden="true" />
-            I dati restano salvati solo nel browser. Per sincronizzare tra dispositivi servirà in futuro un cloud.
+            I dati restano salvati solo nel browser. Per sincronizzare tra dispositivi servira in futuro un cloud.
           </p>
         </div>
       </main>

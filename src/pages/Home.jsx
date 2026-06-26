@@ -123,7 +123,7 @@ export default function Home({ dailyLogs, goTo }) {
       <section
         className="relative overflow-hidden"
         style={{
-          background: 'linear-gradient(135deg, rgba(240,96,48,0.10) 0%, rgba(255,122,66,0.06) 100%)',
+          background: 'linear-gradient(135deg, rgba(229,184,61,0.12) 0%, rgba(255,231,154,0.07) 100%)',
           border: '1px solid var(--b)',
           borderRadius: 24,
           padding: 16,
@@ -159,7 +159,7 @@ export default function Home({ dailyLogs, goTo }) {
       <Card
         style={{
           borderColor: 'var(--a)',
-          boxShadow: '0 0 0 1px rgba(240,96,48,0.16)',
+          boxShadow: '0 0 0 1px rgba(229,184,61,0.18)',
         }}
       >
         <SectionTitle title="Sfida 50 giorni" eyebrow="primo obiettivo">
@@ -180,7 +180,7 @@ export default function Home({ dailyLogs, goTo }) {
             ))}
           </div>
           <div>
-            <div className="mt-3 h-[5px] overflow-hidden rounded-full bg-[#2e2e33]">
+            <div className="mt-3 h-[5px] overflow-hidden rounded-full bg-[#342e1e]">
               <div className="progress-bar h-full rounded-full transition-all duration-700" style={{ width: `${challengeProgress}%` }} />
             </div>
             <p className="mt-1 text-[11px] font-bold text-text/35">{challengeProgress}% completato - traguardo: {formatDate(challengeEnd)}.</p>
@@ -231,7 +231,7 @@ export default function Home({ dailyLogs, goTo }) {
               return (
                 <div
                   key={date}
-                  className={`size-8 rounded-xl transition-all ${hasLog ? 'bg-gradient-to-br from-accent-light to-accent shadow-[0_2px_8px_rgba(232,98,42,0.35)]' : 'bg-blush/70'}`}
+                  className={`size-8 rounded-xl transition-all ${hasLog ? 'bg-gradient-to-br from-accent-light to-accent shadow-[0_2px_8px_rgba(229,184,61,0.35)]' : 'bg-blush/70'}`}
                   title={date}
                 />
               )
@@ -259,8 +259,8 @@ export default function Home({ dailyLogs, goTo }) {
         {reminderItems.length ? (
           <div className="mt-4 rounded-2xl border border-accent/25 bg-gradient-to-br from-accent/8 to-transparent p-4">
             <div className="mb-3 flex items-center gap-2">
-              <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-accent-light to-accent shadow-[0_4px_12px_rgba(232,98,42,0.3)]">
-                <AlertCircle size={18} aria-hidden="true" className="text-white" />
+              <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-accent-light to-accent shadow-[0_4px_12px_rgba(229,184,61,0.3)]">
+                <AlertCircle size={18} aria-hidden="true" className="text-[#2b2410]" />
               </span>
               <p className="font-black text-title">Reminder di oggi</p>
             </div>
@@ -276,7 +276,7 @@ export default function Home({ dailyLogs, goTo }) {
       {/* Rating chart */}
       <Card>
         <SectionTitle title="Andamento valutazione" eyebrow="ultime giornate">
-          Da 1 a 5: arancione pieno quando la giornata e da 4 in su.
+          Da 1 a 5: giallo pieno quando la giornata e da 4 in su.
         </SectionTitle>
         {chartLogs.length ? (
           <div className="flex h-48 items-end gap-2 rounded-2xl bg-pink-bg/50 p-3">
@@ -292,7 +292,7 @@ export default function Home({ dailyLogs, goTo }) {
                 >
                   <span className={`grid size-8 place-items-center rounded-full text-xs font-black transition-transform group-hover:scale-110 ${
                     isGood
-                      ? 'bg-gradient-to-br from-accent-light to-accent text-white shadow-[0_2px_8px_rgba(232,98,42,0.4)]'
+                      ? 'bg-gradient-to-br from-accent-light to-accent text-[#2b2410] shadow-[0_2px_8px_rgba(229,184,61,0.4)]'
                       : 'bg-blush/80 text-title'
                   }`}>
                     {rating}

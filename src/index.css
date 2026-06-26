@@ -1,32 +1,32 @@
 @import "tailwindcss";
 
 @theme {
-  --color-bg: #111113;
-  --color-surface: #1c1c1f;
-  --color-surface2: #252528;
-  --color-surface3: #2e2e33;
+  --color-bg: #14120b;
+  --color-surface: #1f1c12;
+  --color-surface2: #292417;
+  --color-surface3: #342e1e;
   --color-border: rgba(255,255,255,0.07);
   --color-border2: rgba(255,255,255,0.13);
-  --color-accent: #f06030;
-  --color-accent-light: #ff7a42;
-  --color-title: #edeae4;
-  --color-text: #edeae4;
+  --color-accent: #e5b83d;
+  --color-accent-light: #ffe79a;
+  --color-title: #fff7df;
+  --color-text: #fff7df;
   --color-sage: #4caf7d;
-  --color-warm-white: #1c1c1f;
-  --color-pink-bg: #111113;
-  --color-blush: #252528;
+  --color-warm-white: #1f1c12;
+  --color-pink-bg: #14120b;
+  --color-blush: #292417;
   --color-blush-border: rgba(255,255,255,0.13);
-  --color-glass: #1c1c1f;
-  --color-glass-hover: #252528;
+  --color-glass: #1f1c12;
+  --color-glass-hover: #292417;
   --shadow-soft: 0 4px 20px rgba(0,0,0,0.32);
-  --shadow-glow: 0 4px 16px rgba(240,96,48,0.22);
+  --shadow-glow: 0 4px 16px rgba(229,184,61,0.24);
 }
 
 :root {
-  --bg:#111113; --s1:#1c1c1f; --s2:#252528; --s3:#2e2e33;
+  --bg:#14120b; --s1:#1f1c12; --s2:#292417; --s3:#342e1e;
   --b:rgba(255,255,255,0.07); --b2:rgba(255,255,255,0.13);
-  --a:#f06030; --a2:#ff7a42; --adim:rgba(240,96,48,0.14); --aglow:rgba(240,96,48,0.22);
-  --tx:#edeae4; --txm:rgba(237,234,228,0.55); --txd:rgba(237,234,228,0.28);
+  --a:#e5b83d; --a2:#ffe79a; --adim:rgba(229,184,61,0.16); --aglow:rgba(229,184,61,0.24);
+  --tx:#fff7df; --txm:rgba(255,247,223,0.58); --txd:rgba(255,247,223,0.30);
   --gr:#4caf7d; --grdim:rgba(76,175,125,0.14);
   --rd:#e05555; --rddim:rgba(224,85,85,0.14);
 }
@@ -93,7 +93,7 @@ table { border-collapse: collapse; }
 
 .clean-table th {
   background: var(--s2);
-  color: rgba(237,234,228,0.5);
+  color: rgba(255,247,223,0.5);
   font-weight: 700;
   font-size: 0.72rem;
   letter-spacing: 0.06em;
@@ -114,7 +114,7 @@ table { border-collapse: collapse; }
   top: 0;
   z-index: 5;
   background: var(--s2);
-  color: rgba(237,234,228,0.45);
+  color: rgba(255,247,223,0.45);
   border-bottom: 1px solid rgba(255,255,255,0.08);
   font-size: 0.72rem;
   letter-spacing: 0.06em;
@@ -139,7 +139,7 @@ table { border-collapse: collapse; }
   border: 1px solid var(--b);
   border-radius: 1rem;
   background: var(--s2);
-  color: rgba(237,234,228,0.45);
+  color: rgba(255,247,223,0.45);
   font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0.05em;
@@ -154,7 +154,7 @@ table { border-collapse: collapse; }
 .diary-row-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
 .diary-mobile-label {
   display: block;
-  color: rgba(237,234,228,0.4);
+  color: rgba(255,247,223,0.4);
   font-size: 0.68rem;
   font-weight: 900;
   letter-spacing: 0.04em;

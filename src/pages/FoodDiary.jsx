@@ -270,7 +270,7 @@ function DiaryFields({ value, onUpdate, onDateChange, supplementOptions, onAddSu
             <button
               key={status}
               type="button"
-              className={`min-h-11 rounded-xl px-3 py-2 text-sm font-bold transition ${value.feelingStatus === status ? 'bg-accent text-white' : 'bg-pink-bg text-title hover:bg-blush'}`}
+              className={`min-h-11 rounded-xl px-3 py-2 text-sm font-bold transition ${value.feelingStatus === status ? 'bg-accent text-[#2b2410]' : 'bg-pink-bg text-title hover:bg-blush'}`}
               onClick={() => onUpdate('feelingStatus', value.feelingStatus === status ? '' : status)}
             >
               {status}
@@ -306,7 +306,7 @@ function DiaryFields({ value, onUpdate, onDateChange, supplementOptions, onAddSu
               <button
                 key={rating}
                 type="button"
-                className={`min-h-12 rounded-xl text-base font-black transition ${active ? 'bg-accent text-white shadow-soft' : 'bg-pink-bg text-title hover:bg-blush'}`}
+                className={`min-h-12 rounded-xl text-base font-black transition ${active ? 'bg-accent text-[#2b2410] shadow-soft' : 'bg-pink-bg text-title hover:bg-blush'}`}
                 onClick={() => onUpdate('dayRating', active ? '' : String(rating))}
                 aria-pressed={active}
               >
