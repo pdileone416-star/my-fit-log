@@ -6,17 +6,17 @@ import { formatDate, todayISO } from '../utils/storage'
 
 function Stat({ icon: Icon, title, value, gradient = 'from-blush to-sage' }) {
   return (
-    <Card>
-      <div className="flex items-center gap-3">
-        <span className={`grid size-12 shrink-0 place-items-center rounded-2xl bg-gradient-to-br ${gradient} shadow-[0_4px_12px_rgba(232,98,42,0.15)]`}>
-          <Icon size={21} aria-hidden="true" className="text-title" />
+    <article style={{ background: 'var(--s1)', border: '1px solid var(--b)', borderRadius: 18, padding: 14 }}>
+      <div>
+        <span className={`mb-2 grid size-8 shrink-0 place-items-center rounded-[9px] bg-gradient-to-br ${gradient}`}>
+          <Icon size={17} aria-hidden="true" className="text-title" />
         </span>
         <div>
-          <p className="text-xs font-bold uppercase tracking-wide text-accent">{title}</p>
-          <p className="mt-0.5 text-2xl font-black text-title">{value}</p>
+          <p className="mb-0.5 text-[10px] font-bold uppercase tracking-[0.07em] text-text/30">{title}</p>
+          <p className="text-[22px] font-black tracking-[-0.5px] text-title">{value}</p>
         </div>
       </div>
-    </Card>
+    </article>
   )
 }
 
@@ -69,7 +69,7 @@ const weightGoal = [
   ['20', '49,8 kg'],
   ['30', '48,7 kg'],
   ['40', '47,6 kg'],
-  ['50', '46,5–47,0 kg'],
+  ['50', '46,5-47,0 kg'],
 ]
 
 export default function Home({ dailyLogs, goTo }) {
@@ -117,36 +117,37 @@ export default function Home({ dailyLogs, goTo }) {
   ].filter(Boolean)
 
   return (
-    <div className="grid gap-5">
+    <div className="grid gap-0 pt-1">
 
-      {/* ── Hero banner ── */}
+      {/* Hero banner */}
       <section
-        className="relative overflow-hidden rounded-3xl p-5"
+        className="relative overflow-hidden"
         style={{
-          background: 'linear-gradient(135deg, rgba(255,122,66,0.12) 0%, rgba(244,185,138,0.10) 100%)',
-          border: '1px solid rgba(255,255,255,0.65)',
-          backdropFilter: 'blur(18px)',
-          boxShadow: '0 8px 32px rgba(120,46,8,0.08), inset 0 1px 0 rgba(255,255,255,0.8)',
+          background: 'linear-gradient(135deg, rgba(240,96,48,0.10) 0%, rgba(255,122,66,0.06) 100%)',
+          border: '1px solid var(--b)',
+          borderRadius: 24,
+          padding: 16,
+          margin: '0 14px 10px',
         }}
       >
         <div className="relative">
-          <p className="text-sm font-bold text-accent">{formatDate(today)}</p>
-          <div className="mt-2 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <p className="text-[13px] font-bold text-accent">{formatDate(today)}</p>
+          <div className="mt-2 flex flex-col gap-3">
             <div>
-              <h2 className="text-3xl font-black leading-tight text-title">Ciao, oggi si registra con calma.</h2>
-              <p className="mt-1 text-sm text-text/70">Peso, workout e benessere in un diario semplice da telefono.</p>
+              <h2 className="max-w-[18rem] break-words text-[21px] font-black leading-[1.13] tracking-[-0.25px] text-title">Ciao, oggi si registra con calma.</h2>
+              <p className="mt-1 text-[13px] leading-5 text-text/55">Peso, workout e benessere in un diario semplice da telefono.</p>
             </div>
-            <div className="flex flex-wrap gap-2">
-              <Button onClick={() => {
+            <div className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-2">
+              <Button className="w-full" onClick={() => {
                 goTo('diary')
                 setTimeout(() => window.dispatchEvent(new Event('my-fit-log-new-daily')), 0)
               }}>
                 <Plus size={17} />Nuova giornata
               </Button>
-              <Button type="button" variant="secondary" onClick={() => goTo('progress')}>
+              <Button type="button" variant="secondary" className="w-full" onClick={() => goTo('progress')}>
                 <LineChart size={17} />Progressi
               </Button>
-              <Button type="button" variant="ghost" onClick={() => goTo('workout')}>
+              <Button type="button" variant="ghost" className="w-full min-[420px]:col-span-2" onClick={() => goTo('workout')}>
                 <Dumbbell size={17} />Workout
               </Button>
             </div>
@@ -154,39 +155,40 @@ export default function Home({ dailyLogs, goTo }) {
         </div>
       </section>
 
-      {/* ── Challenge card ── */}
-      <Card className="border-2 border-accent/30"
+      {/* Challenge card */}
+      <Card
         style={{
-          background: 'linear-gradient(135deg, rgba(232,98,42,0.10) 0%, rgba(255,122,66,0.07) 100%)',
+          borderColor: 'var(--a)',
+          boxShadow: '0 0 0 1px rgba(240,96,48,0.16)',
         }}
       >
         <SectionTitle title="Sfida 50 giorni" eyebrow="primo obiettivo">
           Dal 23 giugno al {formatDate(challengeEnd)}.
         </SectionTitle>
         <div className="grid gap-3">
-          <div className="grid gap-3 sm:grid-cols-3">
+          <div className="grid grid-cols-3 gap-1.5">
             {[
               { label: challengeDay ? 'Oggi sei al' : 'Partenza', value: challengeDay ? `Giorno ${challengeDay}` : 'Domani', sub: `su ${challengeLength}` },
               { label: 'Mancano', value: challengeRemaining, sub: 'giorni al traguardo' },
               { label: 'Giornate registrate', value: challengeLogs, sub: 'dentro la sfida' },
             ].map(({ label, value, sub }) => (
-              <div key={label} className="rounded-2xl bg-white/60 p-3 backdrop-blur-sm">
-                <p className="text-xs font-bold uppercase tracking-wide text-accent">{label}</p>
-                <p className="text-3xl font-black text-title">{value}</p>
-                <p className="text-sm font-semibold text-text/70">{sub}</p>
+              <div key={label} className="min-w-0 rounded-xl bg-blush px-2 py-3 text-center">
+                <p className="text-[9px] font-bold uppercase leading-tight tracking-[0.04em] text-text/30">{label}</p>
+                <p className="break-words text-[22px] font-black leading-tight tracking-[-0.6px] text-accent">{value}</p>
+                <p className="text-[10px] font-semibold leading-tight text-text/35">{sub}</p>
               </div>
             ))}
           </div>
           <div>
-            <div className="h-3.5 overflow-hidden rounded-full bg-white/60">
+            <div className="mt-3 h-[5px] overflow-hidden rounded-full bg-[#2e2e33]">
               <div className="progress-bar h-full rounded-full transition-all duration-700" style={{ width: `${challengeProgress}%` }} />
             </div>
-            <p className="mt-2 text-sm font-bold text-title">{challengeProgress}% completato - traguardo: {formatDate(challengeEnd)}.</p>
+            <p className="mt-1 text-[11px] font-bold text-text/35">{challengeProgress}% completato - traguardo: {formatDate(challengeEnd)}.</p>
           </div>
         </div>
       </Card>
 
-      {/* ── Progressione peso reference ── */}
+      {/* Progressione peso reference */}
       <Card>
         <SectionTitle title="Progressione peso di riferimento" eyebrow="sfida 50 giorni">
           Un faro semplice per seguire il percorso con calma, senza giudicare una singola giornata.
@@ -211,13 +213,13 @@ export default function Home({ dailyLogs, goTo }) {
         </div>
       </Card>
 
-      {/* ── Stats ── */}
-      <div className="grid gap-4 md:grid-cols-2">
+      {/* Stats */}
+      <div className="grid grid-cols-2 gap-[9px] px-[14px]">
         <Stat icon={Scale} title="Variazione peso" value={weightDelta ? `${weightDelta} kg` : '-'} gradient="from-sage to-blush" />
         <Stat icon={HeartPulse} title="Giornate da 4 in su" value={`${goodRatedLogs.length}/${ratedLogs.length || 0}`} gradient="from-blush to-sage" />
       </div>
 
-      {/* ── 7 giorni ── */}
+      {/* 7 giorni */}
       <Card>
         <SectionTitle title="Costanza ultimi 7 giorni" eyebrow="monitoraggio">
           Solo il conteggio dei giorni in cui hai registrato qualcosa.
@@ -242,7 +244,7 @@ export default function Home({ dailyLogs, goTo }) {
         </div>
       </Card>
 
-      {/* ── Completamento oggi ── */}
+      {/* Completamento oggi */}
       <Card>
         <SectionTitle title="Completamento di oggi" eyebrow="oggi">
           {reminderItems.length ? 'Piccoli promemoria per chiudere meglio la giornata.' : 'Giornata compilata alla grande.'}
@@ -271,10 +273,10 @@ export default function Home({ dailyLogs, goTo }) {
         ) : null}
       </Card>
 
-      {/* ── Rating chart ── */}
+      {/* Rating chart */}
       <Card>
         <SectionTitle title="Andamento valutazione" eyebrow="ultime giornate">
-          Da 1 a 5: arancione pieno quando la giornata è da 4 in su.
+          Da 1 a 5: arancione pieno quando la giornata e da 4 in su.
         </SectionTitle>
         {chartLogs.length ? (
           <div className="flex h-48 items-end gap-2 rounded-2xl bg-pink-bg/50 p-3">

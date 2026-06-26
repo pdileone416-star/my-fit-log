@@ -1,9 +1,9 @@
 export default function Input({ label, className = '', ...props }) {
   return (
-    <label className={`grid gap-1.5 text-sm font-semibold text-title ${className}`}>
+    <label className={`grid gap-[5px] text-[11px] font-bold tracking-[0.03em] text-text/55 ${className}`}>
       <span>{label}</span>
       <input
-        className="min-h-11 rounded-2xl border border-white/60 bg-white/55 px-3 py-2 text-base font-normal text-text outline-none backdrop-blur-sm transition-all duration-200 placeholder:text-text/40 focus:border-accent/60 focus:bg-white/80 focus:ring-4 focus:ring-accent/15"
+        className="min-h-0 rounded-[10px] border border-blush-border bg-[#2e2e33] px-3 py-2.5 text-[13px] font-medium text-text outline-none transition-all duration-150 placeholder:text-text/30 focus:border-accent focus:ring-4 focus:ring-accent/15"
         {...props}
       />
     </label>

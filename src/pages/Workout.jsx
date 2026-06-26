@@ -422,6 +422,7 @@ export default function Workout({ workoutSessions, setWorkoutSessions, workoutPl
         ]}
         activeTab={mode}
         onChange={setMode}
+        variant="inline"
       />
 
       {mode === 'sessions' ? (
