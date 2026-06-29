@@ -74,7 +74,7 @@ const weightGoal = [
 
 export default function Home({ dailyLogs, goTo }) {
   const today = todayISO()
-  const challengeStart = '2026-06-23'
+  const challengeStart = '2026-06-30'
   const challengeLength = 50
   const challengeEnd = addDays(challengeStart, challengeLength - 1)
   const rawChallengeDay = diffDays(challengeStart, today) + 1
