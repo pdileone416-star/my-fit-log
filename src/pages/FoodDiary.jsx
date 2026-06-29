@@ -585,7 +585,6 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
                 <span>Cena</span>
                 <span>Integratori</span>
                 <span>Come ti senti</span>
-                <span>Foto</span>
                 <span>Azioni</span>
               </div>
 
@@ -620,13 +619,6 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
               ['Merenda', log.snack, log.snackPhoto],
               ['Cena', log.dinner, log.dinnerPhoto],
             ]
-            const photoCount = [
-              log.breakfastPhoto,
-              log.lunchPhoto,
-              log.snackPhoto,
-              log.dinnerPhoto,
-              log.bodyPhoto,
-            ].filter(Boolean).length
             const mealPreview = (value, photo) => {
               if (value) return value
               if (photo) return 'Foto'
@@ -690,19 +682,6 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
                     disabled={!moodText}
                   >
                     {moodText ? <p className="diary-board-cell-text">{moodText}</p> : <span className="diary-board-empty">-</span>}
-                  </button>
-                  <button
-                    type="button"
-                    className="diary-board-cell diary-board-meal-cell"
-                    onClick={() => openCell(log, 'Foto corpo', '', log.bodyPhoto)}
-                    disabled={!photoCount}
-                  >
-                    {photoCount ? (
-                      <>
-                        <span className="diary-board-pill bg-blush text-title">{photoCount} foto</span>
-                        {photoCellButton(log.bodyPhoto, 'Foto corpo')}
-                      </>
-                    ) : <span className="diary-board-empty">-</span>}
                   </button>
                   <div className="diary-board-actions">
                     <button

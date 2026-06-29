@@ -176,13 +176,13 @@ table { border-collapse: collapse; }
 .diary-board {
   display: grid;
   gap: 0.35rem;
-  min-width: 1260px;
+  min-width: 1200px;
 }
 
 .diary-board-header,
 .diary-board-row {
   display: grid;
-  grid-template-columns: 8.5rem 6.5rem 5.75rem repeat(4, 9.5rem) 11.5rem 11.5rem 5.5rem 15rem;
+  grid-template-columns: 8.5rem 6.5rem 5.75rem repeat(4, 10rem) 12rem 12rem 15rem;
   gap: 0.35rem;
 }
 
