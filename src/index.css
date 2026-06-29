@@ -240,6 +240,16 @@ table { border-collapse: collapse; }
   align-items: center;
   display: flex;
   border-radius: 0.8rem;
+  color: var(--tx);
+  text-align: left;
+}
+
+button.diary-board-cell:not(:disabled):hover {
+  background: var(--s2);
+}
+
+button.diary-board-cell:disabled {
+  cursor: default;
 }
 
 .diary-board-meal-cell {

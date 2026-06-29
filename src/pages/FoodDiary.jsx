@@ -100,6 +100,34 @@ function PhotoModal({ photo, onClose }) {
   )
 }
 
+function CellModal({ cell, onClose }) {
+  if (!cell) return null
+
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-title/70 p-4" role="dialog" aria-modal="true">
+      <div className="grid max-h-[92vh] w-full max-w-lg gap-3 overflow-y-auto rounded-3xl bg-warm-white p-4 shadow-soft">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-[11px] font-black uppercase tracking-[0.08em] text-accent">{cell.context}</p>
+            <h3 className="text-xl font-black text-title">{cell.label}</h3>
+          </div>
+          <Button type="button" variant="ghost" onClick={onClose}><X size={18} />Chiudi</Button>
+        </div>
+        {cell.text ? (
+          <p className="whitespace-pre-wrap rounded-2xl bg-pink-bg p-3 text-base font-semibold leading-7 text-title">{cell.text}</p>
+        ) : (
+          <p className="rounded-2xl bg-pink-bg p-3 text-sm font-semibold text-text/60">Nessun testo salvato in questa cella.</p>
+        )}
+        {cell.photo ? (
+          <button type="button" className="rounded-2xl" onClick={() => onClose(cell.photo)}>
+            <img src={cell.photo} alt="" className="max-h-[56vh] w-full rounded-2xl border border-blush-border bg-white object-contain p-2" />
+          </button>
+        ) : null}
+      </div>
+    </div>
+  )
+}
+
 function hasDailyContent(log) {
   return [
     'weight',
@@ -328,6 +356,7 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
   const [inlineForm, setInlineForm] = useState(emptyLog)
   const [editingLogId, setEditingLogId] = useState(null)
   const [previewPhoto, setPreviewPhoto] = useState(null)
+  const [previewCell, setPreviewCell] = useState(null)
   const [selectedMonth, setSelectedMonth] = useState('all')
   const [visibleSavedCount, setVisibleSavedCount] = useState(20)
   const [expandedLogIds, setExpandedLogIds] = useState([])
@@ -454,6 +483,24 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
     return index >= 0 ? index + 1 : chronological.length
   }
 
+  function openCell(log, label, text, photo = '') {
+    if (!String(text || '').trim() && !photo) return
+    setPreviewCell({
+      context: `Giorno ${dayNumber(log)} - ${numericDate(log.date)}`,
+      label,
+      text: String(text || '').trim(),
+      photo,
+    })
+  }
+
+  function closeCellModal(photoToOpen) {
+    const currentCell = previewCell
+    setPreviewCell(null)
+    if (photoToOpen && currentCell) {
+      setPreviewPhoto({ src: photoToOpen, label: currentCell.label })
+    }
+  }
+
   return (
     <div className="grid gap-5">
       <Card>
@@ -559,14 +606,13 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
               </button>
             ) : null
             const photoCellButton = (photo, label) => photo ? (
-              <button
-                type="button"
+              <span
                 className="diary-board-photo-chip"
-                onClick={() => setPreviewPhoto({ src: photo, label })}
+                aria-label={label}
               >
                 <ImageIcon size={12} aria-hidden="true" />
                 Foto
-              </button>
+              </span>
             ) : null
             const mealSummary = [
               ['Colazione', log.breakfast, log.breakfastPhoto],
@@ -601,32 +647,63 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
                     </div>
                   </div>
 
-                  <div className="diary-board-cell">
+                  <button
+                    type="button"
+                    className="diary-board-cell"
+                    onClick={() => openCell(log, 'Valutazione', dayRatingLabel(log))}
+                    disabled={!dayRatingLabel(log)}
+                  >
                     {dayRatingLabel(log) ? <span className={`diary-board-pill ${ratingClass}`}>{dayRatingLabel(log)}</span> : <span className="diary-board-empty">-</span>}
-                  </div>
-                  <div className="diary-board-cell">
+                  </button>
+                  <button
+                    type="button"
+                    className="diary-board-cell"
+                    onClick={() => openCell(log, 'Peso', log.weight ? `${log.weight} kg` : '')}
+                    disabled={!log.weight}
+                  >
                     {log.weight ? <span className="diary-board-pill bg-sage text-title">{log.weight} kg</span> : <span className="diary-board-empty">-</span>}
-                  </div>
+                  </button>
                   {mealSummary.map(([label, value, photo]) => (
-                    <div key={label} className="diary-board-cell diary-board-meal-cell">
+                    <button
+                      key={label}
+                      type="button"
+                      className="diary-board-cell diary-board-meal-cell"
+                      onClick={() => openCell(log, label, value, photo)}
+                      disabled={!value && !photo}
+                    >
                       <p className="diary-board-cell-text">{mealPreview(value, photo)}</p>
                       {photoCellButton(photo, `Foto ${label.toLowerCase()}`)}
-                    </div>
+                    </button>
                   ))}
-                  <div className="diary-board-cell">
+                  <button
+                    type="button"
+                    className="diary-board-cell"
+                    onClick={() => openCell(log, 'Integratori / applicazioni', supplementsLabel(log))}
+                    disabled={!supplementsLabel(log)}
+                  >
                     {supplementsLabel(log) ? <p className="diary-board-cell-text">{supplementsLabel(log)}</p> : <span className="diary-board-empty">-</span>}
-                  </div>
-                  <div className="diary-board-cell">
+                  </button>
+                  <button
+                    type="button"
+                    className="diary-board-cell"
+                    onClick={() => openCell(log, 'Come ti senti', moodText)}
+                    disabled={!moodText}
+                  >
                     {moodText ? <p className="diary-board-cell-text">{moodText}</p> : <span className="diary-board-empty">-</span>}
-                  </div>
-                  <div className="diary-board-cell diary-board-meal-cell">
+                  </button>
+                  <button
+                    type="button"
+                    className="diary-board-cell diary-board-meal-cell"
+                    onClick={() => openCell(log, 'Foto corpo', '', log.bodyPhoto)}
+                    disabled={!photoCount}
+                  >
                     {photoCount ? (
                       <>
                         <span className="diary-board-pill bg-blush text-title">{photoCount} foto</span>
                         {photoCellButton(log.bodyPhoto, 'Foto corpo')}
                       </>
                     ) : <span className="diary-board-empty">-</span>}
-                  </div>
+                  </button>
                   <div className="diary-board-actions">
                     <button
                       type="button"
@@ -722,6 +799,7 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
           </div>
         ) : null}
       </Card>
+      {previewCell ? <CellModal cell={previewCell} onClose={closeCellModal} /> : null}
       {previewPhoto ? <PhotoModal photo={previewPhoto} onClose={() => setPreviewPhoto(null)} /> : null}
     </div>
   )
