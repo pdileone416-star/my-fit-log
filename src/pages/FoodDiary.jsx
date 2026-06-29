@@ -1,4 +1,4 @@
-import { ChevronDown, Heart, ImagePlus, Pencil, Plus, Save, Trash2, X } from 'lucide-react'
+import { ChevronDown, Heart, Image as ImageIcon, ImagePlus, Pencil, Plus, Save, Trash2, X } from 'lucide-react'
 import Button from '../components/Button'
 import Card from '../components/Card'
 import Input from '../components/Input'
@@ -558,6 +558,16 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
                 Foto
               </button>
             ) : null
+            const photoCellButton = (photo, label) => photo ? (
+              <button
+                type="button"
+                className="diary-board-photo-chip"
+                onClick={() => setPreviewPhoto({ src: photo, label })}
+              >
+                <ImageIcon size={12} aria-hidden="true" />
+                Foto
+              </button>
+            ) : null
             const mealSummary = [
               ['Colazione', log.breakfast, log.breakfastPhoto],
               ['Pranzo', log.lunch, log.lunchPhoto],
@@ -598,8 +608,9 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
                     {log.weight ? <span className="diary-board-pill bg-sage text-title">{log.weight} kg</span> : <span className="diary-board-empty">-</span>}
                   </div>
                   {mealSummary.map(([label, value, photo]) => (
-                    <div key={label} className="diary-board-cell">
+                    <div key={label} className="diary-board-cell diary-board-meal-cell">
                       <p className="diary-board-cell-text">{mealPreview(value, photo)}</p>
+                      {photoCellButton(photo, `Foto ${label.toLowerCase()}`)}
                     </div>
                   ))}
                   <div className="diary-board-cell">
@@ -608,8 +619,13 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
                   <div className="diary-board-cell">
                     {moodText ? <p className="diary-board-cell-text">{moodText}</p> : <span className="diary-board-empty">-</span>}
                   </div>
-                  <div className="diary-board-cell">
-                    {photoCount ? <span className="diary-board-pill bg-blush text-title">{photoCount} foto</span> : <span className="diary-board-empty">-</span>}
+                  <div className="diary-board-cell diary-board-meal-cell">
+                    {photoCount ? (
+                      <>
+                        <span className="diary-board-pill bg-blush text-title">{photoCount} foto</span>
+                        {photoCellButton(log.bodyPhoto, 'Foto corpo')}
+                      </>
+                    ) : <span className="diary-board-empty">-</span>}
                   </div>
                   <div className="diary-board-actions">
                     <button

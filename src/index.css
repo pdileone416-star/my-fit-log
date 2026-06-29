@@ -242,6 +242,13 @@ table { border-collapse: collapse; }
   border-radius: 0.8rem;
 }
 
+.diary-board-meal-cell {
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 0.4rem;
+  justify-content: center;
+}
+
 .diary-board-actions {
   align-items: center;
   display: flex;
@@ -287,6 +294,25 @@ table { border-collapse: collapse; }
   color: rgba(74,53,16,0.36);
   font-size: 0.78rem;
   font-weight: 800;
+}
+
+.diary-board-photo-chip {
+  align-items: center;
+  align-self: flex-start;
+  border: 1px solid var(--b2);
+  border-radius: 999px;
+  background: var(--s2);
+  color: var(--tx);
+  display: inline-flex;
+  gap: 0.25rem;
+  min-height: 1.45rem;
+  padding: 0.22rem 0.5rem;
+  font-size: 0.68rem;
+  font-weight: 900;
+}
+
+.diary-board-photo-chip:hover {
+  background: var(--gr);
 }
 
 .diary-board-action {
