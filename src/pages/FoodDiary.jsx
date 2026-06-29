@@ -497,8 +497,8 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
       </Card>
 
       <Card>
-        <SectionTitle title="Giornate salvate" eyebrow={`${filteredSavedLogs.length} record`}>
-          Timeline compatta: vedi subito andamento, peso e sensazione. Apri una giornata solo quando vuoi leggere i dettagli.
+        <SectionTitle title="Tabella giornate" eyebrow={`${filteredSavedLogs.length} record`}>
+          Una vista tipo diario Excel: scorri le colonne, confronti le giornate e apri la riga solo quando vuoi leggere tutto.
         </SectionTitle>
 
         <div className="mb-4 grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
@@ -523,8 +523,24 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
           </p>
         </div>
 
-        <div className="grid gap-3">
+        <div className="diary-board-wrap">
           {visibleSavedLogs.length === 0 ? <p className="rounded-2xl bg-pink-bg px-3 py-3 text-sm font-semibold">Nessuna giornata salvata.</p> : null}
+
+          {visibleSavedLogs.length ? (
+            <div className="diary-board">
+              <div className="diary-board-header">
+                <span className="diary-board-day-head">Giorno</span>
+                <span>Valutazione</span>
+                <span>Peso</span>
+                <span>Colazione</span>
+                <span>Pranzo</span>
+                <span>Merenda</span>
+                <span>Cena</span>
+                <span>Integratori</span>
+                <span>Come ti senti</span>
+                <span>Foto</span>
+                <span>Azioni</span>
+              </div>
 
           {visibleSavedLogs.map((log) => {
             const isEditing = editingLogId === log.id
@@ -548,43 +564,57 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
               ['Merenda', log.snack, log.snackPhoto],
               ['Cena', log.dinner, log.dinnerPhoto],
             ]
+            const photoCount = [
+              log.breakfastPhoto,
+              log.lunchPhoto,
+              log.snackPhoto,
+              log.dinnerPhoto,
+              log.bodyPhoto,
+            ].filter(Boolean).length
+            const mealPreview = (value, photo) => {
+              if (value) return value
+              if (photo) return 'Foto'
+              return '-'
+            }
 
             return (
-              <article key={log.id} className="overflow-hidden rounded-2xl border border-blush-border bg-white shadow-soft">
-                <div className="grid gap-3 p-3">
-                  <div className="flex items-start gap-3">
-                    <div className={`grid size-14 shrink-0 place-items-center rounded-2xl ${passed ? 'bg-sage text-title' : 'bg-blush text-title'}`}>
-                      <Heart size={22} className={passed ? 'fill-current' : ''} aria-hidden="true" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex min-w-0 items-start justify-between gap-2">
-                        <div className="min-w-0">
-                          <p className="text-[11px] font-black uppercase tracking-[0.06em] text-accent">{date.weekday} {date.day} {date.month}</p>
-                          <p className="text-lg font-black leading-tight text-title">Giorno {dayNumber(log)}</p>
-                          <p className="text-xs font-bold text-text/55">{numericDate(log.date)}</p>
-                        </div>
-                        {dayRatingLabel(log) ? <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-black ${ratingClass}`}>{dayRatingLabel(log)}</span> : null}
-                      </div>
-
-                      <div className="mt-3 flex flex-wrap gap-2">
-                        {log.weight ? <span className="rounded-full bg-sage px-3 py-1 text-xs font-black text-title">{log.weight} kg</span> : null}
-                        {log.feelingStatus ? <span className="rounded-full bg-blush px-3 py-1 text-xs font-black text-title">{log.feelingStatus}</span> : null}
-                        {supplementsLabel(log) ? <span className="rounded-full bg-pink-bg px-3 py-1 text-xs font-black text-title">Integratori</span> : null}
-                        {log.bodyPhoto || mealSummary.some(([, , photo]) => photo) ? <span className="rounded-full bg-pink-bg px-3 py-1 text-xs font-black text-title">Foto</span> : null}
-                      </div>
-
-                      {moodText || log.notes ? (
-                        <p className="mt-3 line-clamp-2 text-sm font-semibold leading-5 text-title">
-                          {moodText || log.notes}
-                        </p>
-                      ) : null}
+              <article key={log.id} className="diary-board-record">
+                <div className="diary-board-row">
+                  <div className="diary-board-day-cell">
+                    <span className={`diary-board-heart ${passed ? 'bg-sage' : 'bg-blush'}`}>
+                      <Heart size={17} className={passed ? 'fill-current' : ''} aria-hidden="true" />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-black uppercase tracking-[0.05em] text-accent">{date.weekday} {date.day} {date.month}</p>
+                      <p className="text-sm font-black leading-tight text-title">Giorno {dayNumber(log)}</p>
+                      <p className="text-[10px] font-bold text-text/50">{numericDate(log.date)}</p>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-1.5">
+                  <div className="diary-board-cell">
+                    {dayRatingLabel(log) ? <span className={`diary-board-pill ${ratingClass}`}>{dayRatingLabel(log)}</span> : <span className="diary-board-empty">-</span>}
+                  </div>
+                  <div className="diary-board-cell">
+                    {log.weight ? <span className="diary-board-pill bg-sage text-title">{log.weight} kg</span> : <span className="diary-board-empty">-</span>}
+                  </div>
+                  {mealSummary.map(([label, value, photo]) => (
+                    <div key={label} className="diary-board-cell">
+                      <p className="diary-board-cell-text">{mealPreview(value, photo)}</p>
+                    </div>
+                  ))}
+                  <div className="diary-board-cell">
+                    {supplementsLabel(log) ? <p className="diary-board-cell-text">{supplementsLabel(log)}</p> : <span className="diary-board-empty">-</span>}
+                  </div>
+                  <div className="diary-board-cell">
+                    {moodText ? <p className="diary-board-cell-text">{moodText}</p> : <span className="diary-board-empty">-</span>}
+                  </div>
+                  <div className="diary-board-cell">
+                    {photoCount ? <span className="diary-board-pill bg-blush text-title">{photoCount} foto</span> : <span className="diary-board-empty">-</span>}
+                  </div>
+                  <div className="diary-board-actions">
                     <button
                       type="button"
-                      className="inline-flex min-h-10 items-center justify-center gap-1 rounded-xl bg-blush px-2 py-2 text-xs font-black text-title"
+                      className="diary-board-action bg-blush text-title"
                       onClick={() => toggleExpandedLog(log.id)}
                     >
                       <ChevronDown size={16} className={`transition ${isExpanded ? 'rotate-180' : ''}`} />
@@ -592,7 +622,7 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
                     </button>
                     <button
                       type="button"
-                      className="inline-flex min-h-10 items-center justify-center gap-1 rounded-xl border border-blush-border px-2 py-2 text-xs font-black text-title disabled:opacity-50"
+                      className="diary-board-action border border-blush-border text-title disabled:opacity-50"
                       onClick={() => editLog(log)}
                       disabled={isEditing}
                     >
@@ -601,7 +631,7 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
                     </button>
                     <button
                       type="button"
-                      className="inline-flex min-h-10 items-center justify-center gap-1 rounded-xl border border-red-300/70 bg-red-50/80 px-2 py-2 text-xs font-black text-red-700"
+                      className="diary-board-action border border-red-300/70 bg-red-50/80 text-red-700"
                       onClick={() => deleteLog(log.id)}
                     >
                       <Trash2 size={15} />
@@ -611,8 +641,8 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
                 </div>
 
                 {isExpanded ? (
-                  <div className="grid gap-3 border-t border-blush-border bg-pink-bg p-3">
-                    <div className="grid gap-2">
+                  <div className="diary-board-details">
+                    <div className="grid gap-2 md:grid-cols-2">
                       <p className="text-[11px] font-black uppercase tracking-[0.06em] text-accent">Pasti</p>
                       {mealSummary.some(([, value, photo]) => value || photo) ? mealSummary.map(([label, value, photo]) => (
                         value || photo ? (
@@ -664,6 +694,8 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
               </article>
             )
           })}
+            </div>
+          ) : null}
         </div>
 
         {visibleSavedCount < filteredSavedLogs.length ? (
