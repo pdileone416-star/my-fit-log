@@ -111,7 +111,7 @@ function CellModal({ cell, onClose }) {
             <p className="text-[11px] font-black uppercase tracking-[0.08em] text-accent">{cell.context}</p>
             <h3 className="text-xl font-black text-title">{cell.label}</h3>
           </div>
-          <Button type="button" variant="ghost" onClick={onClose}><X size={18} />Chiudi</Button>
+          <Button type="button" variant="ghost" onClick={() => onClose()}><X size={18} />Chiudi</Button>
         </div>
         {cell.text ? (
           <p className="whitespace-pre-wrap rounded-2xl bg-pink-bg p-3 text-base font-semibold leading-7 text-title">{cell.text}</p>
@@ -493,10 +493,10 @@ export default function FoodDiary({ dailyLogs, setDailyLogs, supplementOptions =
     })
   }
 
-  function closeCellModal(photoToOpen) {
+  function closeCellModal(photoToOpen = '') {
     const currentCell = previewCell
     setPreviewCell(null)
-    if (photoToOpen && currentCell) {
+    if (typeof photoToOpen === 'string' && photoToOpen && currentCell) {
       setPreviewPhoto({ src: photoToOpen, label: currentCell.label })
     }
   }
