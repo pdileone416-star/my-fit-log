@@ -74,7 +74,7 @@ const weightGoal = [
 
 export default function Home({ dailyLogs, goTo }) {
   const today = todayISO()
-  const challengeStart = '2026-06-30'
+  const challengeStart = '2026-07-01'
   const challengeLength = 50
   const challengeEnd = addDays(challengeStart, challengeLength - 1)
   const rawChallengeDay = diffDays(challengeStart, today) + 1
@@ -163,7 +163,7 @@ export default function Home({ dailyLogs, goTo }) {
         }}
       >
         <SectionTitle title="Sfida 50 giorni" eyebrow="primo obiettivo">
-          Dal 23 giugno al {formatDate(challengeEnd)}.
+          Dal {formatDate(challengeStart)} al {formatDate(challengeEnd)}.
         </SectionTitle>
         <div className="grid gap-3">
           <div className="grid grid-cols-3 gap-1.5">
